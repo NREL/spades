@@ -1,3 +1,4 @@
+import argparse
 from ase.build import bulk
 from ase.neighborlist import NeighborList
 import numpy as np
@@ -298,6 +299,16 @@ def main():
     start = timer()
     random.seed(34950435)
 
+    parser = argparse.ArgumentParser(description="A simple KMC diffusion application")
+    parser.add_argument(
+        "-p", "--do_plots", help="Make plots", action="store_true"
+    )
+    parser.add_argument(
+        "-s", "--save_plots", help="Save plots", action="store_true"
+    )
+    args = parser.parse_args()
+
+
     #Set microscopic parameters that give various rates and set sticking probabilities for deposition
 
     # Set externally applied parameter(s): T
@@ -311,10 +322,9 @@ def main():
     kB = 1.380649e-23 # Boltzmann's constant in J/K
     ev_to_J = 1.602176634e-19 # Convert eV to J
 
-    do_plots = True
-    save_plots = True
     data_dir = base_dir / "data"
-    data_dir.mkdir(parents=True, exist_ok=True)
+    if args.save_plots:
+        data_dir.mkdir(parents=True, exist_ok=True)
 
     # User-chosen parameters are below
     T = 300.0 # temperature in Kelvin
@@ -419,7 +429,7 @@ def main():
     print("skip = ",skip)
     zvals = range(0,Nz,skip)
     print(*zvals)
-    if do_plots:
+    if args.do_plots:
         fig, ((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)) = plt.subplots(nrows=3,ncols=3,sharex=True,sharey=True)#,constrained_layout=True)
         plt.subplots_adjust(hspace=0.4,wspace=0.)
         ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
@@ -434,7 +444,7 @@ def main():
             ax.set_title("nz = {}".format(z))
           img = ax.imshow(latcut_xy)
           ax_imgs.append(img)
-        if save_plots:
+        if args.save_plots:
             plt.savefig(data_dir / f"{0:05d}.png")
         plt.pause(1)
 
@@ -490,7 +500,7 @@ def main():
         print("Time = {}".format(time))
         otime = 0.0
 
-        if do_plots:
+        if args.do_plots:
             ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
             for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
               z = zvals[nz]
@@ -500,11 +510,11 @@ def main():
               else:
                 ax.set_title("nz = {}".format(z))
               ax_imgs[nz].set_data(latcut_xy)
-            if save_plots:
+            if args.save_plots:
                 plt.savefig(data_dir / f"{nstep:05d}.png")
             plt.pause(0.01)
 
-    if do_plots:
+    if args.do_plots:
         ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
         for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
           z = zvals[nz]
@@ -518,8 +528,6 @@ def main():
     av_dt = np.mean(timestep_array)
     print("{} time steps".format(len(timestep_array)))
     print("Average time step = {:e}".format(av_dt))
-    # if do_plots:
-    #     plt.show()
 
     end = timer()
     print(f"Elapsed time {end - start:.2f} s")
