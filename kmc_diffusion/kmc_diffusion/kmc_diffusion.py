@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from copy import copy as copy
 from itertools import accumulate
 from bisect import bisect
+import pathlib
+import inspect
+
 
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits import mplot3d
@@ -13,7 +16,10 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
 from timeit import default_timer as timer
+import kmc_diffusion as kmcd
 
+module_dir = pathlib.Path(inspect.getfile(kmcd)).parents[0]
+base_dir = module_dir.parents[0]
 
 def make_lattice(Nx,Ny,Nz,f_vacant):
     # f_vacant = fraction of vacant sites
@@ -290,6 +296,7 @@ def main():
     Occupied = 'O', Unoccupied or vacant = 'Ar' - lets us use ase to make the neighbor list
     '''
     start = timer()
+    random.seed(34950435)
 
     #Set microscopic parameters that give various rates and set sticking probabilities for deposition
 
@@ -304,7 +311,10 @@ def main():
     kB = 1.380649e-23 # Boltzmann's constant in J/K
     ev_to_J = 1.602176634e-19 # Convert eV to J
 
-    show_plots = True
+    do_plots = True
+    save_plots = True
+    data_dir = base_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
 
     # User-chosen parameters are below
     T = 300.0 # temperature in Kelvin
@@ -409,7 +419,7 @@ def main():
     print("skip = ",skip)
     zvals = range(0,Nz,skip)
     print(*zvals)
-    if show_plots:
+    if do_plots:
         fig, ((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)) = plt.subplots(nrows=3,ncols=3,sharex=True,sharey=True)#,constrained_layout=True)
         plt.subplots_adjust(hspace=0.4,wspace=0.)
         ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
@@ -424,6 +434,8 @@ def main():
             ax.set_title("nz = {}".format(z))
           img = ax.imshow(latcut_xy)
           ax_imgs.append(img)
+        if save_plots:
+            plt.savefig(data_dir / f"{0:05d}.png")
         plt.pause(1)
 
     # Define a list with Nsites elements. Each element is itself a list of the possible events at
@@ -478,7 +490,7 @@ def main():
         print("Time = {}".format(time))
         otime = 0.0
 
-        if show_plots:
+        if do_plots:
             ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
             for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
               z = zvals[nz]
@@ -488,9 +500,11 @@ def main():
               else:
                 ax.set_title("nz = {}".format(z))
               ax_imgs[nz].set_data(latcut_xy)
+            if save_plots:
+                plt.savefig(data_dir / f"{nstep:05d}.png")
             plt.pause(0.01)
 
-    if show_plots:
+    if do_plots:
         ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
         for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
           z = zvals[nz]
@@ -504,7 +518,7 @@ def main():
     av_dt = np.mean(timestep_array)
     print("{} time steps".format(len(timestep_array)))
     print("Average time step = {:e}".format(av_dt))
-    # if show_plots:
+    # if do_plots:
     #     plt.show()
 
     end = timer()
