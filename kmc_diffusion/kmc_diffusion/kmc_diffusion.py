@@ -218,7 +218,7 @@ def do_event_at_site(
     """
     Pick from the possible events at site i, update the lattice with the event
     that was chosen, then update the site propensities for site i, the other site (j)
-    and the unique neighbors of i and j
+    and the unique neighbors of i and j.
 
     This function assumes diffusion of vacancies ('Ar' site -> 'O' and vice versa)
     To extend this, use the event_type info in event[0]
@@ -268,25 +268,16 @@ def latcuts_xyz_planes(lattice, Nx, Ny, Nz):
     for nx in range(Nx):
         for ny in range(Ny):
             index = Ny * Nz * nx + Nz * ny
-            if lattice.symbols[index] == "Ar":
-                ltype = 0
-            else:
-                ltype = 1
+            ltype = 0 if lattice.symbols[index] == "Ar" else 1
             latcut_xy[nx][ny] = ltype
         for nz in range(Nz):
             index = Ny * Nz * nx + nz
-            if lattice.symbols[index] == "Ar":
-                ltype = 0
-            else:
-                ltype = 1
+            ltype = 0 if lattice.symbols[index] == "Ar" else 1
             latcut_xz[nx][nz] = ltype
     for ny in range(Ny):
         for nz in range(Nz):
             index = Nz * ny + nz
-            if lattice.symbols[index] == "Ar":
-                ltype = 0
-            else:
-                ltype = 1
+            ltype = 0 if lattice.symbols[index] == "Ar" else 1
             latcut_yz[ny][nz] = ltype
 
     return latcut_xy, latcut_xz, latcut_yz
@@ -297,10 +288,7 @@ def latcuts_xy_planes(lattice, nz, Nx, Ny, Nz):
     for nx in range(Nx):
         for ny in range(Ny):
             index = Ny * Nz * nx + Nz * ny + nz
-            if lattice.symbols[index] == "Ar":
-                ltype = 0
-            else:
-                ltype = 1
+            ltype = 0 if lattice.symbols[index] == "Ar" else 1
             latcut_xy[nx][ny] = ltype
     return latcut_xy
 
@@ -308,7 +296,7 @@ def latcuts_xy_planes(lattice, nz, Nx, Ny, Nz):
 def main():
     """
     Simple prototype to make a lattice with vacancies and vacancy diffusion
-    Occupied = 'O', Unoccupied or vacant = 'Ar' - lets us use ase to make the neighbor list
+    Occupied = 'O', Unoccupied or vacant = 'Ar' - lets us use ase to make the neighbor list.
     """
     start = timer()
     random.seed(34950435)
