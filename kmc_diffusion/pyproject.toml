@@ -12,6 +12,37 @@ ase = "^3.22.1"
 [tool.poetry.scripts]
 diffusion = "kmc_diffusion.kmc_diffusion:main"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.13"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # pydocstyle
+    "D",
+    # pep8-naming
+    "N",
+    # mccabe
+    "C",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # flake8-use-pathlib
+    "PTH",
+    # flynt
+    "FLY",
+    # isort
+    "I",
+]
+ignore = ["D203", "D212"]
