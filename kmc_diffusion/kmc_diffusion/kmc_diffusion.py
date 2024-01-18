@@ -304,7 +304,7 @@ def main():
     kB = 1.380649e-23 # Boltzmann's constant in J/K
     ev_to_J = 1.602176634e-19 # Convert eV to J
 
-
+    show_plots = True
 
     # User-chosen parameters are below
     T = 300.0 # temperature in Kelvin
@@ -409,21 +409,22 @@ def main():
     print("skip = ",skip)
     zvals = range(0,Nz,skip)
     print(*zvals)
-    # fig, ((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)) = plt.subplots(nrows=3,ncols=3,sharex=True,sharey=True)#,constrained_layout=True)
-    # plt.subplots_adjust(hspace=0.4,wspace=0.)
-    # ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
-
-    # nz = 0
-    # for ax in np.ndarray.flatten(ax_set):
-    #   z = zvals[nz]
-    #   latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
-    #   if (ax == ax2):
-    #     ax.set_title("time = {:.2e}\nnz = {}".format(0.0,z))
-    #   else:
-    #     ax.set_title("nz = {}".format(z))
-    #   ax.imshow(latcut_xy)
-    #   nz = nz + 1
-    # plt.pause(1)
+    if show_plots:
+        fig, ((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)) = plt.subplots(nrows=3,ncols=3,sharex=True,sharey=True)#,constrained_layout=True)
+        plt.subplots_adjust(hspace=0.4,wspace=0.)
+        ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
+        ax_imgs = []
+        
+        for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
+          z = zvals[nz]
+          latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
+          if (ax == ax2):
+            ax.set_title("time = {:.2e}\nnz = {}".format(0.0,z))
+          else:
+            ax.set_title("nz = {}".format(z))
+          img = ax.imshow(latcut_xy)
+          ax_imgs.append(img)
+        plt.pause(1)
 
     # Define a list with Nsites elements. Each element is itself a list of the possible events at
     # the site: [type, rate, i, j, k,...]. So site_events[i] = [[event_1],[event_2],...,[final_event] ]
@@ -476,36 +477,35 @@ def main():
       if (otime >= output_time):
         print("Time = {}".format(time))
         otime = 0.0
-        nz = 0
 
-        # ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
-        # for ax in np.ndarray.flatten(ax_set):
-        #   z = zvals[nz]
-        #   latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
-        #   if (ax == ax2):
-        #     ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
-        #   else:
-        #     ax.set_title("nz = {}".format(z))
-        #   ax.imshow(latcut_xy)
-        #   nz = nz + 1
-        # plt.pause(0.01)
+        if show_plots:
+            ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
+            for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
+              z = zvals[nz]
+              latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
+              if (ax == ax2):
+                ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
+              else:
+                ax.set_title("nz = {}".format(z))
+              ax_imgs[nz].set_data(latcut_xy)
+            plt.pause(0.01)
 
-    # ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
-    # nz = 0
-    # for ax in np.ndarray.flatten(ax_set):
-    #   z = zvals[nz]
-    #   latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
-    #   if (ax == ax2):
-    #     ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
-    #   else:
-    #     ax.set_title("nz = {}".format(z))
-    #     ax.imshow(latcut_xy)
-    #   nz = nz + 1
+    if show_plots:
+        ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
+        for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
+          z = zvals[nz]
+          latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
+          if (ax == ax2):
+            ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
+          else:
+            ax.set_title("nz = {}".format(z))
+            ax_imgs[nz].set_data(latcut_xy)
 
     av_dt = np.mean(timestep_array)
     print("{} time steps".format(len(timestep_array)))
     print("Average time step = {:e}".format(av_dt))
-    #plt.show()
+    # if show_plots:
+    #     plt.show()
 
     end = timer()
     print(f"Elapsed time {end - start:.2f} s")
