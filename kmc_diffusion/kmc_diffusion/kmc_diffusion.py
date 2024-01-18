@@ -70,6 +70,7 @@ def make_lattice(nx, Ny, nz, f_vacant):
 
 
 def build_site_events(i, lattice, nl, ratelist, beta, nn_delta_e, ndim):
+    """Build site events."""
     hop_rate_not = ratelist[0]
     psum = 0.0
     events_i = []
@@ -93,8 +94,8 @@ def build_site_events(i, lattice, nl, ratelist, beta, nn_delta_e, ndim):
                         nneighbors = nneighbors + 1
                 if nneighbors > 1:  # Site j is a candidate for the vacancy to go here
                     ineighbors = 0
-                    for l in indices:
-                        if lattice.symbols[l] != "Ar":
+                    for id in indices:
+                        if lattice.symbols[id] != "Ar":
                             ineighbors = ineighbors + 1
                     # Define nearest-neighbor energy for energy model:
                     # e(i) = nn(i)*nn_delta_e
@@ -119,6 +120,7 @@ def build_site_events(i, lattice, nl, ratelist, beta, nn_delta_e, ndim):
 
 
 def atom_counts(lattice, type1, type2):
+    """Compute atom counts."""
     one_count = 0
     two_count = 0
     for i in range(len(lattice)):
@@ -132,8 +134,10 @@ def atom_counts(lattice, type1, type2):
     return one_count, two_count
 
 
-def KMC_find_site(propensity, kmc_algorithm="rfKMC"):
+def kmc_find_site(propensity, kmc_algorithm="rfKMC"):
     """
+    Run KMC.
+
     Three KMC methods are available:
     =================================================================================
     First reaction MC method (used by Shirazi and Elliott for their simulations)
@@ -249,8 +253,8 @@ def do_event_at_site(
     for k in ineighbors:
         site_update_list.append(k)
     jneighbors, offsets = nl.get_neighbors(site_j)
-    for l in jneighbors:
-        site_update_list.append(l)
+    for id in jneighbors:
+        site_update_list.append(id)
 
     unique_update_list = list(set(site_update_list))
     # print(unique_update_list)
@@ -261,28 +265,6 @@ def do_event_at_site(
         propensity[site] = psum
         site_events[site] = events
     return propensity, site_events
-
-
-def latcuts_xyz_planes(lattice, nx, Ny, nz):
-    latcut_xy = np.zeros((nx, Ny))
-    latcut_xz = np.zeros((nx, nz))
-    latcut_yz = np.zeros((Ny, nz))
-    for nx in range(nx):
-        for ny in range(Ny):
-            index = Ny * nz * nx + nz * ny
-            ltype = 0 if lattice.symbols[index] == "Ar" else 1
-            latcut_xy[nx][ny] = ltype
-        for nz in range(nz):
-            index = Ny * nz * nx + nz
-            ltype = 0 if lattice.symbols[index] == "Ar" else 1
-            latcut_xz[nx][nz] = ltype
-    for ny in range(Ny):
-        for nz in range(nz):
-            index = nz * ny + nz
-            ltype = 0 if lattice.symbols[index] == "Ar" else 1
-            latcut_yz[ny][nz] = ltype
-
-    return latcut_xy, latcut_xz, latcut_yz
 
 
 def latcuts_xy_planes(lattice, nc, nx, Ny, nz):
@@ -351,9 +333,7 @@ def main():
     nn_delta_e = (
         0.03  # absolute value of 1/2 the bond energy in eV (bond en = negative)
     )
-    print(
-        f"T = 300 K so nn_delta_e ({nn_delta_e} eV)//kT = {nn_delta_e / kT}"
-    )
+    print(f"T = 300 K so nn_delta_e ({nn_delta_e} eV)//kT = {nn_delta_e / kT}")
 
     # attempt frequency (say 10^12 / s) ~vibrational frequencies
     # and a hopping energy barrier, E_hop_not
@@ -361,9 +341,7 @@ def main():
 
     E_hop_not = 0.2  # interbasin hopping barrier in eV. This could be
     hop_rate_not = attempt_freq * np.exp(-beta * E_hop_not)
-    print(
-        f"Rate of Ar hops with no site energy changes would be {hop_rate_not:e}"
-    )
+    print(f"Rate of Ar hops with no site energy changes would be {hop_rate_not:e}")
 
     kmc_algorithm = "rfKMC"
     # kmc_algorithm = 'FirstReaction'
@@ -388,7 +366,7 @@ def main():
         nz,
     ]  # Convenient list of necessary lattice parameters for some functions
 
-    Xmg, Ymg = np.meshgrid(X, Y)
+    xmg, ymg = np.meshgrid(X, Y)
 
     print("Initial lattice:")
     nO, nAr = atom_counts(lattice, "O", "Ar")
@@ -480,7 +458,7 @@ def main():
     # print("site_events: ",site_events)
 
     # Now fill in propensity and site_events
-    ptot = np.sum(propensity)
+    # ptot = np.sum(propensity)
     for i in range(Nsites):
         psum, events = build_site_events(
             i, lattice, nl, ratelist, beta, nn_delta_e, ndim
@@ -502,11 +480,9 @@ def main():
     # while (nstep < nmax):
     run_state = True
     while run_state:
-        site, dt = KMC_find_site(propensity, "rfKMC")
+        site, dt = kmc_find_site(propensity, kmc_algorithm)
         if site != -1:
-            print(
-                f"We will do an event at site {site} and increment dt by {dt}"
-            )
+            print(f"We will do an event at site {site} and increment dt by {dt}")
             propensity, site_events = do_event_at_site(
                 site,
                 lattice,
