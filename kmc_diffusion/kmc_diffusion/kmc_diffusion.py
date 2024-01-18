@@ -90,16 +90,9 @@ def build_site_events(i, lattice, nl, ratelist, beta, nn_delta_e, ndim):
                 # See if site j has more than 1 non-Ar neighbor to
                 # keep us from "diffusing" into thin air
                 jindices, joffsets = nl.get_neighbors(j)
-                for k in jindices:
-                    if (
-                        lattice.symbols[k] != "Ar"
-                    ):  # Could speed this up with a pythonic count-y thing
-                        nneighbors = nneighbors + 1
+                nneighbors = sum(1 for k in jindices if lattice.symbols[k] != "Ar")
                 if nneighbors > 1:  # Site j is a candidate for the vacancy to go here
-                    ineighbors = 0
-                    for id in indices:
-                        if lattice.symbols[id] != "Ar":
-                            ineighbors = ineighbors + 1
+                    ineighbors = sum(1 for i in indices if lattice.symbols[i] != "Ar")
                     # Define nearest-neighbor energy for energy model:
                     # e(i) = nn(i)*nn_delta_e
                     # ndim = 6 in 3d, 4 in 2d, 2 in 1d
