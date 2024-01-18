@@ -453,13 +453,13 @@ def main():
         ax_set = np.asarray(((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)))
         ax_imgs = []
 
-        for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
-            z = zvals[nz]
-            latcut_xy = latcuts_xy_planes(lattice, nz, Nx, Ny, Nz)
+        for nc, ax in enumerate(np.ndarray.flatten(ax_set)):
+            z = zvals[nc]
+            latcut_xy = latcuts_xy_planes(lattice, nc, Nx, Ny, Nz)
             if ax == ax2:
-                ax.set_title(f"time = {0.0:.2e}\nnz = {z}")
+                ax.set_title(f"time = {0.0:.2e}\nz = {z}")
             else:
-                ax.set_title(f"nz = {z}")
+                ax.set_title(f"z = {z}")
             img = ax.imshow(latcut_xy)
             ax_imgs.append(img)
         if args.save_plots:
@@ -534,36 +534,36 @@ def main():
 
             if args.do_plots:
                 ax_set = np.asarray(((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)))
-                for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
-                    z = zvals[nz]
-                    latcut_xy = latcuts_xy_planes(lattice, nz, Nx, Ny, Nz)
+                for nc, ax in enumerate(np.ndarray.flatten(ax_set)):
+                    z = zvals[nc]
+                    latcut_xy = latcuts_xy_planes(lattice, nc, Nx, Ny, Nz)
                     if ax == ax2:
                         ax.set_title(
-                            "nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(
+                            "nn_delta_e = {}, time = {:.3e}, nstep = {}\nz = {}".format(
                                 nn_delta_e, time, nstep, z
                             )
                         )
                     else:
-                        ax.set_title(f"nz = {z}")
-                    ax_imgs[nz].set_data(latcut_xy)
+                        ax.set_title(f"z = {z}")
+                    ax_imgs[nc].set_data(latcut_xy)
                 if args.save_plots:
                     plt.savefig(data_dir / f"{nstep:05d}.png")
                 plt.pause(0.01)
 
     if args.do_plots:
         ax_set = np.asarray(((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)))
-        for nz, ax in enumerate(np.ndarray.flatten(ax_set)):
-            z = zvals[nz]
-            latcut_xy = latcuts_xy_planes(lattice, nz, Nx, Ny, Nz)
+        for nc, ax in enumerate(np.ndarray.flatten(ax_set)):
+            z = zvals[nc]
+            latcut_xy = latcuts_xy_planes(lattice, nc, Nx, Ny, Nz)
             if ax == ax2:
                 ax.set_title(
-                    "nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(
+                    "nn_delta_e = {}, time = {:.3e}, nstep = {}\nz = {}".format(
                         nn_delta_e, time, nstep, z
                     )
                 )
             else:
-                ax.set_title(f"nz = {z}")
-                ax_imgs[nz].set_data(latcut_xy)
+                ax.set_title(f"z = {z}")
+                ax_imgs[nc].set_data(latcut_xy)
 
     av_dt = np.mean(timestep_array)
     print(f"{len(timestep_array)} time steps")
