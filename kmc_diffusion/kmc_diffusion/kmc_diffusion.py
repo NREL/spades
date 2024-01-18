@@ -19,18 +19,18 @@ module_dir = pathlib.Path(inspect.getfile(kmcd)).parents[0]
 base_dir = module_dir.parents[0]
 
 
-def make_lattice(nx, Ny, nz, f_vacant):
+def make_lattice(nx, ny, nz, f_vacant):
     """Make the lattice."""
     # f_vacant = fraction of vacant sites
     # Use ASE to create a simple cubic lattice and make N on the bottom
     # for what ultimately is going to be an alternating N-B-N-B surface
     spacing = 1
     fullcell = bulk("O", "sc", a=spacing, cubic=True)  # Here 'O' means "occupied"
-    lattice = fullcell.repeat((nx, Ny, nz))
+    lattice = fullcell.repeat((nx, ny, nz))
     lattice.set_pbc((True, True, True))
 
     xvec = np.arange(0, nx, spacing)
-    yvec = np.arange(0, Ny, spacing)
+    yvec = np.arange(0, ny, spacing)
     zvec = np.arange(0, nz, spacing)
 
     # print(xvec)
@@ -41,13 +41,14 @@ def make_lattice(nx, Ny, nz, f_vacant):
     nl = NeighborList(cutoff_list, self_interaction=False, bothways=True)
     nl.update(lattice)
     print("Neighborlist:")
-    # for i in range(nx*Ny*nz):
+    # for i in range(nx*ny*nz):
     #  indices, offsets = nl.get_neighbors(i)
     #  print(i, indices)
 
-    # Initialize the defect-containing cell by randomly setting sites to 'Ar' with probability f_vacant
-    # Initialize random number generator
-    for i in range(nx * Ny * nz):
+    # Initialize the defect-containing cell by randomly setting sites
+    # to 'Ar' with probability f_vacant. Initialize random number
+    # generator
+    for i in range(nx * ny * nz):
         if random.random() < f_vacant:
             lattice.symbols[i] = "Ar"
 
@@ -60,9 +61,9 @@ def make_lattice(nx, Ny, nz, f_vacant):
         site = 'Ar'
       else:
         site = 'O'
-      for ny in range(Ny):
+      for ny in range(ny):
         for nz in range(nz):
-          i = Ny*nz*nx +  nz*ny + nz
+          i = ny*nz*nx +  nz*ny + nz
           lattice.symbols[i] = site
     """
 
@@ -83,9 +84,11 @@ def build_site_events(i, lattice, nl, ratelist, beta, nn_delta_e, ndim):
         for j in indices:
             if (
                 lattice.symbols[j] == "O"
-            ):  # position j is 'O' so we can try to move the vacancy there
+            ):  # position j is 'O' so we can try to move the vacancy
+                # there
                 nneighbors = 0
-                # See if site j has more than 1 non-Ar neighbor to keep us from "diffusing" into thin air
+                # See if site j has more than 1 non-Ar neighbor to
+                # keep us from "diffusing" into thin air
                 jindices, joffsets = nl.get_neighbors(j)
                 for k in jindices:
                     if (
@@ -222,6 +225,8 @@ def do_event_at_site(
     i, lattice, nl, ratelist, beta, nn_delta_e, ndim, site_events, propensity
 ):
     """
+    Perform event at a site.
+
     Pick from the possible events at site i, update the lattice with the event
     that was chosen, then update the site propensities for site i, the other site (j)
     and the unique neighbors of i and j.
@@ -267,18 +272,21 @@ def do_event_at_site(
     return propensity, site_events
 
 
-def latcuts_xy_planes(lattice, nc, nx, Ny, nz):
-    latcut_xy = np.zeros((nx, Ny))
-    for nx in range(nx):
-        for ny in range(Ny):
-            index = Ny * nz * nx + nz * ny + nc
+def latcuts_xy_planes(lattice, nc, nx, ny, nz):
+    """Return lattice cut plane."""
+    latcut_xy = np.zeros((nx, ny))
+    for i in range(nx):
+        for j in range(ny):
+            index = ny * nz * i + nz * j + nc
             ltype = 0 if lattice.symbols[index] == "Ar" else 1
-            latcut_xy[nx][ny] = ltype
+            latcut_xy[i][j] = ltype
     return latcut_xy
 
 
 def main():
     """
+    Perform KMC calculation.
+
     Simple prototype to make a lattice with vacancies and vacancy diffusion
     Occupied = 'O', Unoccupied or vacant = 'Ar' - lets us use ase to make the neighbor list.
     """
@@ -297,9 +305,9 @@ def main():
     # enter m_O and m_C in molar units then convert to kg/atom
     # and enter P_O and P_C in bar and convert to SI unit.
     # convert g/mol to kg/atom
-    avogadro = 6.02214076e23
-    gpermol_to_kgperatom = 1.0e-3 / avogadro
-    bar_to_pascals = 1.0e5  # 1 bar = 10^5 Pa
+    # avogadro = 6.02214076e23
+    # gpermol_to_kgperatom = 1.0e-3 / avogadro
+    # bar_to_pascals = 1.0e5  # 1 bar = 10^5 Pa
     kB = 1.380649e-23  # Boltzmann's constant in J/K
     ev_to_J = 1.602176634e-19  # Convert eV to J
 
@@ -317,10 +325,10 @@ def main():
 
     # Set some lattice parameters
     nx = 9
-    Ny = 9
+    ny = 9
     # nz = 9 or a multiple is nice for later because this code will display a 3x3 grid of XY slice
     nz = 9
-    Nsites = nx * Ny * nz
+    nsites = nx * ny * nz
     ndim = 6  # Number of nearest neighbors depending on the number of active dimensions (2, 4, 6)
     f_vacant = 0.2  # Fraction of sites wtih vacancies
 
@@ -357,16 +365,17 @@ def main():
     print(f"End criterion is {end_criterion}, maxval = {maxval}")
 
     # Randomly place vacancies (see function for a commented out example of making a bilayer)
-    lattice, nl, X, Y, Z = make_lattice(nx, Ny, nz, f_vacant)
-    lattice_info = [
-        X,
-        Y,
-        nx,
-        Ny,
-        nz,
-    ]  # Convenient list of necessary lattice parameters for some functions
+    lattice, nl, xc, yc, zc = make_lattice(nx, ny, nz, f_vacant)
+    # Convenient list of necessary lattice parameters for some functions
+    # lattice_info = [
+    #     xc,
+    #     yc,
+    #     nx,
+    #     ny,
+    #     nz,
+    # ]
 
-    xmg, ymg = np.meshgrid(X, Y)
+    xmg, ymg = np.meshgrid(xc, yc)
 
     print("Initial lattice:")
     nO, nAr = atom_counts(lattice, "O", "Ar")
@@ -410,7 +419,7 @@ def main():
     # Here do stuff that will be in a loop
     # Set the max time to be the expected number of vacancies divided by the maximum rate, time
     # the number of hopping events we would expect
-    # tmax = (nx*Ny*nz)*f_vacant/maxrate
+    # tmax = (nx*ny*nz)*f_vacant/maxrate
     print(f"1/maxrate = {1.0 / maxrate}")
     time = 0.0
 
@@ -433,7 +442,7 @@ def main():
 
         for nc, ax in enumerate(np.ndarray.flatten(ax_set)):
             z = zvals[nc]
-            latcut_xy = latcuts_xy_planes(lattice, nc, nx, Ny, nz)
+            latcut_xy = latcuts_xy_planes(lattice, nc, nx, ny, nz)
             if ax == ax2:
                 ax.set_title(f"time = {0.0:.2e}\nz = {z}")
             else:
@@ -444,22 +453,22 @@ def main():
             plt.savefig(data_dir / f"{0:05d}.png")
         plt.pause(1)
 
-    # Define a list with Nsites elements. Each element is itself a list of the possible events at
+    # Define a list with nsites elements. Each element is itself a list of the possible events at
     # the site: [type, rate, i, j, k,...]. So site_events[i] = [[event_1],[event_2],...,[final_event] ]
     # If there are no events at site i, then site_events[i] = [] - a list with no elements
-    site_events = [[] for i in range(Nsites)]
-    # for i in range(Nsites):
+    site_events = [[] for i in range(nsites)]
+    # for i in range(nsites):
     #  site_events.append([])
 
     # Define an array that contains the propensity for each site
-    propensity = np.zeros(Nsites)
+    propensity = np.zeros(nsites)
 
     # print("propensity: ",propensity)
     # print("site_events: ",site_events)
 
     # Now fill in propensity and site_events
     # ptot = np.sum(propensity)
-    for i in range(Nsites):
+    for i in range(nsites):
         psum, events = build_site_events(
             i, lattice, nl, ratelist, beta, nn_delta_e, ndim
         )
@@ -512,7 +521,7 @@ def main():
                 ax_set = np.asarray(((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)))
                 for nc, ax in enumerate(np.ndarray.flatten(ax_set)):
                     z = zvals[nc]
-                    latcut_xy = latcuts_xy_planes(lattice, nc, nx, Ny, nz)
+                    latcut_xy = latcuts_xy_planes(lattice, nc, nx, ny, nz)
                     if ax == ax2:
                         ax.set_title(
                             "nn_delta_e = {}, time = {:.3e}, nstep = {}\nz = {}".format(
@@ -530,7 +539,7 @@ def main():
         ax_set = np.asarray(((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)))
         for nc, ax in enumerate(np.ndarray.flatten(ax_set)):
             z = zvals[nc]
-            latcut_xy = latcuts_xy_planes(lattice, nc, nx, Ny, nz)
+            latcut_xy = latcuts_xy_planes(lattice, nc, nx, ny, nz)
             if ax == ax2:
                 ax.set_title(
                     "nn_delta_e = {}, time = {:.3e}, nstep = {}\nz = {}".format(
