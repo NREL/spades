@@ -285,11 +285,11 @@ def latcuts_xyz_planes(lattice, Nx, Ny, Nz):
     return latcut_xy, latcut_xz, latcut_yz
 
 
-def latcuts_xy_planes(lattice, nz, Nx, Ny, Nz):
+def latcuts_xy_planes(lattice, nc, Nx, Ny, Nz):
     latcut_xy = np.zeros((Nx, Ny))
     for nx in range(Nx):
         for ny in range(Ny):
-            index = Ny * Nz * nx + Nz * ny + nz
+            index = Ny * Nz * nx + Nz * ny + nc
             ltype = 0 if lattice.symbols[index] == "Ar" else 1
             latcut_xy[nx][ny] = ltype
     return latcut_xy
