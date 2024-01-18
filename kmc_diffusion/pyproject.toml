@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "kmc-diffusion"
+version = "0.1.0"
+description = "Example KMC diffusion code"
+authors = ["Ross Larsen", "Marc T. Henry de Frahan"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+ase = "^3.22.1"
+
+[tool.poetry.scripts]
+diffusion = "kmc_diffusion.kmc_diffusion:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

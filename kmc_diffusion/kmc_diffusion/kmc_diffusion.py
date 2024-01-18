@@ -407,21 +407,21 @@ def main():
     print("skip = ",skip)
     zvals = range(0,Nz,skip)
     print(*zvals)
-    fig, ((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)) = plt.subplots(nrows=3,ncols=3,sharex=True,sharey=True)#,constrained_layout=True)
-    plt.subplots_adjust(hspace=0.4,wspace=0.)
-    ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
+    # fig, ((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)) = plt.subplots(nrows=3,ncols=3,sharex=True,sharey=True)#,constrained_layout=True)
+    # plt.subplots_adjust(hspace=0.4,wspace=0.)
+    # ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
 
-    nz = 0
-    for ax in np.ndarray.flatten(ax_set):
-      z = zvals[nz]
-      latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
-      if (ax == ax2):
-        ax.set_title("time = {:.2e}\nnz = {}".format(0.0,z))
-      else:
-        ax.set_title("nz = {}".format(z))
-      ax.imshow(latcut_xy)
-      nz = nz + 1
-    plt.pause(1)
+    # nz = 0
+    # for ax in np.ndarray.flatten(ax_set):
+    #   z = zvals[nz]
+    #   latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
+    #   if (ax == ax2):
+    #     ax.set_title("time = {:.2e}\nnz = {}".format(0.0,z))
+    #   else:
+    #     ax.set_title("nz = {}".format(z))
+    #   ax.imshow(latcut_xy)
+    #   nz = nz + 1
+    # plt.pause(1)
 
     # Define a list with Nsites elements. Each element is itself a list of the possible events at
     # the site: [type, rate, i, j, k,...]. So site_events[i] = [[event_1],[event_2],...,[final_event] ]
@@ -476,34 +476,34 @@ def main():
         otime = 0.0
         nz = 0
 
-        ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
-        for ax in np.ndarray.flatten(ax_set):
-          z = zvals[nz]
-          latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
-          if (ax == ax2):
-            ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
-          else:
-            ax.set_title("nz = {}".format(z))
-          ax.imshow(latcut_xy)
-          nz = nz + 1
-        plt.pause(0.01)
+        # ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
+        # for ax in np.ndarray.flatten(ax_set):
+        #   z = zvals[nz]
+        #   latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
+        #   if (ax == ax2):
+        #     ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
+        #   else:
+        #     ax.set_title("nz = {}".format(z))
+        #   ax.imshow(latcut_xy)
+        #   nz = nz + 1
+        # plt.pause(0.01)
 
-    ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
-    nz = 0
-    for ax in np.ndarray.flatten(ax_set):
-      z = zvals[nz]
-      latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
-      if (ax == ax2):
-        ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
-      else:
-        ax.set_title("nz = {}".format(z))
-        ax.imshow(latcut_xy)
-      nz = nz + 1
+    # ax_set = np.asarray(((ax1,ax2,ax3),(ax4,ax5,ax6),(ax7,ax8,ax9)))
+    # nz = 0
+    # for ax in np.ndarray.flatten(ax_set):
+    #   z = zvals[nz]
+    #   latcut_xy = latcuts_xy_planes(lattice,nz,Nx,Ny,Nz)
+    #   if (ax == ax2):
+    #     ax.set_title("nn_delta_e = {}, time = {:.3e}, nstep = {}\nnz = {}".format(nn_delta_e,time,nstep,z))
+    #   else:
+    #     ax.set_title("nz = {}".format(z))
+    #     ax.imshow(latcut_xy)
+    #   nz = nz + 1
 
     av_dt = np.mean(timestep_array)
     print("{} time steps".format(len(timestep_array)))
     print("Average time step = {:e}".format(av_dt))
-    plt.show()
+    #plt.show()
 
 if __name__=="__main__":
     main()
