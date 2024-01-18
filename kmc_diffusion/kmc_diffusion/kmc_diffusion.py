@@ -1,22 +1,17 @@
 import argparse
+import inspect
+import pathlib
+import random
+from bisect import bisect
+from copy import copy as copy
+from timeit import default_timer as timer
+
+import matplotlib.pyplot as plt
+import numpy as np
 from ase.build import bulk
 from ase.neighborlist import NeighborList
-import numpy as np
-import random
-import matplotlib.pyplot as plt
-from copy import copy as copy
-from itertools import accumulate
-from bisect import bisect
-import pathlib
-import inspect
-
 
 # This import registers the 3D projection, but is otherwise unused.
-from mpl_toolkits import mplot3d
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import numpy as np
-from timeit import default_timer as timer
 import kmc_diffusion as kmcd
 
 module_dir = pathlib.Path(inspect.getfile(kmcd)).parents[0]
@@ -131,7 +126,7 @@ def atom_counts(lattice, type1, type2):
         elif atomtype == type2:
             two_count = two_count + 1
 
-    print("{} occupied and {} unoccupied sites".format(one_count, two_count))
+    print(f"{one_count} occupied and {two_count} unoccupied sites")
     return one_count, two_count
 
 
@@ -165,7 +160,6 @@ def KMC_find_site(propensity, kmc_algorithm="rfKMC"):
         rate. Here we will take rmax to be the maximum of all the rates in our list. This appears
         to be an arbitrary choice...so I'll do this.
     """
-
     if (
         kmc_algorithm != "FirstReaction"
         and kmc_algorithm != "rfKMC"
@@ -238,7 +232,7 @@ def do_event_at_site(
     if enumber == len(cumulative_props):
         enumber = len(cumulative_props) - 1
     event = site_events[i][enumber]
-    print("...doing event {} at site {}: {}".format(enumber, i, event))
+    print(f"...doing event {enumber} at site {i}: {event}")
 
     # Update lattice sites i and j from site_events[i][enumber
     site_i = event[2]
@@ -347,7 +341,7 @@ def main():
         kB * T / ev_to_J
     )  # Convert kT to eV (means we should use energies in eV everywhere)
     beta = 1.0 / kT
-    print("T = 300 K, so kT = {} eV (beta = {} / eV)".format(kT, beta))
+    print(f"T = 300 K, so kT = {kT} eV (beta = {beta} / eV)")
 
     # Set some lattice parameters
     Nx = 9
@@ -368,7 +362,7 @@ def main():
         0.03  # absolute value of 1/2 the bond energy in eV (bond en = negative)
     )
     print(
-        "T = 300 K so nn_delta_e ({} eV)//kT = {}".format(nn_delta_e, nn_delta_e / kT)
+        f"T = 300 K so nn_delta_e ({nn_delta_e} eV)//kT = {nn_delta_e / kT}"
     )
 
     # attempt frequency (say 10^12 / s) ~vibrational frequencies
@@ -378,7 +372,7 @@ def main():
     E_hop_not = 0.2  # interbasin hopping barrier in eV. This could be
     hop_rate_not = attempt_freq * np.exp(-beta * E_hop_not)
     print(
-        "Rate of Ar hops with no site energy changes would be {:e}".format(hop_rate_not)
+        f"Rate of Ar hops with no site energy changes would be {hop_rate_not:e}"
     )
 
     kmc_algorithm = "rfKMC"
@@ -392,7 +386,7 @@ def main():
     # end_criterion = 'STEPS'
     # maxval = 20
 
-    print("End criterion is {}, maxval = {}".format(end_criterion, maxval))
+    print(f"End criterion is {end_criterion}, maxval = {maxval}")
 
     # Randomly place vacancies (see function for a commented out example of making a bilayer)
     lattice, nl, X, Y, Z = make_lattice(Nx, Ny, Nz, f_vacant)
@@ -438,9 +432,9 @@ def main():
 
     ratelist = [hop_rate_not]
     maxrate = max(ratelist)
-    print("The largest rate coefficient from ratelist is is {:.2e} / s".format(maxrate))
+    print(f"The largest rate coefficient from ratelist is is {maxrate:.2e} / s")
 
-    print("Rate parameters: {}".format(ratelist))
+    print(f"Rate parameters: {ratelist}")
 
     # Set up a run for some length of time (define it in terms of number of diffusers and in terms of
     # 1/maxrate?
@@ -449,12 +443,12 @@ def main():
     # Set the max time to be the expected number of vacancies divided by the maximum rate, time
     # the number of hopping events we would expect
     # tmax = (Nx*Ny*Nz)*f_vacant/maxrate
-    print("1/maxrate = {}".format(1.0 / maxrate))
+    print(f"1/maxrate = {1.0 / maxrate}")
     time = 0.0
 
     output_time = 0.0
     otime = 0.0
-    print("Put out some information every {} seconds".format(output_time))
+    print(f"Put out some information every {output_time} seconds")
 
     # Plot a 3x3 grid of XY lattice planes spread over 9 z values
     skip = int(float(Nz) / 9.0)
@@ -473,9 +467,9 @@ def main():
             z = zvals[nz]
             latcut_xy = latcuts_xy_planes(lattice, nz, Nx, Ny, Nz)
             if ax == ax2:
-                ax.set_title("time = {:.2e}\nnz = {}".format(0.0, z))
+                ax.set_title(f"time = {0.0:.2e}\nnz = {z}")
             else:
-                ax.set_title("nz = {}".format(z))
+                ax.set_title(f"nz = {z}")
             img = ax.imshow(latcut_xy)
             ax_imgs.append(img)
         if args.save_plots:
@@ -521,7 +515,7 @@ def main():
         site, dt = KMC_find_site(propensity, "rfKMC")
         if site != -1:
             print(
-                "We will do an event at site {} and increment dt by {}".format(site, dt)
+                f"We will do an event at site {site} and increment dt by {dt}"
             )
             propensity, site_events = do_event_at_site(
                 site,
@@ -545,7 +539,7 @@ def main():
 
         otime += dt
         if otime >= output_time:
-            print("Time = {}".format(time))
+            print(f"Time = {time}")
             otime = 0.0
 
             if args.do_plots:
@@ -560,7 +554,7 @@ def main():
                             )
                         )
                     else:
-                        ax.set_title("nz = {}".format(z))
+                        ax.set_title(f"nz = {z}")
                     ax_imgs[nz].set_data(latcut_xy)
                 if args.save_plots:
                     plt.savefig(data_dir / f"{nstep:05d}.png")
@@ -578,12 +572,12 @@ def main():
                     )
                 )
             else:
-                ax.set_title("nz = {}".format(z))
+                ax.set_title(f"nz = {z}")
                 ax_imgs[nz].set_data(latcut_xy)
 
     av_dt = np.mean(timestep_array)
-    print("{} time steps".format(len(timestep_array)))
-    print("Average time step = {:e}".format(av_dt))
+    print(f"{len(timestep_array)} time steps")
+    print(f"Average time step = {av_dt:e}")
 
     end = timer()
     print(f"Elapsed time {end - start:.2f} s")
