@@ -12,6 +12,7 @@ from mpl_toolkits import mplot3d
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
+from timeit import default_timer as timer
 
 
 def make_lattice(Nx,Ny,Nz,f_vacant):
@@ -288,6 +289,7 @@ def main():
     Simple prototype to make a lattice with vacancies and vacancy diffusion
     Occupied = 'O', Unoccupied or vacant = 'Ar' - lets us use ase to make the neighbor list
     '''
+    start = timer()
 
     #Set microscopic parameters that give various rates and set sticking probabilities for deposition
 
@@ -505,6 +507,9 @@ def main():
     print("Average time step = {:e}".format(av_dt))
     #plt.show()
 
+    end = timer()
+    print(f"Elapsed time {end - start:.2f} s")
+        
 if __name__=="__main__":
     main()
 
