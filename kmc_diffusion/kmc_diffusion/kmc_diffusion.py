@@ -1,3 +1,4 @@
+"""KMC diffusion mini-app."""
 import argparse
 import inspect
 import pathlib
@@ -19,6 +20,7 @@ base_dir = module_dir.parents[0]
 
 
 def make_lattice(Nx, Ny, Nz, f_vacant):
+    """Make the lattice."""
     # f_vacant = fraction of vacant sites
     # Use ASE to create a simple cubic lattice and make N on the bottom
     # for what ultimately is going to be an alternating N-B-N-B surface
