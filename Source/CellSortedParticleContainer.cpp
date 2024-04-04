@@ -76,7 +76,7 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
     //                     p.idata(particles::IntData::type_id) =
-    //                         static_cast<int>(particles::MessageType::message);
+    //                         MessageTypes::message;
     //                     p.idata(particles::IntData::sender) =
     //                     box.index(iv_src);
     //                     p.idata(particles::IntData::receiver) =
@@ -106,7 +106,7 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
     //                     p.idata(particles::IntData::type_id) =
-    //                         static_cast<int>(particles::MessageType::message);
+    //                         MessageTypes::message;
     //                     p.idata(particles::IntData::sender) =
     //                     box.index(iv_src);
     //                     p.idata(particles::IntData::receiver) =
@@ -137,7 +137,7 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
     //                     p.idata(particles::IntData::type_id) =
-    //                         static_cast<int>(particles::MessageType::message);
+    //                         MessageTypes::message;
     //                     p.idata(particles::IntData::sender) =
     //                     box.index(iv_src);
     //                     p.idata(particles::IntData::receiver) =
@@ -167,7 +167,7 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
     //                     p.idata(particles::IntData::type_id) =
-    //                         static_cast<int>(particles::MessageType::message);
+    //                         MessageTypes::message;
     //                     p.idata(particles::IntData::sender) =
     //                     box.index(iv_src);
     //                     p.idata(particles::IntData::receiver) =
@@ -215,8 +215,7 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
                     NextID();
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-                p.idata(particles::IntData::type_id) =
-                    static_cast<int>(particles::MessageType::undefined);
+                p.idata(particles::IntData::type_id) = MessageTypes::undefined;
                 p.idata(particles::IntData::sender) = box.index(iv);
                 p.idata(particles::IntData::receiver) = box.index(iv);
 
@@ -232,7 +231,7 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
                     p.rdata(particles::RealData::timestamp) =
                         random_exponential(1.0) + lookahead;
                     p.idata(particles::IntData::type_id) =
-                        static_cast<int>(particles::MessageType::message);
+                        MessageTypes::message;
                 }
 
                 pti.push_back(p);
@@ -287,8 +286,7 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
             if (p.rdata(RealData::timestamp) < gvt) {
-                p.idata(IntData::type_id) =
-                    static_cast<int>(MessageType::undefined);
+                p.idata(IntData::type_id) = MessageTypes::undefined;
             }
         });
     }

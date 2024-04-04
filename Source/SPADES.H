@@ -157,14 +157,15 @@ private:
     amrex::Real m_stop_time = std::numeric_limits<amrex::Real>::max();
 
     // variable names for output
-    amrex::Vector<std::string> m_tw_varnames;
+    amrex::Vector<std::string> m_spades_varnames;
     amrex::Vector<std::string> m_state_varnames;
     // amrex::Vector<std::string> m_microdata_varnames;
     // amrex::Vector<std::string> m_deriveddata_varnames;
-    // amrex::Vector<std::string> m_idata_varnames;
+    amrex::Vector<std::string> m_events_varnames;
 
     // array of multifabs to store the solution at each level of refinement
     amrex::Vector<amrex::MultiFab> m_state;
+    amrex::Vector<amrex::iMultiFab> m_events;
     // amrex::Vector<amrex::MultiFab> m_f;
     // amrex::Vector<amrex::MultiFab> m_eq;
     // amrex::Vector<amrex::MultiFab> m_derived;

@@ -51,7 +51,7 @@ struct MakeAntiMessage
     operator()(const P& p1, P& p2) const
     {
         Copy()(p1, p2);
-        p2.idata(IntData::type_id) = MessageType::anti_message;
+        p2.idata(IntData::type_id) = MessageTypes::anti_message;
     }
 };
 

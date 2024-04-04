@@ -14,9 +14,19 @@ SPADES::SPADES()
     }
 
     m_state_varnames.push_back("lvt");
+    m_events_varnames.push_back("anti_message");
+    m_events_varnames.push_back("undefined");
+    m_events_varnames.push_back("message");
+    m_events_varnames.push_back("processed");
+    AMREX_ALWAYS_ASSERT(
+        m_events_varnames.size() == particles::MessageTypes::ntypes);
     for (const auto& vname : m_state_varnames) {
-        m_tw_varnames.push_back(vname);
+        m_spades_varnames.push_back(vname);
     }
+    for (const auto& vname : m_events_varnames) {
+        m_spades_varnames.push_back(vname);
+    }
+
     m_isteps.resize(nlevs_max, 0);
     m_nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= max_level; ++lev) {
@@ -29,6 +39,7 @@ SPADES::SPADES()
     m_dts.resize(nlevs_max, constants::LARGE_NUM);
 
     m_state.resize(nlevs_max);
+    m_events.resize(nlevs_max);
     m_plt_mf.resize(nlevs_max);
 }
 
@@ -164,7 +175,8 @@ void SPADES::evolve()
 
 // advance a level by dt
 // includes a recursive call for finer levels
-void SPADES::time_step(const int lev, const amrex::Real time, const int iteration)
+void SPADES::time_step(
+    const int lev, const amrex::Real time, const int iteration)
 {
     BL_PROFILE("SPADES::time_step()");
     if (m_regrid_int > 0) // We may need to regrid
@@ -309,7 +321,7 @@ void SPADES::consume_particles(const int lev)
                     // only process messages, fixme: get a pointer to the
                     // messages and skip the test
                     if (p.idata(particles::IntData::type_id) ==
-                        static_cast<int>(particles::MessageType::message)) {
+                        particles::MessageTypes::message) {
 
                         if (sarr(iv, constants::LVT_IDX) >
                             p.rdata(particles::RealData::timestamp)) {
@@ -326,7 +338,7 @@ void SPADES::consume_particles(const int lev)
                         sarr(iv, constants::LVT_IDX) =
                             p.rdata(particles::RealData::timestamp);
                         p.idata(particles::IntData::type_id) =
-                            static_cast<int>(particles::MessageType::processed);
+                            particles::MessageTypes::processed;
                     }
                 }
 
@@ -337,12 +349,11 @@ void SPADES::consume_particles(const int lev)
 
                     if (cnt < 10) {
                         if (p.idata(particles::IntData::type_id) ==
-                            static_cast<int>(
-                                particles::MessageType::undefined)) {
+
+                            particles::MessageTypes::undefined) {
 
                             p.idata(particles::IntData::type_id) =
-                                static_cast<int>(
-                                    particles::MessageType::message);
+                                particles::MessageTypes::message;
                             p.rdata(particles::RealData::timestamp) =
                                 sarr(iv, constants::LVT_IDX) +
                                 random_exponential(1.0) + lookahead;
@@ -441,11 +452,16 @@ void SPADES::MakeNewLevelFromScratch(
     m_state[lev].define(
         ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
 
+    m_events[lev].define(
+        ba, dm, particles::MessageTypes::ntypes, m_state[lev].nGrow(),
+        amrex::MFInfo());
+
     m_ts_new[lev] = time;
     m_ts_old[lev] = constants::LOW_NUM;
 
     // Initialize the data
     initialize_state(lev);
+    m_events[lev].setVal(0.0);
 
     // Update particle container
     m_pc->Define(Geom(lev), dm, ba);
@@ -479,6 +495,7 @@ void SPADES::ClearLevel(int lev)
 {
     BL_PROFILE("SPADES::ClearLevel()");
     m_state[lev].clear();
+    m_events[lev].clear();
     m_plt_mf[lev].clear();
 }
 
@@ -498,7 +515,7 @@ void SPADES::set_ics()
 bool SPADES::check_field_existence(const std::string& name)
 {
     BL_PROFILE("SPADES::check_field_existence()");
-    const auto vnames = {m_state_varnames};
+    const auto vnames = {m_state_varnames, m_events_varnames};
     return std::any_of(vnames.begin(), vnames.end(), [=](const auto& vn) {
         return get_field_component(name, vn) != -1;
     });
@@ -534,12 +551,23 @@ SPADES::get_field(const std::string& name, const int lev, const int ngrow)
     if (srccomp_sd != -1) {
         amrex::MultiFab::Copy(*mf, m_state[lev], srccomp_sd, 0, nc, ngrow);
     }
+    const int srccomp_id = get_field_component(name, m_events_varnames);
+    if (srccomp_id != -1) {
+        auto const& events_arrs = m_events[lev].const_arrays();
+        auto const& mf_arrs = mf->arrays();
+        amrex::ParallelFor(
+            *mf, mf->nGrowVect(), m_events[lev].nComp(),
+            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+                mf_arrs[nbx](i, j, k, n) = events_arrs[nbx](i, j, k, n);
+            });
+        amrex::Gpu::synchronize();
+    }
     return mf;
 }
 
 amrex::Vector<std::string> SPADES::plot_file_var_names() const
 {
-    return m_tw_varnames;
+    return m_spades_varnames;
 }
 
 std::string SPADES::plot_file_name(const int step) const
@@ -565,6 +593,15 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
         amrex::MultiFab::Copy(
             m_plt_mf[lev], m_state[lev], 0, cnt, m_state[lev].nComp(), 0);
         cnt += m_state[lev].nComp();
+        auto const& events_arrs = m_events[lev].const_arrays();
+        auto const& plt_mf_arrs = m_plt_mf[lev].arrays();
+        amrex::ParallelFor(
+            m_plt_mf[lev], m_plt_mf[lev].nGrowVect(), m_events[lev].nComp(),
+            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+                plt_mf_arrs[nbx](i, j, k, n + cnt) =
+                    events_arrs[nbx](i, j, k, n);
+            });
+        amrex::Gpu::synchronize();
 
         r.push_back(&m_plt_mf[lev]);
     }
@@ -577,6 +614,9 @@ void SPADES::write_plot_file()
     const std::string& plotfilename = plot_file_name(m_isteps[0]);
     const auto& mf = plot_file_mf();
     const auto& varnames = plot_file_var_names();
+    for (const auto& vn : varnames) {
+        amrex::Print() << "vn: " << vn << std::endl;
+    }
 
     amrex::Print() << "Writing plot file " << plotfilename << " at time "
                    << m_ts_new[0] << std::endl;
