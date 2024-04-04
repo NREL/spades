@@ -55,13 +55,23 @@ struct MakeAntiMessage
     }
 };
 
-struct MsgAntiMsgPair
+struct Create
 {
     template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
-    operator()(const P& p1, const P& p2) const
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
+        P& p,
+        const amrex::Real timestamp,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
+        const amrex::IntVect& iv) const
     {
-        amrex::Abort("not implemented yet");
+        AMREX_ASSERT(p.idata(IntData::type_id) == MessageTypes::undefined);
+
+        p.idata(IntData::type_id) = MessageTypes::message;
+        p.rdata(RealData::timestamp) = timestamp;
+
+        AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)
+        AMREX_D_TERM(p.idata(IntData::i) = iv[0];, p.idata(IntData::j) = iv[1];
+                     , p.idata(IntData::k) = iv[2];)
     }
 };
 

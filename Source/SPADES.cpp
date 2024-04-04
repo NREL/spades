@@ -253,7 +253,7 @@ void SPADES::advance(
 {
     BL_PROFILE("SPADES::advance()");
 
-    consume_particles(lev);
+    process_events(lev);
 
     update_gvt(lev);
 
@@ -318,9 +318,9 @@ void SPADES::count_events()
     }
 }
 
-void SPADES::consume_particles(const int lev)
+void SPADES::process_events(const int lev)
 {
-    BL_PROFILE("SPADES::consume_particles()");
+    BL_PROFILE("SPADES::process_events()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
         m_state_ngrow == m_pc->ngrow(),
         "Particle and state cells must be equal for now");
@@ -387,45 +387,43 @@ void SPADES::consume_particles(const int lev)
                                 << "I got a message from the past" << std::endl;
                         }
 
+                        // process the event
                         sarr(iv, constants::LVT_IDX) =
                             p.rdata(particles::RealData::timestamp);
                         p.idata(particles::IntData::type_id) =
                             particles::MessageTypes::processed;
-                    }
-                }
 
-                int cnt = 0;
-                for (int pidx = 0; pidx < np; pidx++) {
-                    particles::CellSortedParticleContainer::ParticleType& p =
-                        pstruct[l_cell_list[pidx]];
+                        // find undefined event to add to the queue
+                        // fixme just get a pointer to this thing
+                        // fixme add abort if you can't find an undefined
+                        // particles
+                        for (int pidx2 = 0; pidx2 < np; pidx2++) {
+                            particles::CellSortedParticleContainer::
+                                ParticleType& p2 = pstruct[l_cell_list[pidx2]];
+                            if (p2.idata(particles::IntData::type_id) ==
+                                particles::MessageTypes::undefined) {
 
-                    if (cnt < 10) {
-                        if (p.idata(particles::IntData::type_id) ==
+                                amrex::IntVect iv_dest(AMREX_D_DECL(
+                                    amrex::Random_int(dhi[0] - dlo[0] + 1) +
+                                        dlo[0],
+                                    amrex::Random_int(dhi[1] - dlo[1] + 1) +
+                                        dlo[1],
+                                    amrex::Random_int(dhi[2] - dlo[2] + 1) +
+                                        dlo[2]));
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+                                    pos = {AMREX_D_DECL(
+                                        plo[0] + (iv_dest[0] + 0.5) * dx[0],
+                                        plo[1] + (iv_dest[1] + 0.5) * dx[1],
+                                        plo[2] + (iv_dest[2] + 0.5) * dx[2])};
+                                const amrex::Real ts =
+                                    sarr(iv, constants::LVT_IDX) +
+                                    random_exponential(1.0) + lookahead;
 
-                            particles::MessageTypes::undefined) {
-
-                            p.idata(particles::IntData::type_id) =
-                                particles::MessageTypes::message;
-                            p.rdata(particles::RealData::timestamp) =
-                                sarr(iv, constants::LVT_IDX) +
-                                random_exponential(1.0) + lookahead;
-                            amrex::IntVect iv_dest(AMREX_D_DECL(
-                                amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
-                                amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
-                                amrex::Random_int(dhi[2] - dlo[2] + 1) +
-                                    dlo[2]));
-                            AMREX_D_TERM(
-                                p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
-                                ,
-                                p.pos(1) = plo[1] + (iv_dest[1] + 0.5) * dx[1];
-                                ,
-                                p.pos(2) = plo[2] + (iv_dest[2] + 0.5) * dx[2];)
-                            AMREX_D_TERM(
-                                p.idata(particles::IntData::i) = iv_dest[0];
-                                , p.idata(particles::IntData::j) = iv_dest[1];
-                                , p.idata(particles::IntData::k) = iv_dest[2];)
-                            cnt++;
+                                particles::Create()(p2, ts, pos, iv_dest);
+                                break;
+                            }
                         }
+                        break; // only do 1 event
                     }
                 }
             });

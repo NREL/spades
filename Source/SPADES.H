@@ -103,8 +103,8 @@ private:
     // perform work after a time step
     void post_time_step();
 
-    // consume particles
-    void consume_particles(const int lev);
+    // process events
+    void process_events(const int lev);
 
     // update gvt
     void update_gvt(const int lev);
