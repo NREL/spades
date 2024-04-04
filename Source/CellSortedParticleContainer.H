@@ -1,0 +1,86 @@
+#ifndef CELLSORTEDPARTICLECONTAINER_H
+#define CELLSORTEDPARTICLECONTAINER_H
+#include <AMReX.H>
+#include <AMReX_AmrCore.H>
+#include <AMReX_AmrParGDB.H>
+#include <AMReX_NeighborParticles.H>
+#include "ParticleData.H"
+#include "CellList.H"
+#include "Utilities.H"
+
+namespace spades::particles {
+
+struct CheckPair
+{
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
+    operator()(const P& /*p1*/, const P& /*p2*/) const
+    {
+        return false;
+    }
+};
+
+/** Information for a particle container
+ *  \ingroup particles
+ */
+struct ParticleContainerInfo
+{
+    explicit ParticleContainerInfo(std::string basename);
+
+    ~ParticleContainerInfo();
+
+    //! Field name without state information
+    std::string m_basename;
+};
+
+class CellSortedParticleContainer
+    : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
+{
+public:
+    explicit CellSortedParticleContainer(
+        amrex::AmrParGDB* par_gdb, int ngrow = 0);
+
+    void initialize(const amrex::Real lookahead);
+
+    void assign_cell_lists();
+
+    void update_cell_lists();
+
+    void garbage_collect(const amrex::Real gvt);
+
+    const CellList<ParticleType>&
+    cell_lists(const int lev, const std::pair<int, int> index) const
+    {
+        return m_cell_lists[lev].at(index);
+    }
+
+    void write_plot_file(const std::string& plt_filename);
+
+    int ngrow() const { return m_ngrow; }
+
+protected:
+    //! Vectors of particle indices on a cell-by-cell basis
+    amrex::Vector<std::map<std::pair<int, int>, CellList<ParticleType>>>
+        m_cell_lists;
+
+    //! used to keep track of whether we need to rebuild the cell list
+    bool m_cell_lists_initialized = false;
+
+    amrex::BoxArray::RefID m_BARef;
+
+    amrex::DistributionMapping::RefID m_DMRef;
+
+private:
+    //! Data for particle container
+    ParticleContainerInfo m_info;
+
+    amrex::Vector<int> m_writeflags_real;
+    amrex::Vector<int> m_writeflags_int;
+
+    amrex::Vector<std::string> m_real_data_names;
+    amrex::Vector<std::string> m_int_data_names;
+
+    int m_ngrow;
+};
+} // namespace spades::particles
+#endif

@@ -1,0 +1,2 @@
+CEXE_sources += main.cpp CellSortedParticleContainer.cpp IC.cpp SPADES.cpp Utilities.cpp
+CEXE_headers += CellList.H CellSortedParticleContainer.H Constants.H Factory.H IC.H SPADES.H Utilities.H ParticleData.H ParticleOps.H
