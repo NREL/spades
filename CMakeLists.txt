@@ -30,7 +30,7 @@ set(SPADES_PRECISION "DOUBLE" CACHE STRING "Floating point precision SINGLE or D
 option(SPADES_ENABLE_HDF5 "Enable HDF5 library" OFF)
 option(SPADES_ENABLE_HDF5_ZFP "Enable ZFP compression in HDF5 library" OFF)
 
-#Options for C++
+# Options for C++
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
