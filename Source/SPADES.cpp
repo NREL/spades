@@ -397,65 +397,70 @@ void SPADES::process_events(const int lev)
                         // fixme just get a pointer to this thing
                         // fixme add abort if you can't find an undefined
                         // particles
+                        int pidx_undef1 = -1;
                         for (int pidx2 = 0; pidx2 < np; pidx2++) {
                             particles::CellSortedParticleContainer::
-                                ParticleType& p2 = pstruct[l_cell_list[pidx2]];
-                            if (p2.idata(particles::IntData::type_id) ==
+                                ParticleType& pl = pstruct[l_cell_list[pidx2]];
+                            if (pl.idata(particles::IntData::type_id) ==
                                 particles::MessageTypes::undefined) {
-
-                                amrex::IntVect iv_dest(AMREX_D_DECL(
-                                    amrex::Random_int(dhi[0] - dlo[0] + 1) +
-                                        dlo[0],
-                                    amrex::Random_int(dhi[1] - dlo[1] + 1) +
-                                        dlo[1],
-                                    amrex::Random_int(dhi[2] - dlo[2] + 1) +
-                                        dlo[2]));
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
-                                    pos = {AMREX_D_DECL(
-                                        plo[0] + (iv_dest[0] + 0.5) * dx[0],
-                                        plo[1] + (iv_dest[1] + 0.5) * dx[1],
-                                        plo[2] + (iv_dest[2] + 0.5) * dx[2])};
-                                const amrex::Real ts =
-                                    sarr(iv, constants::LVT_IDX) +
-                                    random_exponential(1.0) + lookahead;
-
-                                particles::Create()(
-                                    p2, ts, pos, iv_dest, box.index(iv),
-                                    box.index(iv_dest));
-
-                                // find _another_ undefined particle for the
-                                // antimessage fixme: oooff this is ugly
-                                for (int pidx3 = 0; pidx3 < np; pidx3++) {
-                                    particles::CellSortedParticleContainer::
-                                        ParticleType& p3 =
-                                            pstruct[l_cell_list[pidx3]];
-
-                                    if (p3.idata(particles::IntData::type_id) ==
-                                        particles::MessageTypes::undefined) {
-                                        amrex::GpuArray<
-                                            amrex::Real, AMREX_SPACEDIM>
-                                            anti_pos = {AMREX_D_DECL(
-                                                plo[0] + (iv[0] + 0.5) * dx[0],
-                                                plo[1] + (iv[1] + 0.5) * dx[1],
-                                                plo[2] +
-                                                    (iv[2] + 0.5) * dx[2])};
-
-                                        // This is weird. The antimessage
-                                        // position is iv but the receiver is
-                                        // still updated (we need to know who to
-                                        // send this to)
-                                        particles::Create()(
-                                            p3, ts, anti_pos, iv_dest,
-                                            box.index(iv), box.index(iv_dest));
-                                        p3.idata(particles::IntData::type_id) =
-                                            particles::MessageTypes::
-                                                anti_message;
-                                        break; // only create 1 anti-message
-                                    }
-                                }
-                                break; // only create 1 event
+                                pidx_undef1 = pidx2;
+                                break;
                             }
                         }
+                        AMREX_ALWAYS_ASSERT(pidx_undef1 > -1);
+
+                        particles::CellSortedParticleContainer::ParticleType&
+                            p2 = pstruct[l_cell_list[pidx_undef1]];
+                        amrex::IntVect iv_dest(AMREX_D_DECL(
+                            amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
+                            amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
+                            amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
+                            AMREX_D_DECL(
+                                plo[0] + (iv_dest[0] + 0.5) * dx[0],
+                                plo[1] + (iv_dest[1] + 0.5) * dx[1],
+                                plo[2] + (iv_dest[2] + 0.5) * dx[2])};
+                        const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
+                                               random_exponential(1.0) +
+                                               lookahead;
+
+                        particles::Create()(
+                            p2, ts, pos, iv_dest, box.index(iv),
+                            box.index(iv_dest));
+
+                        // find _another_ undefined particle for the
+                        // antimessage fixme: oooff this is ugly
+                        int pidx_undef2 = -1;
+                        for (int pidx2 = 0; pidx2 < np; pidx2++) {
+                            particles::CellSortedParticleContainer::
+                                ParticleType& pl = pstruct[l_cell_list[pidx2]];
+                            if (pl.idata(particles::IntData::type_id) ==
+                                particles::MessageTypes::undefined) {
+                                pidx_undef2 = pidx2;
+                                break;
+                            }
+                        }
+                        AMREX_ALWAYS_ASSERT(pidx_undef2 > -1);
+                        particles::CellSortedParticleContainer::ParticleType&
+                            p3 = pstruct[l_cell_list[pidx_undef2]];
+
+                        // fixme, could do a copy. Or just pass p.pos to Create
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> anti_pos =
+                            {AMREX_D_DECL(
+                                plo[0] + (iv[0] + 0.5) * dx[0],
+                                plo[1] + (iv[1] + 0.5) * dx[1],
+                                plo[2] + (iv[2] + 0.5) * dx[2])};
+
+                        // This is weird. The antimessage
+                        // position is iv but the receiver is
+                        // still updated (we need to know who to
+                        // send this to)
+                        particles::Create()(
+                            p3, ts, anti_pos, iv_dest, box.index(iv),
+                            box.index(iv_dest));
+                        p3.idata(particles::IntData::type_id) =
+                            particles::MessageTypes::anti_message;
+
                         break; // only do 1 event
                     }
                 }

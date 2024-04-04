@@ -21,6 +21,5 @@ random_exponential(const amrex::Real lambda)
 
     return std::log(1 - amrex::Random()) / (-lambda);
 }
-
 } // namespace spades
 #endif
