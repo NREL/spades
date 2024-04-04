@@ -62,7 +62,9 @@ struct Create
         P& p,
         const amrex::Real timestamp,
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
-        const amrex::IntVect& iv) const
+        const amrex::IntVect& iv,
+        const int sender,
+        const int receiver) const
     {
         AMREX_ASSERT(p.idata(IntData::type_id) == MessageTypes::undefined);
 
@@ -72,6 +74,8 @@ struct Create
         AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)
         AMREX_D_TERM(p.idata(IntData::i) = iv[0];, p.idata(IntData::j) = iv[1];
                      , p.idata(IntData::k) = iv[2];)
+        p.idata(IntData::sender) = sender;
+        p.idata(IntData::receiver) = receiver;
     }
 };
 

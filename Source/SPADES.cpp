@@ -419,8 +419,41 @@ void SPADES::process_events(const int lev)
                                     sarr(iv, constants::LVT_IDX) +
                                     random_exponential(1.0) + lookahead;
 
-                                particles::Create()(p2, ts, pos, iv_dest);
-                                break;
+                                particles::Create()(
+                                    p2, ts, pos, iv_dest, box.index(iv),
+                                    box.index(iv_dest));
+
+                                // find _another_ undefined particle for the
+                                // antimessage fixme: oooff this is ugly
+                                for (int pidx3 = 0; pidx3 < np; pidx3++) {
+                                    particles::CellSortedParticleContainer::
+                                        ParticleType& p3 =
+                                            pstruct[l_cell_list[pidx3]];
+
+                                    if (p3.idata(particles::IntData::type_id) ==
+                                        particles::MessageTypes::undefined) {
+                                        amrex::GpuArray<
+                                            amrex::Real, AMREX_SPACEDIM>
+                                            anti_pos = {AMREX_D_DECL(
+                                                plo[0] + (iv[0] + 0.5) * dx[0],
+                                                plo[1] + (iv[1] + 0.5) * dx[1],
+                                                plo[2] +
+                                                    (iv[2] + 0.5) * dx[2])};
+
+                                        // This is weird. The antimessage
+                                        // position is iv but the receiver is
+                                        // still updated (we need to know who to
+                                        // send this to)
+                                        particles::Create()(
+                                            p3, ts, anti_pos, iv_dest,
+                                            box.index(iv), box.index(iv_dest));
+                                        p3.idata(particles::IntData::type_id) =
+                                            particles::MessageTypes::
+                                                anti_message;
+                                        break; // only create 1 anti-message
+                                    }
+                                }
+                                break; // only create 1 event
                             }
                         }
                         break; // only do 1 event
