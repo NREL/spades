@@ -109,6 +109,9 @@ private:
     // update gvt
     void update_gvt(const int lev);
 
+    // count events
+    void count_events();
+
     // Check if a field exists
     bool check_field_existence(const std::string& name);
 

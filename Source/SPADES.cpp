@@ -63,6 +63,8 @@ void SPADES::init_data()
 
         compute_dt();
 
+        count_events();
+
         if (m_chk_int > 0) {
             write_checkpoint_file();
         }
@@ -264,7 +266,57 @@ void SPADES::advance(
     m_ts_new[lev] += dt_lev;       // new time is ahead
 }
 
-void SPADES::post_time_step() { BL_PROFILE("SPADES::post_time_step()"); }
+void SPADES::post_time_step()
+{
+    BL_PROFILE("SPADES::post_time_step()");
+
+    count_events();
+}
+
+void SPADES::count_events()
+{
+    BL_PROFILE("SPADES::count_events()");
+
+    const int lev = 0;
+    m_events[lev].setVal(0);
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto& events_arr = m_events[lev].array(mfi);
+        const auto index = std::make_pair(gid, tid);
+        const auto& cell_lists = m_pc->cell_lists(lev, index);
+        auto& pti = m_pc->GetParticles(lev)[index];
+        auto& particles = pti.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
+
+        const auto* p_cell_list = cell_lists.list().data();
+        const auto* p_cell_counts = cell_lists.counts().data();
+        const auto* p_cell_offsets = cell_lists.offsets().data();
+
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto ni = box.index(iv);
+                const auto* l_cell_list = &p_cell_list[p_cell_offsets[ni]];
+                const auto np = p_cell_counts[ni];
+
+                for (int pidx = 0; pidx < np; pidx++) {
+                    particles::CellSortedParticleContainer::ParticleType& p =
+                        pstruct[l_cell_list[pidx]];
+                    for (int typ = 0; typ < particles::MessageTypes::ntypes;
+                         typ++) {
+                        if (typ == p.idata(particles::IntData::type_id)) {
+                            events_arr(iv, typ) += 1;
+                        }
+                    }
+                }
+            });
+    }
+}
 
 void SPADES::consume_particles(const int lev)
 {
@@ -461,7 +513,7 @@ void SPADES::MakeNewLevelFromScratch(
 
     // Initialize the data
     initialize_state(lev);
-    m_events[lev].setVal(0.0);
+    m_events[lev].setVal(0);
 
     // Update particle container
     m_pc->Define(Geom(lev), dm, ba);
@@ -614,9 +666,6 @@ void SPADES::write_plot_file()
     const std::string& plotfilename = plot_file_name(m_isteps[0]);
     const auto& mf = plot_file_mf();
     const auto& varnames = plot_file_var_names();
-    for (const auto& vn : varnames) {
-        amrex::Print() << "vn: " << vn << std::endl;
-    }
 
     amrex::Print() << "Writing plot file " << plotfilename << " at time "
                    << m_ts_new[0] << std::endl;
