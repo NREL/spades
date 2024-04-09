@@ -46,6 +46,8 @@ public:
 
     void update_cell_lists();
 
+    void sort_particles();
+
     void garbage_collect(const amrex::Real gvt);
 
     const CellList<ParticleType>&

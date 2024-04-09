@@ -213,6 +213,7 @@ void SPADES::time_step(
                         << "Grid summary after regrid: " << std::endl;
                     printGridSummary(amrex::OutStream(), 0, finest_level);
                 }
+                m_pc->sort_particles();
                 m_pc->update_cell_lists();
             }
         }
@@ -260,6 +261,7 @@ void SPADES::advance(
     m_pc->garbage_collect(m_gvts[lev]);
 
     m_pc->Redistribute();
+    m_pc->sort_particles();
     m_pc->assign_cell_lists();
 
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
@@ -279,42 +281,32 @@ void SPADES::count_events()
 
     const int lev = 0;
     m_events[lev].setVal(0);
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& events_arr = m_events[lev].array(mfi);
-        const auto index = std::make_pair(gid, tid);
-        const auto& cell_lists = m_pc->cell_lists(lev, index);
-        auto& pti = m_pc->GetParticles(lev)[index];
-        auto& particles = pti.GetArrayOfStructs();
-        auto* pstruct = particles().dataPtr();
+        auto& pti = m_pc->GetParticles(lev)[std::make_pair(gid, tid)];
+        const auto& particles = pti.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+        const int np = pti.numParticles();
 
-        const auto* p_cell_list = cell_lists.list().data();
-        const auto* p_cell_counts = cell_lists.counts().data();
-        const auto* p_cell_offsets = cell_lists.offsets().data();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            const amrex::IntVect iv(AMREX_D_DECL(
+                p.idata(particles::IntData::i), p.idata(particles::IntData::j),
+                p.idata(particles::IntData::k)));
 
-        amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto ni = box.index(iv);
-                const auto* l_cell_list = &p_cell_list[p_cell_offsets[ni]];
-                const auto np = p_cell_counts[ni];
-
-                for (int pidx = 0; pidx < np; pidx++) {
-                    particles::CellSortedParticleContainer::ParticleType& p =
-                        pstruct[l_cell_list[pidx]];
-                    for (int typ = 0; typ < particles::MessageTypes::ntypes;
-                         typ++) {
-                        if (typ == p.idata(particles::IntData::type_id)) {
-                            events_arr(iv, typ) += 1;
-                        }
-                    }
-                }
-            });
+            if (box.contains(iv)) {
+                amrex::Gpu::Atomic::AddNoRet(
+                    &events_arr(iv, p.idata(particles::IntData::type_id)), 1);
+            }
+        });
     }
 }
 
@@ -331,141 +323,164 @@ void SPADES::process_events(const int lev)
     const auto& dhi = Geom(lev).Domain().bigEnd();
     const auto lookahead = m_lookahead;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
-        const amrex::Box& box = mfi.tilebox();
-        const int gid = mfi.index();
-        const int tid = mfi.LocalTileIndex();
-        const auto& sarr = m_state[lev].array(mfi);
-        const auto index = std::make_pair(gid, tid);
-        const auto& cell_lists = m_pc->cell_lists(lev, index);
-        auto& pti = m_pc->GetParticles(lev)[index];
-        auto& particles = pti.GetArrayOfStructs();
-        auto* pstruct = particles().dataPtr();
+    // #ifdef _OPENMP
+    // #pragma omp parallel
+    // #endif
+    //     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi)
+    //     {
+    //         const amrex::Box& box = mfi.tilebox();
+    //         const int gid = mfi.index();
+    //         const int tid = mfi.LocalTileIndex();
+    //         const auto& sarr = m_state[lev].array(mfi);
+    //         const auto index = std::make_pair(gid, tid);
+    //         const auto& cell_lists = m_pc->cell_lists(lev, index);
+    //         auto& pti = m_pc->GetParticles(lev)[index];
+    //         auto& particles = pti.GetArrayOfStructs();
+    //         auto* pstruct = particles().dataPtr();
 
-        const auto* p_cell_list = cell_lists.list().data();
-        const auto* p_cell_counts = cell_lists.counts().data();
-        const auto* p_cell_offsets = cell_lists.offsets().data();
+    //         const auto* p_cell_list = cell_lists.list().data();
+    //         const auto* p_cell_counts = cell_lists.counts().data();
+    //         const auto* p_cell_offsets = cell_lists.offsets().data();
 
-        amrex::ParallelForRNG(
-            box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int k,
-                     amrex::RandomEngine const& engine) noexcept {
-                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto ni = box.index(iv);
-                const auto* l_cell_list = &p_cell_list[p_cell_offsets[ni]];
-                const auto np = p_cell_counts[ni];
+    //         amrex::ParallelForRNG(
+    //             box, [=] AMREX_GPU_DEVICE(
+    //                      int i, int j, int k,
+    //                      amrex::RandomEngine const& engine) noexcept {
+    //                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+    //                 const auto ni = box.index(iv);
+    //                 const auto* l_cell_list =
+    //                 &p_cell_list[p_cell_offsets[ni]]; const auto np =
+    //                 p_cell_counts[ni];
 
-                for (int pidx = 0; pidx < np; pidx++) {
-                    particles::CellSortedParticleContainer::ParticleType& p =
-                        pstruct[l_cell_list[pidx]];
+    //                 for (int pidx = 0; pidx < np; pidx++) {
+    //                     particles::CellSortedParticleContainer::ParticleType&
+    //                     p =
+    //                         pstruct[l_cell_list[pidx]];
 
-                    // amrex::Print()
-                    //     << "particle: " << pidx << " in cell: " << iv
-                    //     << " has timestamp: "
-                    //     << p.rdata(particles::RealData::timestamp)
-                    //     << " and type " <<
-                    //     p.idata(particles::IntData::type_id)
-                    //     << std::endl;
+    //                     amrex::Print()
+    //                         << "particle: " << pidx << " in cell: " << iv
+    //                         << " has timestamp: "
+    //                         << p.rdata(particles::RealData::timestamp)
+    //                         << " and type " <<
+    //                         p.idata(particles::IntData::type_id)
+    //                         << std::endl;
 
-                    // only process messages, fixme: get a pointer to the
-                    // messages and skip the test
-                    if (p.idata(particles::IntData::type_id) ==
-                        particles::MessageTypes::message) {
+    //                     // // only process messages, fixme: get a pointer to
+    //                     the
+    //                     // // messages and skip the test
+    //                     // if (p.idata(particles::IntData::type_id) ==
+    //                     //     particles::MessageTypes::message) {
 
-                        if (sarr(iv, constants::LVT_IDX) >
-                            p.rdata(particles::RealData::timestamp)) {
-                            amrex::Print()
-                                << "LVT: " << sarr(iv, constants::LVT_IDX)
-                                << " and message time stamp is "
-                                << p.rdata(particles::RealData::timestamp)
-                                << std::endl;
-                            // amrex::Abort("I got a message from the past");
-                            amrex::Print()
-                                << "I got a message from the past" << std::endl;
-                        }
+    //                     //     if (sarr(iv, constants::LVT_IDX) >
+    //                     //         p.rdata(particles::RealData::timestamp)) {
+    //                     //         amrex::Print()
+    //                     //             << "LVT: " << sarr(iv,
+    //                     constants::LVT_IDX)
+    //                     //             << " and message time stamp is "
+    //                     //             <<
+    //                     p.rdata(particles::RealData::timestamp)
+    //                     //             << std::endl;
+    //                     //         // amrex::Abort("I got a message from the
+    //                     past");
+    //                     //         amrex::Print()
+    //                     //             << "I got a message from the past" <<
+    //                     std::endl;
+    //                     //     }
 
-                        // process the event
-                        sarr(iv, constants::LVT_IDX) =
-                            p.rdata(particles::RealData::timestamp);
-                        p.idata(particles::IntData::type_id) =
-                            particles::MessageTypes::processed;
+    //                     //     // process the event
+    //                     //     sarr(iv, constants::LVT_IDX) =
+    //                     //         p.rdata(particles::RealData::timestamp);
+    //                     //     p.idata(particles::IntData::type_id) =
+    //                     //         particles::MessageTypes::processed;
 
-                        // find undefined event to add to the queue
-                        // fixme just get a pointer to this thing
-                        // fixme add abort if you can't find an undefined
-                        // particles
-                        int pidx_undef1 = -1;
-                        for (int pidx2 = 0; pidx2 < np; pidx2++) {
-                            particles::CellSortedParticleContainer::
-                                ParticleType& pl = pstruct[l_cell_list[pidx2]];
-                            if (pl.idata(particles::IntData::type_id) ==
-                                particles::MessageTypes::undefined) {
-                                pidx_undef1 = pidx2;
-                                break;
-                            }
-                        }
-                        AMREX_ALWAYS_ASSERT(pidx_undef1 > -1);
+    //                     //     // find undefined event to add to the queue
+    //                     //     // fixme just get a pointer to this thing
+    //                     //     // fixme add abort if you can't find an
+    //                     undefined
+    //                     //     // particles
+    //                     //     int pidx_undef1 = -1;
+    //                     //     for (int pidx2 = 0; pidx2 < np; pidx2++) {
+    //                     //         particles::CellSortedParticleContainer::
+    //                     //             ParticleType& pl =
+    //                     pstruct[l_cell_list[pidx2]];
+    //                     //         if (pl.idata(particles::IntData::type_id)
+    //                     ==
+    //                     //             particles::MessageTypes::undefined) {
+    //                     //             pidx_undef1 = pidx2;
+    //                     //             break;
+    //                     //         }
+    //                     //     }
+    //                     //     AMREX_ALWAYS_ASSERT(pidx_undef1 > -1);
 
-                        particles::CellSortedParticleContainer::ParticleType&
-                            p2 = pstruct[l_cell_list[pidx_undef1]];
-                        amrex::IntVect iv_dest(AMREX_D_DECL(
-                            amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
-                            amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
-                            amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
-                            AMREX_D_DECL(
-                                plo[0] + (iv_dest[0] + 0.5) * dx[0],
-                                plo[1] + (iv_dest[1] + 0.5) * dx[1],
-                                plo[2] + (iv_dest[2] + 0.5) * dx[2])};
-                        const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
-                                               random_exponential(1.0) +
-                                               lookahead;
+    //                     //
+    //                     particles::CellSortedParticleContainer::ParticleType&
+    //                     //         p2 = pstruct[l_cell_list[pidx_undef1]];
+    //                     //     amrex::IntVect iv_dest(AMREX_D_DECL(
+    //                     //         amrex::Random_int(dhi[0] - dlo[0] + 1) +
+    //                     dlo[0],
+    //                     //         amrex::Random_int(dhi[1] - dlo[1] + 1) +
+    //                     dlo[1],
+    //                     //         amrex::Random_int(dhi[2] - dlo[2] + 1) +
+    //                     dlo[2]));
+    //                     //     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+    //                     pos = {
+    //                     //         AMREX_D_DECL(
+    //                     //             plo[0] + (iv_dest[0] + 0.5) * dx[0],
+    //                     //             plo[1] + (iv_dest[1] + 0.5) * dx[1],
+    //                     //             plo[2] + (iv_dest[2] + 0.5) * dx[2])};
+    //                     //     const amrex::Real ts = sarr(iv,
+    //                     constants::LVT_IDX) +
+    //                     //                            random_exponential(1.0)
+    //                     +
+    //                     //                            lookahead;
 
-                        particles::Create()(
-                            p2, ts, pos, iv_dest, box.index(iv),
-                            box.index(iv_dest));
+    //                     //     particles::Create()(
+    //                     //         p2, ts, pos, iv_dest, box.index(iv),
+    //                     //         box.index(iv_dest));
 
-                        // find _another_ undefined particle for the
-                        // antimessage fixme: oooff this is ugly
-                        int pidx_undef2 = -1;
-                        for (int pidx2 = 0; pidx2 < np; pidx2++) {
-                            particles::CellSortedParticleContainer::
-                                ParticleType& pl = pstruct[l_cell_list[pidx2]];
-                            if (pl.idata(particles::IntData::type_id) ==
-                                particles::MessageTypes::undefined) {
-                                pidx_undef2 = pidx2;
-                                break;
-                            }
-                        }
-                        AMREX_ALWAYS_ASSERT(pidx_undef2 > -1);
-                        particles::CellSortedParticleContainer::ParticleType&
-                            p3 = pstruct[l_cell_list[pidx_undef2]];
+    //                     //     // find _another_ undefined particle for the
+    //                     //     // antimessage fixme: oooff this is ugly
+    //                     //     int pidx_undef2 = -1;
+    //                     //     for (int pidx2 = 0; pidx2 < np; pidx2++) {
+    //                     //         particles::CellSortedParticleContainer::
+    //                     //             ParticleType& pl =
+    //                     pstruct[l_cell_list[pidx2]];
+    //                     //         if (pl.idata(particles::IntData::type_id)
+    //                     ==
+    //                     //             particles::MessageTypes::undefined) {
+    //                     //             pidx_undef2 = pidx2;
+    //                     //             break;
+    //                     //         }
+    //                     //     }
+    //                     //     AMREX_ALWAYS_ASSERT(pidx_undef2 > -1);
+    //                     //
+    //                     particles::CellSortedParticleContainer::ParticleType&
+    //                     //         p3 = pstruct[l_cell_list[pidx_undef2]];
 
-                        // fixme, could do a copy. Or just pass p.pos to Create
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> anti_pos =
-                            {AMREX_D_DECL(
-                                plo[0] + (iv[0] + 0.5) * dx[0],
-                                plo[1] + (iv[1] + 0.5) * dx[1],
-                                plo[2] + (iv[2] + 0.5) * dx[2])};
+    //                     //     // fixme, could do a copy. Or just pass p.pos
+    //                     to Create
+    //                     //     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+    //                     anti_pos =
+    //                     //         {AMREX_D_DECL(
+    //                     //             plo[0] + (iv[0] + 0.5) * dx[0],
+    //                     //             plo[1] + (iv[1] + 0.5) * dx[1],
+    //                     //             plo[2] + (iv[2] + 0.5) * dx[2])};
 
-                        // This is weird. The antimessage
-                        // position is iv but the receiver is
-                        // still updated (we need to know who to
-                        // send this to)
-                        particles::Create()(
-                            p3, ts, anti_pos, iv_dest, box.index(iv),
-                            box.index(iv_dest));
-                        p3.idata(particles::IntData::type_id) =
-                            particles::MessageTypes::anti_message;
+    //                     //     // This is weird. The antimessage
+    //                     //     // position is iv but the receiver is
+    //                     //     // still updated (we need to know who to
+    //                     //     // send this to)
+    //                     //     particles::Create()(
+    //                     //         p3, ts, anti_pos, iv_dest, box.index(iv),
+    //                     //         box.index(iv_dest));
+    //                     //     p3.idata(particles::IntData::type_id) =
+    //                     //         particles::MessageTypes::anti_message;
 
-                        break; // only do 1 event
-                    }
-                }
-            });
-    }
+    //                     //     break; // only do 1 event
+    //                     // }
+    //                 }
+    //             });
+    //     }
 }
 
 void SPADES::update_gvt(const int lev)
@@ -554,6 +569,7 @@ void SPADES::MakeNewLevelFromScratch(
     // Update particle container
     m_pc->Define(Geom(lev), dm, ba);
     m_pc->initialize(m_lookahead);
+    m_pc->sort_particles();
     m_pc->update_cell_lists();
 }
 
