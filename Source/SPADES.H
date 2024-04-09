@@ -112,6 +112,9 @@ private:
     // count events
     void count_events();
 
+    // count offsets
+    void count_offsets();
+
     // Check if a field exists
     bool check_field_existence(const std::string& name);
 
@@ -169,6 +172,7 @@ private:
     // array of multifabs to store the solution at each level of refinement
     amrex::Vector<amrex::MultiFab> m_state;
     amrex::Vector<amrex::iMultiFab> m_events;
+    amrex::Vector<amrex::iMultiFab> m_offsets;
     // amrex::Vector<amrex::MultiFab> m_f;
     // amrex::Vector<amrex::MultiFab> m_eq;
     // amrex::Vector<amrex::MultiFab> m_derived;

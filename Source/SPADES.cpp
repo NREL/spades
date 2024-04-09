@@ -40,6 +40,7 @@ SPADES::SPADES()
 
     m_state.resize(nlevs_max);
     m_events.resize(nlevs_max);
+    m_offsets.resize(nlevs_max);
     m_plt_mf.resize(nlevs_max);
 }
 
@@ -308,6 +309,47 @@ void SPADES::count_events()
             }
         });
     }
+
+    count_offsets();
+}
+
+void SPADES::count_offsets()
+{
+    BL_PROFILE("SPADES::count_offsets()");
+
+    const int lev = 0;
+    m_offsets[lev].setVal(0);
+
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int ncell = box.numPts();
+        const auto& events_arr = m_events[lev].const_array(mfi);
+        const auto& offsets_arr = m_offsets[lev].array(mfi);
+        int* p_offsets = offsets_arr.dataPtr();
+        const int np = amrex::Scan::PrefixSum<int>(
+            ncell,
+            [=] AMREX_GPU_DEVICE(int i) -> int {
+                const auto iv = box.atOffset(i);
+                int total_events = 0;
+                for (int typ = 0; typ < particles::MessageTypes::ntypes;
+                     typ++) {
+                    total_events += events_arr(iv, typ);
+                }
+                return total_events;
+            },
+            [=] AMREX_GPU_DEVICE(int i, const int& x) { p_offsets[i] = x; },
+            amrex::Scan::Type::exclusive, amrex::Scan::retSum);
+
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                for (int typ = 1; typ < particles::MessageTypes::ntypes;
+                     typ++) {
+                    offsets_arr(iv, typ) =
+                        offsets_arr(iv, typ - 1) + events_arr(iv, typ - 1);
+                }
+            });
+    }
 }
 
 void SPADES::process_events(const int lev)
@@ -322,6 +364,39 @@ void SPADES::process_events(const int lev)
     const auto& dlo = Geom(lev).Domain().smallEnd();
     const auto& dhi = Geom(lev).Domain().bigEnd();
     const auto lookahead = m_lookahead;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto& sarr = m_state[lev].array(mfi);
+        const auto& events_arr = m_events[lev].const_array(mfi);
+        const auto& offsets_arr = m_offsets[lev].const_array(mfi);
+        const auto index = std::make_pair(gid, tid);
+        const auto& cell_lists = m_pc->cell_lists(lev, index);
+        auto& pti = m_pc->GetParticles(lev)[index];
+        auto& particles = pti.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelForRNG(
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int k,
+                     amrex::RandomEngine const& engine) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+
+                for (int typ = 0; typ < particles::MessageTypes::ntypes;
+                     typ++) {
+                    const int n_messages = events_arr(iv, typ);
+                    const int offset = offsets_arr(iv, typ);
+                    amrex::Print()
+                        << "nmessage: " << typ << " count: " << n_messages
+                        << " with offset " << offset << std::endl;
+                }
+            });
+    }
 
     // #ifdef _OPENMP
     // #pragma omp parallel
@@ -559,12 +634,17 @@ void SPADES::MakeNewLevelFromScratch(
         ba, dm, particles::MessageTypes::ntypes, m_state[lev].nGrow(),
         amrex::MFInfo());
 
+    m_offsets[lev].define(
+        ba, dm, particles::MessageTypes::ntypes, m_state[lev].nGrow(),
+        amrex::MFInfo());
+
     m_ts_new[lev] = time;
     m_ts_old[lev] = constants::LOW_NUM;
 
     // Initialize the data
     initialize_state(lev);
     m_events[lev].setVal(0);
+    m_offsets[lev].setVal(0);
 
     // Update particle container
     m_pc->Define(Geom(lev), dm, ba);
@@ -600,6 +680,7 @@ void SPADES::ClearLevel(int lev)
     BL_PROFILE("SPADES::ClearLevel()");
     m_state[lev].clear();
     m_events[lev].clear();
+    m_offsets[lev].clear();
     m_plt_mf[lev].clear();
 }
 
