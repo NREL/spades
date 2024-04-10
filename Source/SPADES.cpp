@@ -384,14 +384,79 @@ void SPADES::process_events(const int lev)
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
 
-                for (int typ = 0; typ < particles::MessageTypes::ntypes;
-                     typ++) {
-                    const int n_messages = events_arr(iv, typ);
-                    const int offset = offsets_arr(iv, typ);
+                const int msg_idx =
+                    offsets_arr(iv, particles::MessageTypes::message);
+                particles::CellSortedParticleContainer::ParticleType& prcv =
+                    pstruct[msg_idx];
+
+                // amrex::Print()
+                //     << "particle: " << msg_idx << " in cell: " << iv
+                //     << " has timestamp: "
+                //     << prcv.rdata(particles::RealData::timestamp)
+                //     << " and type " << prcv.idata(particles::IntData::type_id)
+                //     << std::endl;
+
+                if (sarr(iv, constants::LVT_IDX) >
+                    prcv.rdata(particles::RealData::timestamp)) {
+                    amrex::Print() << "LVT: " << sarr(iv, constants::LVT_IDX)
+                                   << " and message time stamp is "
+                                   << prcv.rdata(particles::RealData::timestamp)
+                                   << std::endl;
+                    // amrex::Abort("I got a message from the past ");
                     amrex::Print()
-                        << "nmessage: " << typ << " count: " << n_messages
-                        << " with offset " << offset << std::endl;
+                        << "I got a message from the past" << std::endl;
                 }
+
+                // process the event
+                sarr(iv, constants::LVT_IDX) =
+                    prcv.rdata(particles::RealData::timestamp);
+                prcv.idata(particles::IntData::type_id) =
+                    particles::MessageTypes::processed;
+
+                AMREX_ALWAYS_ASSERT(
+                    events_arr(iv, particles::MessageTypes::undefined) > 2);
+
+                // Create a new message to send
+                const int undef_idx0 =
+                    offsets_arr(iv, particles::MessageTypes::undefined);
+                particles::CellSortedParticleContainer::ParticleType& psnd =
+                    pstruct[undef_idx0];
+                amrex::IntVect iv_dest(AMREX_D_DECL(
+                    amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
+                    amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
+                    amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
+                    AMREX_D_DECL(
+                        plo[0] + (iv_dest[0] + 0.5) * dx[0],
+                        plo[1] + (iv_dest[1] + 0.5) * dx[1],
+                        plo[2] + (iv_dest[2] + 0.5) * dx[2])};
+                const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
+                                       random_exponential(1.0) + lookahead;
+                // FIXME, in general, Create is clunky. Better way?
+                particles::Create()(
+                    psnd, ts, pos, iv_dest, box.index(iv), box.index(iv_dest));
+
+                // Create the anti-message
+                const int undef_idx1 = undef_idx0 + 1;
+                particles::CellSortedParticleContainer::ParticleType& pant =
+                    pstruct[undef_idx1];
+
+                // FIXME, could do a copy. Or just pass p.pos to Create
+                // This is weird. The antimessage
+                // position is iv but the receiver is
+                // still updated (we need to know who to
+                // send this to)
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> anti_pos = {
+                    AMREX_D_DECL(
+                        plo[0] + (iv[0] + 0.5) * dx[0],
+                        plo[1] + (iv[1] + 0.5) * dx[1],
+                        plo[2] + (iv[2] + 0.5) * dx[2])};
+
+                particles::Create()(
+                    pant, ts, anti_pos, iv_dest, box.index(iv),
+                    box.index(iv_dest));
+                pant.idata(particles::IntData::type_id) =
+                    particles::MessageTypes::anti_message;
             });
     }
 
