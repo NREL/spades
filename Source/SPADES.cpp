@@ -14,16 +14,16 @@ SPADES::SPADES()
     }
 
     m_state_varnames.push_back("lvt");
-    m_events_varnames.push_back("anti_message");
-    m_events_varnames.push_back("undefined");
-    m_events_varnames.push_back("message");
-    m_events_varnames.push_back("processed");
+    m_message_counts_varnames.push_back("anti_message");
+    m_message_counts_varnames.push_back("undefined");
+    m_message_counts_varnames.push_back("message");
+    m_message_counts_varnames.push_back("processed");
     AMREX_ALWAYS_ASSERT(
-        m_events_varnames.size() == particles::MessageTypes::ntypes);
+        m_message_counts_varnames.size() == particles::MessageTypes::ntypes);
     for (const auto& vname : m_state_varnames) {
         m_spades_varnames.push_back(vname);
     }
-    for (const auto& vname : m_events_varnames) {
+    for (const auto& vname : m_message_counts_varnames) {
         m_spades_varnames.push_back(vname);
     }
 
@@ -39,7 +39,7 @@ SPADES::SPADES()
     m_dts.resize(nlevs_max, constants::LARGE_NUM);
 
     m_state.resize(nlevs_max);
-    m_events.resize(nlevs_max);
+    m_message_counts.resize(nlevs_max);
     m_offsets.resize(nlevs_max);
     m_plt_mf.resize(nlevs_max);
 }
@@ -64,7 +64,7 @@ void SPADES::init_data()
 
         compute_dt();
 
-        count_events();
+        count_messages();
 
         if (m_chk_int > 0) {
             write_checkpoint_file();
@@ -254,7 +254,7 @@ void SPADES::advance(
 {
     BL_PROFILE("SPADES::advance()");
 
-    process_events(lev);
+    process_messages(lev);
 
     update_gvt(lev);
 
@@ -271,15 +271,15 @@ void SPADES::post_time_step()
 {
     BL_PROFILE("SPADES::post_time_step()");
 
-    count_events();
+    count_messages();
 }
 
-void SPADES::count_events()
+void SPADES::count_messages()
 {
-    BL_PROFILE("SPADES::count_events()");
+    BL_PROFILE("SPADES::count_messages()");
 
     const int lev = 0;
-    m_events[lev].setVal(0);
+    m_message_counts[lev].setVal(0);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -289,7 +289,7 @@ void SPADES::count_events()
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& events_arr = m_events[lev].array(mfi);
+        const auto& msg_cnt_arr = m_message_counts[lev].array(mfi);
         auto& pti = m_pc->GetParticles(lev)[std::make_pair(gid, tid)];
         const auto& particles = pti.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
@@ -303,7 +303,7 @@ void SPADES::count_events()
 
             if (box.contains(iv)) {
                 amrex::Gpu::Atomic::AddNoRet(
-                    &events_arr(iv, p.idata(particles::IntData::type_id)), 1);
+                    &msg_cnt_arr(iv, p.idata(particles::IntData::type_id)), 1);
             }
         });
     }
@@ -321,19 +321,19 @@ void SPADES::count_offsets()
     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int ncell = box.numPts();
-        const auto& events_arr = m_events[lev].const_array(mfi);
+        const auto& msg_cnt_arr = m_message_counts[lev].const_array(mfi);
         const auto& offsets_arr = m_offsets[lev].array(mfi);
         int* p_offsets = offsets_arr.dataPtr();
         const int np = amrex::Scan::PrefixSum<int>(
             ncell,
             [=] AMREX_GPU_DEVICE(int i) -> int {
                 const auto iv = box.atOffset(i);
-                int total_events = 0;
+                int total_messages = 0;
                 for (int typ = 0; typ < particles::MessageTypes::ntypes;
                      typ++) {
-                    total_events += events_arr(iv, typ);
+                    total_messages += msg_cnt_arr(iv, typ);
                 }
-                return total_events;
+                return total_messages;
             },
             [=] AMREX_GPU_DEVICE(int i, const int& x) { p_offsets[i] = x; },
             amrex::Scan::Type::exclusive, amrex::Scan::retSum);
@@ -344,15 +344,15 @@ void SPADES::count_offsets()
                 for (int typ = 1; typ < particles::MessageTypes::ntypes;
                      typ++) {
                     offsets_arr(iv, typ) =
-                        offsets_arr(iv, typ - 1) + events_arr(iv, typ - 1);
+                        offsets_arr(iv, typ - 1) + msg_cnt_arr(iv, typ - 1);
                 }
             });
     }
 }
 
-void SPADES::process_events(const int lev)
+void SPADES::process_messages(const int lev)
 {
-    BL_PROFILE("SPADES::process_events()");
+    BL_PROFILE("SPADES::process_messages()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
         m_state_ngrow == m_pc->ngrow(),
         "Particle and state cells must be equal for now");
@@ -371,7 +371,7 @@ void SPADES::process_events(const int lev)
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& sarr = m_state[lev].array(mfi);
-        const auto& events_arr = m_events[lev].const_array(mfi);
+        const auto& msg_cnt_arr = m_message_counts[lev].const_array(mfi);
         const auto& offsets_arr = m_offsets[lev].const_array(mfi);
         const auto index = std::make_pair(gid, tid);
         auto& pti = m_pc->GetParticles(lev)[index];
@@ -384,7 +384,7 @@ void SPADES::process_events(const int lev)
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
 
-                if (events_arr(iv, particles::MessageTypes::message) > 0) {
+                if (msg_cnt_arr(iv, particles::MessageTypes::message) > 0) {
                     const int msg_idx =
                         offsets_arr(iv, particles::MessageTypes::message);
                     particles::CellSortedParticleContainer::ParticleType& prcv =
@@ -418,7 +418,7 @@ void SPADES::process_events(const int lev)
                 }
 
                 AMREX_ALWAYS_ASSERT(
-                    events_arr(iv, particles::MessageTypes::undefined) > 2);
+                    msg_cnt_arr(iv, particles::MessageTypes::undefined) > 2);
 
                 // Create a new message to send
                 const int undef_idx0 =
@@ -537,7 +537,7 @@ void SPADES::MakeNewLevelFromScratch(
     m_state[lev].define(
         ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
 
-    m_events[lev].define(
+    m_message_counts[lev].define(
         ba, dm, particles::MessageTypes::ntypes, m_state[lev].nGrow(),
         amrex::MFInfo());
 
@@ -550,7 +550,7 @@ void SPADES::MakeNewLevelFromScratch(
 
     // Initialize the data
     initialize_state(lev);
-    m_events[lev].setVal(0);
+    m_message_counts[lev].setVal(0);
     m_offsets[lev].setVal(0);
 
     // Update particle container
@@ -585,7 +585,7 @@ void SPADES::ClearLevel(int lev)
 {
     BL_PROFILE("SPADES::ClearLevel()");
     m_state[lev].clear();
-    m_events[lev].clear();
+    m_message_counts[lev].clear();
     m_offsets[lev].clear();
     m_plt_mf[lev].clear();
 }
@@ -606,7 +606,7 @@ void SPADES::set_ics()
 bool SPADES::check_field_existence(const std::string& name)
 {
     BL_PROFILE("SPADES::check_field_existence()");
-    const auto vnames = {m_state_varnames, m_events_varnames};
+    const auto vnames = {m_state_varnames, m_message_counts_varnames};
     return std::any_of(vnames.begin(), vnames.end(), [=](const auto& vn) {
         return get_field_component(name, vn) != -1;
     });
@@ -642,14 +642,14 @@ SPADES::get_field(const std::string& name, const int lev, const int ngrow)
     if (srccomp_sd != -1) {
         amrex::MultiFab::Copy(*mf, m_state[lev], srccomp_sd, 0, nc, ngrow);
     }
-    const int srccomp_id = get_field_component(name, m_events_varnames);
+    const int srccomp_id = get_field_component(name, m_message_counts_varnames);
     if (srccomp_id != -1) {
-        auto const& events_arrs = m_events[lev].const_arrays();
+        auto const& msg_cnt_arrs = m_message_counts[lev].const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
-            *mf, mf->nGrowVect(), m_events[lev].nComp(),
+            *mf, mf->nGrowVect(), m_message_counts[lev].nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-                mf_arrs[nbx](i, j, k, n) = events_arrs[nbx](i, j, k, n);
+                mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
             });
         amrex::Gpu::synchronize();
     }
@@ -684,13 +684,14 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
         amrex::MultiFab::Copy(
             m_plt_mf[lev], m_state[lev], 0, cnt, m_state[lev].nComp(), 0);
         cnt += m_state[lev].nComp();
-        auto const& events_arrs = m_events[lev].const_arrays();
+        auto const& msg_cnt_arrs = m_message_counts[lev].const_arrays();
         auto const& plt_mf_arrs = m_plt_mf[lev].arrays();
         amrex::ParallelFor(
-            m_plt_mf[lev], m_plt_mf[lev].nGrowVect(), m_events[lev].nComp(),
+            m_plt_mf[lev], m_plt_mf[lev].nGrowVect(),
+            m_message_counts[lev].nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 plt_mf_arrs[nbx](i, j, k, n + cnt) =
-                    events_arrs[nbx](i, j, k, n);
+                    msg_cnt_arrs[nbx](i, j, k, n);
             });
         amrex::Gpu::synchronize();
 

@@ -103,14 +103,14 @@ private:
     // perform work after a time step
     void post_time_step();
 
-    // process events
-    void process_events(const int lev);
+    // process messages
+    void process_messages(const int lev);
 
     // update gvt
     void update_gvt(const int lev);
 
-    // count events
-    void count_events();
+    // count messages
+    void count_messages();
 
     // count offsets
     void count_offsets();
@@ -167,11 +167,11 @@ private:
     amrex::Vector<std::string> m_state_varnames;
     // amrex::Vector<std::string> m_microdata_varnames;
     // amrex::Vector<std::string> m_deriveddata_varnames;
-    amrex::Vector<std::string> m_events_varnames;
+    amrex::Vector<std::string> m_message_counts_varnames;
 
     // array of multifabs to store the solution at each level of refinement
     amrex::Vector<amrex::MultiFab> m_state;
-    amrex::Vector<amrex::iMultiFab> m_events;
+    amrex::Vector<amrex::iMultiFab> m_message_counts;
     amrex::Vector<amrex::iMultiFab> m_offsets;
     // amrex::Vector<amrex::MultiFab> m_f;
     // amrex::Vector<amrex::MultiFab> m_eq;
