@@ -1,6 +1,5 @@
 target_sources(${spades_lib_name}
   PRIVATE
-    CellList.H
     CellSortedParticleContainer.H
     CellSortedParticleContainer.cpp
     Constants.H

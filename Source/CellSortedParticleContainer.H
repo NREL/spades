@@ -5,7 +5,7 @@
 #include <AMReX_AmrParGDB.H>
 #include <AMReX_NeighborParticles.H>
 #include "ParticleData.H"
-#include "CellList.H"
+#include "ParticleOps.H"
 #include "Utilities.H"
 
 namespace spades::particles {
@@ -42,32 +42,15 @@ public:
 
     void initialize(const amrex::Real lookahead);
 
-    void assign_cell_lists();
-
-    void update_cell_lists();
-
     void sort_particles();
 
     void garbage_collect(const amrex::Real gvt);
-
-    const CellList<ParticleType>&
-    cell_lists(const int lev, const std::pair<int, int> index) const
-    {
-        return m_cell_lists[lev].at(index);
-    }
 
     void write_plot_file(const std::string& plt_filename);
 
     int ngrow() const { return m_ngrow; }
 
 protected:
-    //! Vectors of particle indices on a cell-by-cell basis
-    amrex::Vector<std::map<std::pair<int, int>, CellList<ParticleType>>>
-        m_cell_lists;
-
-    //! used to keep track of whether we need to rebuild the cell list
-    bool m_cell_lists_initialized = false;
-
     amrex::BoxArray::RefID m_BARef;
 
     amrex::DistributionMapping::RefID m_DMRef;

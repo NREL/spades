@@ -215,7 +215,6 @@ void SPADES::time_step(
                     printGridSummary(amrex::OutStream(), 0, finest_level);
                 }
                 m_pc->sort_particles();
-                m_pc->update_cell_lists();
             }
         }
     }
@@ -263,7 +262,6 @@ void SPADES::advance(
 
     m_pc->Redistribute();
     m_pc->sort_particles();
-    m_pc->assign_cell_lists();
 
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
     m_ts_new[lev] += dt_lev;       // new time is ahead
@@ -376,7 +374,6 @@ void SPADES::process_events(const int lev)
         const auto& events_arr = m_events[lev].const_array(mfi);
         const auto& offsets_arr = m_offsets[lev].const_array(mfi);
         const auto index = std::make_pair(gid, tid);
-        const auto& cell_lists = m_pc->cell_lists(lev, index);
         auto& pti = m_pc->GetParticles(lev)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
@@ -650,7 +647,6 @@ void SPADES::MakeNewLevelFromScratch(
     m_pc->Define(Geom(lev), dm, ba);
     m_pc->initialize(m_lookahead);
     m_pc->sort_particles();
-    m_pc->update_cell_lists();
 }
 
 void SPADES::initialize_state(const int lev)

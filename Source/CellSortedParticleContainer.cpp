@@ -240,32 +240,6 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     }
 }
 
-void CellSortedParticleContainer::assign_cell_lists()
-{
-    BL_PROFILE("spades::CellSortedParticleContainer::assign_cell_lists");
-
-    const int lev = 0;
-
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-    for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
-        auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
-
-        auto& particle_tile = GetParticles(lev)[index];
-
-        if (particle_tile.numParticles() == 0) {
-            continue;
-        }
-
-        const amrex::Box& box = pti.tilebox();
-
-        const amrex::Box& gbox = amrex::grow(box, m_ngrow);
-
-        m_cell_lists[lev].at(index).build(particle_tile, gbox);
-    }
-}
-
 void CellSortedParticleContainer::sort_particles()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
@@ -368,44 +342,6 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
             }
         });
     }
-}
-
-void CellSortedParticleContainer::update_cell_lists()
-{
-    BL_PROFILE("spades::CellSortedParticleContainer::update_cell_lists");
-
-    const int lev = 0;
-
-    bool needs_update = false;
-    if (!m_cell_lists_initialized) {
-        // this is the first call, so we must update
-        m_cell_lists_initialized = true;
-        needs_update = true;
-    } else if (
-        (m_BARef != this->ParticleBoxArray(lev).getRefID()) ||
-        (m_DMRef != this->ParticleDistributionMap(lev).getRefID())) {
-        // the grids have changed, so we must update
-        m_BARef = this->ParticleBoxArray(lev).getRefID();
-        m_DMRef = this->ParticleDistributionMap(lev).getRefID();
-        needs_update = true;
-    }
-
-    if (!needs_update) {
-        return;
-    }
-
-    if (static_cast<int>(m_cell_lists.size()) <= numLevels()) {
-        m_cell_lists.resize(numLevels());
-    }
-    m_cell_lists[lev].clear();
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
-        const int gid = mfi.index();
-        const int tid = mfi.LocalTileIndex();
-        const auto index = std::make_pair(gid, tid);
-        m_cell_lists[lev].insert({index, CellList<ParticleType>()});
-    }
-
-    assign_cell_lists();
 }
 
 void CellSortedParticleContainer::write_plot_file(
