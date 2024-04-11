@@ -1,16 +1,8 @@
 target_sources(${spades_lib_name}
   PRIVATE
-    CellSortedParticleContainer.H
     CellSortedParticleContainer.cpp
-    Constants.H
-    Factory.H
-    IC.H
     IC.cpp
-    SPADES.H
     SPADES.cpp
-    ParticleData.H
-    ParticleOps.H
-    Utilities.H
     Utilities.cpp
 )
 
