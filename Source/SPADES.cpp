@@ -19,7 +19,7 @@ SPADES::SPADES()
     m_message_counts_varnames.push_back("message");
     m_message_counts_varnames.push_back("processed");
     AMREX_ALWAYS_ASSERT(
-        m_message_counts_varnames.size() == particles::MessageTypes::ntypes);
+        m_message_counts_varnames.size() == particles::MessageTypes::NTYPES);
     for (const auto& vname : m_state_varnames) {
         m_spades_varnames.push_back(vname);
     }
@@ -240,7 +240,7 @@ void SPADES::time_step(
     if (Verbose() != 0) {
         amrex::Print() << "[Level " << lev << " step " << m_isteps[lev] << "] ";
         amrex::Print() << "Advanced " << CountCells(lev) << " cells and "
-                       << m_pc->TotalNumberOfParticles(lev) << " particles"
+                       << m_pc->TotalNumberOfParticles(lev != 0) << " particles"
                        << std::endl;
     }
 }
@@ -320,28 +320,28 @@ void SPADES::count_offsets()
 
     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
-        const int ncell = box.numPts();
+        const auto ncell = box.numPts();
         const auto& msg_cnt_arr = m_message_counts[lev].const_array(mfi);
         const auto& offsets_arr = m_offsets[lev].array(mfi);
         int* p_offsets = offsets_arr.dataPtr();
-        const int np = amrex::Scan::PrefixSum<int>(
+        amrex::Scan::PrefixSum<int>(
             ncell,
             [=] AMREX_GPU_DEVICE(int i) -> int {
                 const auto iv = box.atOffset(i);
                 int total_messages = 0;
-                for (int typ = 0; typ < particles::MessageTypes::ntypes;
+                for (int typ = 0; typ < particles::MessageTypes::NTYPES;
                      typ++) {
                     total_messages += msg_cnt_arr(iv, typ);
                 }
                 return total_messages;
             },
             [=] AMREX_GPU_DEVICE(int i, const int& x) { p_offsets[i] = x; },
-            amrex::Scan::Type::exclusive, amrex::Scan::retSum);
+            amrex::Scan::Type::exclusive, amrex::Scan::noRetSum);
 
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                for (int typ = 1; typ < particles::MessageTypes::ntypes;
+                for (int typ = 1; typ < particles::MessageTypes::NTYPES;
                      typ++) {
                     offsets_arr(iv, typ) =
                         offsets_arr(iv, typ - 1) + msg_cnt_arr(iv, typ - 1);
@@ -384,9 +384,9 @@ void SPADES::process_messages(const int lev)
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
 
-                if (msg_cnt_arr(iv, particles::MessageTypes::message) > 0) {
+                if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
                     const int msg_idx =
-                        offsets_arr(iv, particles::MessageTypes::message);
+                        offsets_arr(iv, particles::MessageTypes::MESSAGE);
                     particles::CellSortedParticleContainer::ParticleType& prcv =
                         pstruct[msg_idx];
 
@@ -414,15 +414,15 @@ void SPADES::process_messages(const int lev)
                     sarr(iv, constants::LVT_IDX) =
                         prcv.rdata(particles::RealData::timestamp);
                     prcv.idata(particles::IntData::type_id) =
-                        particles::MessageTypes::processed;
+                        particles::MessageTypes::PROCESSED;
                 }
 
                 AMREX_ALWAYS_ASSERT(
-                    msg_cnt_arr(iv, particles::MessageTypes::undefined) > 2);
+                    msg_cnt_arr(iv, particles::MessageTypes::UNDEFINED) > 2);
 
                 // Create a new message to send
                 const int undef_idx0 =
-                    offsets_arr(iv, particles::MessageTypes::undefined);
+                    offsets_arr(iv, particles::MessageTypes::UNDEFINED);
                 particles::CellSortedParticleContainer::ParticleType& psnd =
                     pstruct[undef_idx0];
                 amrex::IntVect iv_dest(AMREX_D_DECL(
@@ -438,7 +438,8 @@ void SPADES::process_messages(const int lev)
                                        random_exponential(1.0) + lookahead;
                 // FIXME, in general, Create is clunky. Better way?
                 particles::Create()(
-                    psnd, ts, pos, iv_dest, box.index(iv), box.index(iv_dest));
+                    psnd, ts, pos, iv_dest, static_cast<int>(box.index(iv)),
+                    static_cast<int>(box.index(iv_dest)));
 
                 // Create the anti-message
                 const int undef_idx1 = undef_idx0 + 1;
@@ -457,10 +458,11 @@ void SPADES::process_messages(const int lev)
                         plo[2] + (iv[2] + 0.5) * dx[2])};
 
                 particles::Create()(
-                    pant, ts, anti_pos, iv_dest, box.index(iv),
-                    box.index(iv_dest));
+                    pant, ts, anti_pos, iv_dest,
+                    static_cast<int>(box.index(iv)),
+                    static_cast<int>(box.index(iv_dest)));
                 pant.idata(particles::IntData::type_id) =
-                    particles::MessageTypes::anti_message;
+                    particles::MessageTypes::ANTI_MESSAGE;
             });
     }
 }
@@ -538,11 +540,11 @@ void SPADES::MakeNewLevelFromScratch(
         ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
 
     m_message_counts[lev].define(
-        ba, dm, particles::MessageTypes::ntypes, m_state[lev].nGrow(),
+        ba, dm, particles::MessageTypes::NTYPES, m_state[lev].nGrow(),
         amrex::MFInfo());
 
     m_offsets[lev].define(
-        ba, dm, particles::MessageTypes::ntypes, m_state[lev].nGrow(),
+        ba, dm, particles::MessageTypes::NTYPES, m_state[lev].nGrow(),
         amrex::MFInfo());
 
     m_ts_new[lev] = time;

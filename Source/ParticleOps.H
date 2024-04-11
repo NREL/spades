@@ -51,7 +51,7 @@ struct MakeAntiMessage
     operator()(const P& p1, P& p2) const
     {
         Copy()(p1, p2);
-        p2.idata(IntData::type_id) = MessageTypes::anti_message;
+        p2.idata(IntData::type_id) = MessageTypes::ANTI_MESSAGE;
     }
 };
 
@@ -66,9 +66,9 @@ struct Create
         const int sender,
         const int receiver) const
     {
-        AMREX_ASSERT(p.idata(IntData::type_id) == MessageTypes::undefined);
+        AMREX_ASSERT(p.idata(IntData::type_id) == MessageTypes::UNDEFINED);
 
-        p.idata(IntData::type_id) = MessageTypes::message;
+        p.idata(IntData::type_id) = MessageTypes::MESSAGE;
         p.rdata(RealData::timestamp) = timestamp;
 
         AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)

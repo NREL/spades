@@ -17,11 +17,11 @@ struct IntData
 
 struct MessageTypes
 {
-    static constexpr int anti_message = 0;
-    static constexpr int undefined = 1;
-    static constexpr int message = 2;
-    static constexpr int processed = 3;
-    static constexpr int ntypes = 4;
+    static constexpr int ANTI_MESSAGE = 0;
+    static constexpr int UNDEFINED = 1;
+    static constexpr int MESSAGE = 2;
+    static constexpr int PROCESSED = 3;
+    static constexpr int NTYPES = 4;
 };
 } // namespace spades::particles
 #endif
