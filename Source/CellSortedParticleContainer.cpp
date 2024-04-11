@@ -17,9 +17,6 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     , m_info("message")
     , m_ngrow(ngrow)
 {
-
-    const int lev = 0;
-
     m_real_data_names.resize(RealData::ncomps, "");
     m_writeflags_real.resize(RealData::ncomps, 0);
     m_int_data_names.resize(IntData::ncomps, "");
@@ -270,7 +267,7 @@ void CellSortedParticleContainer::sort_particles()
         // Sort particle indices based on the cell index
         // BL_PROFILE_VAR("spades::CellSortedParticleContainer::sort_particles::sort",
         // sort);
-        auto& particles = particle_tile.GetArrayOfStructs();
+        const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
