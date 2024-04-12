@@ -42,6 +42,8 @@ public:
 
     void initialize(const amrex::Real lookahead);
 
+    void add_particles(amrex::iMultiFab& counts);
+
     void sort_particles();
 
     void garbage_collect(const amrex::Real gvt);

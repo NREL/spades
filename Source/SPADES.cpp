@@ -308,6 +308,8 @@ void SPADES::count_messages()
         });
     }
 
+    m_pc->add_particles(m_message_counts[lev]);
+
     count_offsets();
 }
 

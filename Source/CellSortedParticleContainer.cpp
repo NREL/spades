@@ -37,6 +37,8 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
 {
     BL_PROFILE("spades::CellSortedParticleContainer::initialize");
 
+    // FIXME this happens on CPU
+
     const int lev = 0;
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
@@ -67,18 +69,18 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                 amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
     //             if (iv == iv_src) {
     //                 {
-    //                     particles::CellSortedParticleContainer::ParticleType
-    //                     p; p.id() = particles::CellSortedParticleContainer::
+    //                     ParticleType
+    //                     p; p.id() =
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(particles::IntData::type_id) =
+    //                     p.idata(IntData::type_id) =
     //                         MessageTypes::anti_message;
-    //                     p.idata(particles::IntData::sender) =
+    //                     p.idata(IntData::sender) =
     //                     box.index(iv_src);
-    //                     p.idata(particles::IntData::receiver) =
+    //                     p.idata(IntData::receiver) =
     //                     box.index(iv_dest);
-    //                     p.rdata(particles::RealData::timestamp) =
+    //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead + 20;
 
     //                     AMREX_D_TERM(
@@ -87,28 +89,28 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                         , p.pos(2) = plo[2] + (iv_dest[2] + 0.5) *
     //                         dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(particles::IntData::i) =
+    //                     AMREX_D_TERM(p.idata(IntData::i) =
     //                     iv_dest[0];
-    //                                  , p.idata(particles::IntData::j) =
+    //                                  , p.idata(IntData::j) =
     //                                  iv_dest[1]; ,
-    //                                  p.idata(particles::IntData::k) =
+    //                                  p.idata(IntData::k) =
     //                                  iv_dest[2];)
 
     //                     pti.push_back(p);
     //                 }
     //                 {
-    //                     particles::CellSortedParticleContainer::ParticleType
-    //                     p; p.id() = particles::CellSortedParticleContainer::
+    //                     ParticleType
+    //                     p; p.id() =
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(particles::IntData::type_id) =
+    //                     p.idata(IntData::type_id) =
     //                         MessageTypes::message;
-    //                     p.idata(particles::IntData::sender) =
+    //                     p.idata(IntData::sender) =
     //                     box.index(iv_src);
-    //                     p.idata(particles::IntData::receiver) =
+    //                     p.idata(IntData::receiver) =
     //                     box.index(iv_dest2);
-    //                     p.rdata(particles::RealData::timestamp) =
+    //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead;
 
     //                     AMREX_D_TERM(
@@ -117,29 +119,29 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                         dx[1]; , p.pos(2) = plo[2] + (iv_dest2[2] + 0.5)
     //                         * dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(particles::IntData::i) =
+    //                     AMREX_D_TERM(p.idata(IntData::i) =
     //                     iv_dest2[0];
-    //                                  , p.idata(particles::IntData::j) =
+    //                                  , p.idata(IntData::j) =
     //                                  iv_dest2[1];
     //                                  ,
-    //                                  p.idata(particles::IntData::k) =
+    //                                  p.idata(IntData::k) =
     //                                  iv_dest2[2];)
 
     //                     pti.push_back(p);
     //                 }
     //                 { // creating another particle
-    //                     particles::CellSortedParticleContainer::ParticleType
-    //                     p; p.id() = particles::CellSortedParticleContainer::
+    //                     ParticleType
+    //                     p; p.id() =
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(particles::IntData::type_id) =
+    //                     p.idata(IntData::type_id) =
     //                         MessageTypes::message;
-    //                     p.idata(particles::IntData::sender) =
+    //                     p.idata(IntData::sender) =
     //                     box.index(iv_src);
-    //                     p.idata(particles::IntData::receiver) =
+    //                     p.idata(IntData::receiver) =
     //                     box.index(iv_dest);
-    //                     p.rdata(particles::RealData::timestamp) =
+    //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead;
 
     //                     AMREX_D_TERM(
@@ -148,28 +150,28 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                         , p.pos(2) = plo[2] + (iv_dest[2] + 0.5) *
     //                         dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(particles::IntData::i) =
+    //                     AMREX_D_TERM(p.idata(IntData::i) =
     //                     iv_dest[0];
-    //                                  , p.idata(particles::IntData::j) =
+    //                                  , p.idata(IntData::j) =
     //                                  iv_dest[1]; ,
-    //                                  p.idata(particles::IntData::k) =
+    //                                  p.idata(IntData::k) =
     //                                  iv_dest[2];)
 
     //                     pti.push_back(p);
     //                 }
     //                 { // creating another particle
-    //                     particles::CellSortedParticleContainer::ParticleType
-    //                     p; p.id() = particles::CellSortedParticleContainer::
+    //                     ParticleType
+    //                     p; p.id() =
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(particles::IntData::type_id) =
+    //                     p.idata(IntData::type_id) =
     //                         MessageTypes::undefined;
-    //                     p.idata(particles::IntData::sender) =
+    //                     p.idata(IntData::sender) =
     //                     box.index(iv_src);
-    //                     p.idata(particles::IntData::receiver) =
+    //                     p.idata(IntData::receiver) =
     //                     box.index(iv_dest2);
-    //                     p.rdata(particles::RealData::timestamp) =
+    //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead;
 
     //                     AMREX_D_TERM(
@@ -178,12 +180,12 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
     //                         dx[1]; , p.pos(2) = plo[2] + (iv_dest2[2] + 0.5)
     //                         * dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(particles::IntData::i) =
+    //                     AMREX_D_TERM(p.idata(IntData::i) =
     //                     iv_dest2[0];
-    //                                  , p.idata(particles::IntData::j) =
+    //                                  , p.idata(IntData::j) =
     //                                  iv_dest2[1];
     //                                  ,
-    //                                  p.idata(particles::IntData::k) =
+    //                                  p.idata(IntData::k) =
     //                                  iv_dest2[2];)
 
     //                     pti.push_back(p);
@@ -207,36 +209,103 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
              box.next(iv)) {
 
             for (int i = 0; i < np_per_cell; i++) {
-                particles::CellSortedParticleContainer::ParticleType p;
-                p.id() = particles::CellSortedParticleContainer::ParticleType::
-                    NextID();
+                ParticleType p;
+                p.id() = ParticleType::NextID();
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-                p.idata(particles::IntData::type_id) = MessageTypes::UNDEFINED;
-                p.idata(particles::IntData::sender) =
-                    static_cast<int>(box.index(iv));
-                p.idata(particles::IntData::receiver) =
-                    static_cast<int>(box.index(iv));
+                p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+                p.idata(IntData::sender) = static_cast<int>(box.index(iv));
+                p.idata(IntData::receiver) = static_cast<int>(box.index(iv));
 
                 AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
                              , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
                              , p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
 
-                AMREX_D_TERM(p.idata(particles::IntData::i) = iv[0];
-                             , p.idata(particles::IntData::j) = iv[1];
-                             , p.idata(particles::IntData::k) = iv[2];)
+                AMREX_D_TERM(p.idata(IntData::i) = iv[0];
+                             , p.idata(IntData::j) = iv[1];
+                             , p.idata(IntData::k) = iv[2];)
 
                 if (i < msg_per_cell) {
-                    p.rdata(particles::RealData::timestamp) =
+                    p.rdata(RealData::timestamp) =
                         random_exponential(1.0) + lookahead;
-                    p.idata(particles::IntData::type_id) =
-                        MessageTypes::MESSAGE;
+                    p.idata(IntData::type_id) = MessageTypes::MESSAGE;
                 }
 
                 pti.push_back(p);
             }
         }
     }
+}
+
+void CellSortedParticleContainer::add_particles(amrex::iMultiFab& counts)
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::add_particles");
+
+    const int lev = 0;
+    const auto& plo = Geom(lev).ProbLoArray();
+    const auto& dx = Geom(lev).CellSizeArray();
+    const int target_undefined_particles = 95;
+
+    // FIXME parts of this happens on CPU
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
+        const auto& cnt_arr = counts.array(mfi);
+
+        const auto ncells = static_cast<int>(box.numPts());
+        amrex::Gpu::DeviceVector<int> new_counts(ncells, 0);
+        auto* p_new_counts = new_counts.data();
+        amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
+            const auto iv = box.atOffset(icell);
+            const int new_counts = amrex::max<int>(
+                0, target_undefined_particles -
+                       cnt_arr(iv, MessageTypes::UNDEFINED));
+            p_new_counts[icell] = new_counts;
+            amrex::Gpu::Atomic::AddNoRet(
+                &cnt_arr(iv, MessageTypes::UNDEFINED), new_counts);
+        });
+
+        /// FIXME booo. Instead of this, it would be neat to resize the particle
+        /// tile with the return of the sum. Then we can offload this to a gpu I
+        /// think
+        amrex::Vector<int> h_new_counts(ncells, 0);
+        amrex::Gpu::copy(
+            amrex::Gpu::deviceToHost, new_counts.begin(), new_counts.end(),
+            h_new_counts.begin());
+
+        for (int i = 0; i < h_new_counts.size(); i++) {
+            const auto iv = box.atOffset(i);
+            const auto np = h_new_counts[i];
+            for (int j = 0; j < np; j++) {
+                ParticleType p;
+                p.id() = ParticleType::NextID();
+                p.cpu() = amrex::ParallelDescriptor::MyProc();
+
+                p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+                p.idata(IntData::sender) = static_cast<int>(box.index(iv));
+                p.idata(IntData::receiver) = static_cast<int>(box.index(iv));
+                p.rdata(RealData::timestamp) = 0.0;
+
+                AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
+                             , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
+                             , p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
+
+                AMREX_D_TERM(p.idata(IntData::i) = iv[0];
+                             , p.idata(IntData::j) = iv[1];
+                             , p.idata(IntData::k) = iv[2];)
+
+                pti.push_back(p);
+            }
+        }
+    }
+
+    sort_particles();
 }
 
 void CellSortedParticleContainer::sort_particles()
@@ -254,7 +323,7 @@ void CellSortedParticleContainer::sort_particles()
             continue;
         }
 
-        // BL_PROFILE_VAR("spades::CellSortedParticleContainer::sort_particles::prep",
+        // BL_PROFILE_VAR("spades::CellSortedParticleContainer::sort_prep",
         // prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
