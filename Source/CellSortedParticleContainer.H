@@ -40,9 +40,39 @@ public:
     explicit CellSortedParticleContainer(
         amrex::AmrParGDB* par_gdb, int ngrow = 0);
 
-    void initialize(const amrex::Real lookahead);
+    void initialize_state();
 
-    void add_particles(amrex::iMultiFab& counts);
+    void clear_state();
+
+    // count messages
+    void count_messages();
+
+    // count offsets
+    void count_offsets();
+
+    const amrex::Vector<amrex::iMultiFab>& message_counts() const
+    {
+        return m_message_counts;
+    };
+
+    const amrex::Vector<amrex::iMultiFab>& offsets() const
+    {
+        return m_offsets;
+    };
+
+    const amrex::iMultiFab& message_counts(const int lev) const
+    {
+        return m_message_counts[lev];
+    };
+
+    const amrex::iMultiFab& offsets(const int lev) const
+    {
+        return m_offsets[lev];
+    };
+
+    void initialize_particles(const amrex::Real lookahead);
+
+    void add_messages();
 
     void sort_particles();
 
@@ -68,6 +98,9 @@ private:
     amrex::Vector<std::string> m_int_data_names;
 
     int m_ngrow;
+
+    amrex::Vector<amrex::iMultiFab> m_message_counts;
+    amrex::Vector<amrex::iMultiFab> m_offsets;
 };
 } // namespace spades::particles
 #endif

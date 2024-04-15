@@ -80,7 +80,7 @@ public:
     void initialize_state(const int lev);
 
     // Initialize the particle container
-    void init_particle_containter();
+    void init_particle_container();
 
 private:
     // read parameters
@@ -108,12 +108,6 @@ private:
 
     // update gvt
     void update_gvt(const int lev);
-
-    // count messages
-    void count_messages();
-
-    // count offsets
-    void count_offsets();
 
     // Check if a field exists
     bool check_field_existence(const std::string& name);
@@ -171,8 +165,6 @@ private:
 
     // array of multifabs to store the solution at each level of refinement
     amrex::Vector<amrex::MultiFab> m_state;
-    amrex::Vector<amrex::iMultiFab> m_message_counts;
-    amrex::Vector<amrex::iMultiFab> m_offsets;
     // amrex::Vector<amrex::MultiFab> m_f;
     // amrex::Vector<amrex::MultiFab> m_eq;
     // amrex::Vector<amrex::MultiFab> m_derived;

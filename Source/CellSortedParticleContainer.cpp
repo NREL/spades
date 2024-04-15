@@ -17,6 +17,12 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     , m_info("message")
     , m_ngrow(ngrow)
 {
+    int nlevs_max = par_gdb->maxLevel() + 1;
+
+    if (par_gdb->maxLevel() > 0) {
+        amrex::Abort("Not supporting multilevel right now");
+    }
+
     m_real_data_names.resize(RealData::ncomps, "");
     m_writeflags_real.resize(RealData::ncomps, 0);
     m_int_data_names.resize(IntData::ncomps, "");
@@ -31,15 +37,121 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     m_writeflags_int[IntData::sender] = 1;
     m_int_data_names[IntData::receiver] = "receiver";
     m_writeflags_int[IntData::receiver] = 1;
+
+    m_message_counts.resize(nlevs_max);
+    m_offsets.resize(nlevs_max);
 }
 
-void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
+void CellSortedParticleContainer::initialize_state()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::initialize");
+    BL_PROFILE("spades::CellSortedParticleContainer::init_state()");
+
+    const int lev = 0;
+
+    m_message_counts[lev].define(
+        m_gdb->boxArray(lev), m_gdb->DistributionMap(lev), MessageTypes::NTYPES,
+        m_ngrow, amrex::MFInfo());
+
+    m_offsets[lev].define(
+        m_gdb->boxArray(lev), m_gdb->DistributionMap(lev), MessageTypes::NTYPES,
+        m_ngrow, amrex::MFInfo());
+
+    m_message_counts[lev].setVal(0);
+    m_offsets[lev].setVal(0);
+}
+
+void CellSortedParticleContainer::clear_state()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::clear_state()");
+    const int lev = 0;
+    m_message_counts[lev].clear();
+    m_offsets[lev].clear();
+}
+
+void CellSortedParticleContainer::count_messages()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::count_messages()");
+
+    const int lev = 0;
+    m_message_counts[lev].setVal(0);
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto& msg_cnt_arr = m_message_counts[lev].array(mfi);
+        auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
+        const auto& particles = pti.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+        const int np = pti.numParticles();
+
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            const amrex::IntVect iv(AMREX_D_DECL(
+                p.idata(IntData::i), p.idata(IntData::j), p.idata(IntData::k)));
+
+            if (box.contains(iv)) {
+                amrex::Gpu::Atomic::AddNoRet(
+                    &msg_cnt_arr(iv, p.idata(IntData::type_id)), 1);
+            }
+        });
+    }
+
+    add_messages();
+
+    count_offsets();
+}
+
+void CellSortedParticleContainer::count_offsets()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::count_offsets()");
+
+    const int lev = 0;
+    m_offsets[lev].setVal(0);
+
+    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const auto ncell = box.numPts();
+        const auto& msg_cnt_arr = m_message_counts[lev].const_array(mfi);
+        const auto& offsets_arr = m_offsets[lev].array(mfi);
+        int* p_offsets = offsets_arr.dataPtr();
+        amrex::Scan::PrefixSum<int>(
+            ncell,
+            [=] AMREX_GPU_DEVICE(int i) -> int {
+                const auto iv = box.atOffset(i);
+                int total_messages = 0;
+                for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
+                    total_messages += msg_cnt_arr(iv, typ);
+                }
+                return total_messages;
+            },
+            [=] AMREX_GPU_DEVICE(int i, const int& x) { p_offsets[i] = x; },
+            amrex::Scan::Type::exclusive, amrex::Scan::noRetSum);
+
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                for (int typ = 1; typ < MessageTypes::NTYPES; typ++) {
+                    offsets_arr(iv, typ) =
+                        offsets_arr(iv, typ - 1) + msg_cnt_arr(iv, typ - 1);
+                }
+            });
+    }
+}
+
+void CellSortedParticleContainer::initialize_particles(
+    const amrex::Real lookahead)
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::initialize()");
+
+    const int lev = 0;
 
     // FIXME this happens on CPU
 
-    const int lev = 0;
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
     const auto& dlo = Geom(lev).Domain().smallEnd();
@@ -235,16 +347,19 @@ void CellSortedParticleContainer::initialize(const amrex::Real lookahead)
             }
         }
     }
+    Redistribute();
+    sort_particles();
 }
 
-void CellSortedParticleContainer::add_particles(amrex::iMultiFab& counts)
+void CellSortedParticleContainer::add_messages()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::add_particles");
+    BL_PROFILE("spades::CellSortedParticleContainer::add_messages()");
 
     const int lev = 0;
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
-    const int target_undefined_particles = 95;
+    const int lower_count = 85;
+    const int upper_count = 1005;
 
     // FIXME parts of this happens on CPU
 
@@ -256,19 +371,24 @@ void CellSortedParticleContainer::add_particles(amrex::iMultiFab& counts)
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
-        const auto& cnt_arr = counts.array(mfi);
+        const auto& cnt_arr = m_message_counts[lev].array(mfi);
 
         const auto ncells = static_cast<int>(box.numPts());
         amrex::Gpu::DeviceVector<int> new_counts(ncells, 0);
         auto* p_new_counts = new_counts.data();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
-            const int new_counts = amrex::max<int>(
-                0, target_undefined_particles -
-                       cnt_arr(iv, MessageTypes::UNDEFINED));
-            p_new_counts[icell] = new_counts;
+            const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
+            const int new_count = (lower_count > current_count)
+                                      ? lower_count - current_count
+                                      : ((current_count > upper_count)
+                                             ? upper_count - current_count
+                                             : 0);
+            p_new_counts[icell] = new_count;
             amrex::Gpu::Atomic::AddNoRet(
-                &cnt_arr(iv, MessageTypes::UNDEFINED), new_counts);
+                &cnt_arr(iv, MessageTypes::UNDEFINED), new_count);
+            amrex::Print() << "particles to add/remove: " << new_count << " "
+                           << cnt_arr(iv, MessageTypes::UNDEFINED) << std::endl;
         });
 
         /// FIXME booo. Instead of this, it would be neat to resize the particle
@@ -279,9 +399,11 @@ void CellSortedParticleContainer::add_particles(amrex::iMultiFab& counts)
             amrex::Gpu::deviceToHost, new_counts.begin(), new_counts.end(),
             h_new_counts.begin());
 
+        // add particles
         for (int i = 0; i < h_new_counts.size(); i++) {
             const auto iv = box.atOffset(i);
             const auto np = h_new_counts[i];
+
             for (int j = 0; j < np; j++) {
                 ParticleType p;
                 p.id() = ParticleType::NextID();
@@ -303,15 +425,27 @@ void CellSortedParticleContainer::add_particles(amrex::iMultiFab& counts)
                 pti.push_back(p);
             }
         }
+
+        // remove particles
+        for (int i = 0; i < h_new_counts.size(); i++) {
+            const auto iv = box.atOffset(i);
+            const auto np = h_new_counts[i];
+            if (np < 0) {
+                amrex::Print()
+                    << "I want to remove particles: " << np << std::endl;
+                amrex::Abort();
+            }
+        }
     }
 
+    Redistribute();
     sort_particles();
 }
 
 void CellSortedParticleContainer::sort_particles()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::CellSortedParticleContainer::sort_particles");
+    BL_PROFILE("spades::CellSortedParticleContainer::sort_particles()");
 
     const int lev = 0;
 
@@ -388,7 +522,7 @@ void CellSortedParticleContainer::sort_particles()
 
 void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::garbage_collect");
+    BL_PROFILE("spades::CellSortedParticleContainer::garbage_collect()");
 
     const int lev = 0;
 
@@ -407,6 +541,7 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
             auto& p = pstruct[pindex];
             if (p.rdata(RealData::timestamp) < gvt) {
                 p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+                p.rdata(RealData::timestamp) = gvt;
             }
         });
     }
