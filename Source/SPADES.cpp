@@ -62,8 +62,6 @@ void SPADES::init_data()
 
         compute_dt();
 
-        m_pc->count_messages();
-
         if (m_chk_int > 0) {
             write_checkpoint_file();
         }
@@ -269,7 +267,8 @@ void SPADES::post_time_step()
 {
     BL_PROFILE("SPADES::post_time_step()");
 
-    m_pc->count_messages();
+    m_pc->update_counts();
+    m_pc->update_undefined();
 }
 
 void SPADES::process_messages(const int lev)
@@ -472,7 +471,7 @@ void SPADES::MakeNewLevelFromScratch(
     m_pc->Define(Geom(lev), dm, ba);
     m_pc->initialize_particles(m_lookahead);
     m_pc->initialize_state();
-    m_pc->sort_particles();
+    m_pc->update_counts();
 }
 
 void SPADES::initialize_state(const int lev)

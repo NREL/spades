@@ -68,6 +68,13 @@ void CellSortedParticleContainer::clear_state()
     m_offsets[lev].clear();
 }
 
+void CellSortedParticleContainer::update_counts()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::update_counts()");
+    count_messages();
+    count_offsets();
+}
+
 void CellSortedParticleContainer::count_messages()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::count_messages()");
@@ -100,10 +107,6 @@ void CellSortedParticleContainer::count_messages()
             }
         });
     }
-
-    add_messages();
-
-    count_offsets();
 }
 
 void CellSortedParticleContainer::count_offsets()
@@ -351,17 +354,15 @@ void CellSortedParticleContainer::initialize_particles(
     sort_particles();
 }
 
-void CellSortedParticleContainer::add_messages()
+void CellSortedParticleContainer::update_undefined()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::add_messages()");
+    BL_PROFILE("spades::CellSortedParticleContainer::update_undefined()");
 
     const int lev = 0;
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
-    const int lower_count = 85;
-    const int upper_count = 1005;
-
-    // FIXME parts of this happens on CPU
+    const int lower_count = m_lower_undefined_count;
+    const int upper_count = m_upper_undefined_count;
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -370,8 +371,11 @@ void CellSortedParticleContainer::add_messages()
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
-        const auto& cnt_arr = m_message_counts[lev].array(mfi);
+        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
+        const auto& offsets_arr = m_offsets[lev].const_array(mfi);
+        auto& particle_tile = GetParticles(lev)[std::make_pair(gid, tid)];
+        auto& particles = particle_tile.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
 
         const auto ncells = static_cast<int>(box.numPts());
         amrex::Gpu::DeviceVector<int> new_counts(ncells, 0);
@@ -385,15 +389,9 @@ void CellSortedParticleContainer::add_messages()
                                              ? upper_count - current_count
                                              : 0);
             p_new_counts[icell] = new_count;
-            amrex::Gpu::Atomic::AddNoRet(
-                &cnt_arr(iv, MessageTypes::UNDEFINED), new_count);
-            amrex::Print() << "particles to add/remove: " << new_count << " "
-                           << cnt_arr(iv, MessageTypes::UNDEFINED) << std::endl;
         });
 
-        /// FIXME booo. Instead of this, it would be neat to resize the particle
-        /// tile with the return of the sum. Then we can offload this to a gpu I
-        /// think
+        // host vector for the particle adds
         amrex::Vector<int> h_new_counts(ncells, 0);
         amrex::Gpu::copy(
             amrex::Gpu::deviceToHost, new_counts.begin(), new_counts.end(),
@@ -403,7 +401,6 @@ void CellSortedParticleContainer::add_messages()
         for (int i = 0; i < h_new_counts.size(); i++) {
             const auto iv = box.atOffset(i);
             const auto np = h_new_counts[i];
-
             for (int j = 0; j < np; j++) {
                 ParticleType p;
                 p.id() = ParticleType::NextID();
@@ -422,24 +419,30 @@ void CellSortedParticleContainer::add_messages()
                              , p.idata(IntData::j) = iv[1];
                              , p.idata(IntData::k) = iv[2];)
 
-                pti.push_back(p);
+                particle_tile.push_back(p);
             }
         }
 
         // remove particles
-        for (int i = 0; i < h_new_counts.size(); i++) {
-            const auto iv = box.atOffset(i);
-            const auto np = h_new_counts[i];
-            if (np < 0) {
-                amrex::Print()
-                    << "I want to remove particles: " << np << std::endl;
-                amrex::Abort();
-            }
-        }
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto idx = box.index(iv);
+                const auto np = p_new_counts[idx];
+                for (int m = 0; m < -np; m++) {
+                    const int msg_idx =
+                        offsets_arr(iv, particles::MessageTypes::UNDEFINED);
+                    ParticleType& p = pstruct[msg_idx + m];
+                    AMREX_ALWAYS_ASSERT(
+                        p.idata(IntData::type_id) == MessageTypes::UNDEFINED);
+                    p.id() = -1;
+                }
+            });
     }
 
     Redistribute();
     sort_particles();
+    update_counts();
 }
 
 void CellSortedParticleContainer::sort_particles()

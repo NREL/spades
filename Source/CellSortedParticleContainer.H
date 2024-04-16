@@ -45,10 +45,7 @@ public:
     void clear_state();
 
     // count messages
-    void count_messages();
-
-    // count offsets
-    void count_offsets();
+    void update_counts();
 
     const amrex::Vector<amrex::iMultiFab>& message_counts() const
     {
@@ -72,9 +69,10 @@ public:
 
     void initialize_particles(const amrex::Real lookahead);
 
-    void add_messages();
-
     void sort_particles();
+
+    // update the undefined messages
+    void update_undefined();
 
     void garbage_collect(const amrex::Real gvt);
 
@@ -88,6 +86,12 @@ protected:
     amrex::DistributionMapping::RefID m_DMRef;
 
 private:
+    // count messages
+    void count_messages();
+
+    // count offsets
+    void count_offsets();
+
     //! Data for particle container
     ParticleContainerInfo m_info;
 
@@ -101,6 +105,9 @@ private:
 
     amrex::Vector<amrex::iMultiFab> m_message_counts;
     amrex::Vector<amrex::iMultiFab> m_offsets;
+
+    const int m_lower_undefined_count{85};
+    const int m_upper_undefined_count{85};
 };
 } // namespace spades::particles
 #endif
