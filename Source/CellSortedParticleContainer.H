@@ -80,11 +80,6 @@ public:
 
     int ngrow() const { return m_ngrow; }
 
-protected:
-    amrex::BoxArray::RefID m_BARef;
-
-    amrex::DistributionMapping::RefID m_DMRef;
-
 private:
     // count messages
     void count_messages();
