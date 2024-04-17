@@ -332,6 +332,8 @@ void SPADES::process_messages(const int lev)
                     }
 
                     // process the event
+                    prcv.rdata(particles::RealData::old_timestamp) =
+                        sarr(iv, constants::LVT_IDX);
                     sarr(iv, constants::LVT_IDX) =
                         prcv.rdata(particles::RealData::timestamp);
                     prcv.idata(particles::IntData::type_id) =

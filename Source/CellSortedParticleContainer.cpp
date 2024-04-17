@@ -30,6 +30,8 @@ CellSortedParticleContainer::CellSortedParticleContainer(
 
     m_real_data_names[RealData::timestamp] = "timestamp";
     m_writeflags_real[RealData::timestamp] = 1;
+    m_real_data_names[RealData::old_timestamp] = "old_timestamp";
+    m_writeflags_real[RealData::old_timestamp] = 1;
 
     m_int_data_names[IntData::type_id] = "type_id";
     m_writeflags_int[IntData::type_id] = 1;
@@ -331,6 +333,8 @@ void CellSortedParticleContainer::initialize_particles(
                 p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
                 p.idata(IntData::sender) = static_cast<int>(box.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(box.index(iv));
+                p.rdata(RealData::timestamp) = 0.0;
+                p.rdata(RealData::old_timestamp) = 0.0;
 
                 AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
                              , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
@@ -343,6 +347,7 @@ void CellSortedParticleContainer::initialize_particles(
                 if (i < msg_per_cell) {
                     p.rdata(RealData::timestamp) =
                         random_exponential(1.0) + lookahead;
+                    p.rdata(RealData::old_timestamp) = 0.0;
                     p.idata(IntData::type_id) = MessageTypes::MESSAGE;
                 }
 
@@ -410,6 +415,7 @@ void CellSortedParticleContainer::update_undefined()
                 p.idata(IntData::sender) = static_cast<int>(box.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(box.index(iv));
                 p.rdata(RealData::timestamp) = 0.0;
+                p.rdata(RealData::old_timestamp) = 0.0;
 
                 AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
                              , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];

@@ -7,7 +7,7 @@ namespace spades::particles {
 
 struct RealData
 {
-    enum { timestamp, ncomps };
+    enum { timestamp, old_timestamp, ncomps };
 };
 
 struct IntData
