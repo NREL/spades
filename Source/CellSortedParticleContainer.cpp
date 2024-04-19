@@ -92,7 +92,7 @@ void CellSortedParticleContainer::count_messages()
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& msg_cnt_arr = m_message_counts[lev].array(mfi);
+        const auto& cnt_arr = m_message_counts[lev].array(mfi);
         auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
         const auto& particles = pti.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
@@ -105,7 +105,7 @@ void CellSortedParticleContainer::count_messages()
 
             if (box.contains(iv)) {
                 amrex::Gpu::Atomic::AddNoRet(
-                    &msg_cnt_arr(iv, p.idata(IntData::type_id)), 1);
+                    &cnt_arr(iv, p.idata(IntData::type_id)), 1);
             }
         });
     }
@@ -121,7 +121,7 @@ void CellSortedParticleContainer::count_offsets()
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const auto ncell = box.numPts();
-        const auto& msg_cnt_arr = m_message_counts[lev].const_array(mfi);
+        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
         const auto& offsets_arr = m_offsets[lev].array(mfi);
         int* p_offsets = offsets_arr.dataPtr();
         amrex::Scan::PrefixSum<int>(
@@ -130,7 +130,7 @@ void CellSortedParticleContainer::count_offsets()
                 const auto iv = box.atOffset(i);
                 int total_messages = 0;
                 for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
-                    total_messages += msg_cnt_arr(iv, typ);
+                    total_messages += cnt_arr(iv, typ);
                 }
                 return total_messages;
             },
@@ -142,7 +142,7 @@ void CellSortedParticleContainer::count_offsets()
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 for (int typ = 1; typ < MessageTypes::NTYPES; typ++) {
                     offsets_arr(iv, typ) =
-                        offsets_arr(iv, typ - 1) + msg_cnt_arr(iv, typ - 1);
+                        offsets_arr(iv, typ - 1) + cnt_arr(iv, typ - 1);
                 }
             });
     }
@@ -451,6 +451,7 @@ void CellSortedParticleContainer::update_undefined()
     Redistribute();
     sort_particles();
     update_counts();
+    amrex::Print() << "updated undefined" << std::endl;
 }
 
 void CellSortedParticleContainer::sort_particles()
@@ -558,9 +559,67 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
     }
 }
 
+void CellSortedParticleContainer::reposition_messages()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::reposition_messages()");
+
+    const int lev = 0;
+    const auto& plo = Geom(lev).ProbLoArray();
+    const auto& dx = Geom(lev).CellSizeArray();
+    const auto& dxi = Geom(lev).InvCellSizeArray();
+    const auto& dom = Geom(lev).Domain();
+    const int nbins = 100;
+
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
+        const auto& offsets_arr = m_offsets[lev].const_array(mfi);
+        const auto index = std::make_pair(gid, tid);
+        auto& pti = GetParticles(lev)[index];
+        auto& particles = pti.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
+                    AMREX_ALWAYS_ASSERT(cnt_arr(iv, typ) < nbins);
+                    for (int n = 0; n < cnt_arr(iv, typ); n++) {
+                        const int idx = offsets_arr(iv, typ);
+                        ParticleType& p = pstruct[idx + n];
+                        AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == typ);
+
+                        const amrex::IntVect piv(AMREX_D_DECL(
+                            p.idata(IntData::i), p.idata(IntData::j),
+                            p.idata(IntData::k)));
+                        AMREX_ALWAYS_ASSERT(piv == iv);
+
+                        AMREX_D_TERM(p.pos(0) = plo[0] + iv[0] * dx[0] +
+                                                (typ + 1) * dx[0] /
+                                                    (MessageTypes::NTYPES + 1);
+                                     , p.pos(1) = plo[1] + iv[1] * dx[1] +
+                                                  (n + 1) * dx[1] / nbins;
+                                     ,
+                                     p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
+
+                        // ensure the particle didn't change cells
+                        AMREX_ALWAYS_ASSERT(
+                            piv == getParticleCell(p, plo, dxi, dom));
+                    }
+                }
+            });
+    }
+}
+
 void CellSortedParticleContainer::write_plot_file(
     const std::string& plt_filename)
 {
+    reposition_messages();
     WritePlotFile(
         plt_filename, "particles", m_writeflags_real, m_writeflags_int,
         m_real_data_names, m_int_data_names);

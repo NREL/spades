@@ -14,11 +14,9 @@ struct Compare
     {
         // sort by iv, then message type then by timestamp
         const amrex::IntVect piv1(AMREX_D_DECL(
-            p1.idata(particles::IntData::i), p1.idata(particles::IntData::j),
-            p1.idata(particles::IntData::k)));
+            p1.idata(IntData::i), p1.idata(IntData::j), p1.idata(IntData::k)));
         const amrex::IntVect piv2(AMREX_D_DECL(
-            p2.idata(particles::IntData::i), p2.idata(particles::IntData::j),
-            p2.idata(particles::IntData::k)));
+            p2.idata(IntData::i), p2.idata(IntData::j), p2.idata(IntData::k)));
 
         const auto m1 = p1.idata(IntData::type_id);
         const auto m2 = p2.idata(IntData::type_id);

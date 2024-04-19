@@ -87,6 +87,9 @@ private:
     // count offsets
     void count_offsets();
 
+    // reposition the messages inside a cell
+    void reposition_messages();
+
     //! Data for particle container
     ParticleContainerInfo m_info;
 

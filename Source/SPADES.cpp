@@ -310,6 +310,9 @@ void SPADES::process_messages(const int lev)
                         offsets_arr(iv, particles::MessageTypes::MESSAGE);
                     particles::CellSortedParticleContainer::ParticleType& prcv =
                         pstruct[msg_idx];
+                    AMREX_ALWAYS_ASSERT(
+                        prcv.idata(particles::IntData::type_id) ==
+                        particles::MessageTypes::MESSAGE);
 
                     // amrex::Print()
                     //     << "particle: " << msg_idx << " in cell: " << iv
@@ -357,6 +360,9 @@ void SPADES::process_messages(const int lev)
                         offsets_arr(iv, particles::MessageTypes::UNDEFINED);
                     particles::CellSortedParticleContainer::ParticleType& psnd =
                         pstruct[undef_idx0];
+                    AMREX_ALWAYS_ASSERT(
+                        psnd.idata(particles::IntData::type_id) ==
+                        particles::MessageTypes::UNDEFINED);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
@@ -377,6 +383,9 @@ void SPADES::process_messages(const int lev)
                     const int undef_idx1 = undef_idx0 + 1;
                     particles::CellSortedParticleContainer::ParticleType& pant =
                         pstruct[undef_idx1];
+                    AMREX_ALWAYS_ASSERT(
+                        pant.idata(particles::IntData::type_id) ==
+                        particles::MessageTypes::UNDEFINED);
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The antimessage
@@ -390,8 +399,7 @@ void SPADES::process_messages(const int lev)
                             plo[2] + (iv[2] + 0.5) * dx[2])};
 
                     particles::Create()(
-                        pant, ts, anti_pos, iv_dest,
-                        static_cast<int>(dom.index(iv)),
+                        pant, ts, anti_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     pant.idata(particles::IntData::type_id) =
                         particles::MessageTypes::ANTI_MESSAGE;
