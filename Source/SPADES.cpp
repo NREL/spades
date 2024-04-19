@@ -219,7 +219,8 @@ void SPADES::time_step(
         amrex::Print() << "[Level " << lev << " step " << m_isteps[lev] + 1
                        << "] ";
         amrex::Print() << "Advance with time = " << m_ts_new[lev]
-                       << " dt = " << m_dts[lev] << std::endl;
+                       << " dt = " << m_dts[lev] << " gvt = " << m_gvts[lev]
+                       << std::endl;
     }
 
     if (lev < finest_level) {
@@ -250,26 +251,24 @@ void SPADES::advance(
 {
     BL_PROFILE("SPADES::advance()");
 
-    process_messages(lev);
-
     update_gvt(lev);
 
     m_pc->garbage_collect(m_gvts[lev]);
+    m_pc->sort_particles();
+    m_pc->update_counts();
+
+    process_messages(lev);
 
     m_pc->Redistribute();
     m_pc->sort_particles();
+    m_pc->update_counts();
+    m_pc->update_undefined();
 
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
     m_ts_new[lev] += dt_lev;       // new time is ahead
 }
 
-void SPADES::post_time_step()
-{
-    BL_PROFILE("SPADES::post_time_step()");
-
-    m_pc->update_counts();
-    m_pc->update_undefined();
-}
+void SPADES::post_time_step() { BL_PROFILE("SPADES::post_time_step()"); }
 
 void SPADES::process_messages(const int lev)
 {
@@ -325,6 +324,12 @@ void SPADES::process_messages(const int lev)
                             << "LVT: " << sarr(iv, constants::LVT_IDX)
                             << " and message time stamp is "
                             << prcv.rdata(particles::RealData::timestamp)
+                            << " with id " << prcv.id() << " and type "
+                            << prcv.idata(particles::IntData::type_id)
+                            << " and sender "
+                            << prcv.idata(particles::IntData::sender)
+                            << " and receiver "
+                            << prcv.idata(particles::IntData::receiver)
                             << std::endl;
                         // amrex::Abort("I got a message from the past ");
                         amrex::Print()
