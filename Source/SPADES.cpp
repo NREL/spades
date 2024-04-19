@@ -5,12 +5,13 @@
 namespace spades {
 SPADES::SPADES()
 {
-    BL_PROFILE("SPADES::SPADES()");
+    BL_PROFILE("spades::SPADES::SPADES()");
     read_parameters();
     int nlevs_max = max_level + 1;
 
     if (max_level > 0) {
-        amrex::Abort("Not supporting multilevel right now");
+        amrex::Abort(
+            "spades::SPADES::SPADES(): not supporting multilevel right now");
     }
 
     m_state_varnames.push_back("lvt");
@@ -46,7 +47,7 @@ SPADES::~SPADES() = default;
 
 void SPADES::init_data()
 {
-    BL_PROFILE("SPADES::init_data()");
+    BL_PROFILE("spades::SPADES::init_data()");
 
     if (m_restart_chkfile.empty()) {
         // start simulation from the beginning
@@ -68,7 +69,9 @@ void SPADES::init_data()
     } else {
         // restart from a checkpoint
         read_checkpoint_file();
-        amrex::Abort("need to create then grab the particle chkp");
+        amrex::Abort(
+            "spades::SPADES::init_data(): need to create then grab the "
+            "particle chkp");
     }
 
     if (m_plot_int > 0) {
@@ -83,14 +86,14 @@ void SPADES::init_data()
 
 void SPADES::init_particle_container()
 {
-    BL_PROFILE("SPADES::init_particle_container()");
+    BL_PROFILE("spades::SPADES::init_particle_container()");
     m_pc =
         std::make_unique<particles::CellSortedParticleContainer>(GetParGDB());
 }
 
 void SPADES::read_parameters()
 {
-    BL_PROFILE("SPADES::read_parameters()");
+    BL_PROFILE("spades::SPADES::read_parameters()");
 
     {
         amrex::ParmParse pp;
@@ -119,14 +122,16 @@ void SPADES::read_parameters()
     // force periodic bcs
     for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
         if (!amrex::DefaultGeometry().isPeriodic(dir)) {
-            amrex::Abort("Geometry needs to be periodic");
+            amrex::Abort(
+                "spades::SPADES::read_parameters(): geometry needs to be "
+                "periodic");
         }
     }
 }
 
 void SPADES::evolve()
 {
-    BL_PROFILE("SPADES::evolve()");
+    BL_PROFILE("spades::SPADES::evolve()");
 
     amrex::Real cur_time = m_ts_new[0];
     int last_plot_file_step = 0;
@@ -177,7 +182,7 @@ void SPADES::evolve()
 void SPADES::time_step(
     const int lev, const amrex::Real time, const int iteration)
 {
-    BL_PROFILE("SPADES::time_step()");
+    BL_PROFILE("spades::SPADES::time_step()");
     if (m_regrid_int > 0) // We may need to regrid
     {
 
@@ -249,7 +254,7 @@ void SPADES::advance(
     const int /*iteration*/,
     const int /*ncycle*/)
 {
-    BL_PROFILE("SPADES::advance()");
+    BL_PROFILE("spades::SPADES::advance()");
 
     update_gvt(lev);
 
@@ -268,11 +273,14 @@ void SPADES::advance(
     m_ts_new[lev] += dt_lev;       // new time is ahead
 }
 
-void SPADES::post_time_step() { BL_PROFILE("SPADES::post_time_step()"); }
+void SPADES::post_time_step()
+{
+    BL_PROFILE("spades::SPADES::post_time_step()");
+}
 
 void SPADES::process_messages(const int lev)
 {
-    BL_PROFILE("SPADES::process_messages()");
+    BL_PROFILE("spades::SPADES::process_messages()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
         m_state_ngrow == m_pc->ngrow(),
         "Particle and state cells must be equal for now");
@@ -410,14 +418,14 @@ void SPADES::process_messages(const int lev)
 
 void SPADES::update_gvt(const int lev)
 {
-    BL_PROFILE("SPADES::update_gvt()");
+    BL_PROFILE("spades::SPADES::update_gvt()");
     m_gvts[lev] = m_state[lev].min(0, 0);
 }
 
 // a wrapper for EstTimeStep
 void SPADES::compute_dt()
 {
-    BL_PROFILE("SPADES::compute_dt()");
+    BL_PROFILE("spades::SPADES::compute_dt()");
     amrex::Vector<amrex::Real> dt_tmp(finest_level + 1);
 
     for (int lev = 0; lev <= finest_level; ++lev) {
@@ -450,7 +458,7 @@ void SPADES::compute_dt()
 // compute dt
 amrex::Real SPADES::est_time_step(const int /*lev*/)
 {
-    BL_PROFILE("SPADES::est_time_step()");
+    BL_PROFILE("spades::SPADES::est_time_step()");
     return 1.0;
 }
 
@@ -462,8 +470,8 @@ void SPADES::MakeNewLevelFromCoarse(
     const amrex::BoxArray& ba,
     const amrex::DistributionMapping& dm)
 {
-    BL_PROFILE("SPADES::MakeNewLevelFromCoarse()");
-    amrex::Abort("MakeNewLevelFromCoarse not implemented");
+    BL_PROFILE("spades::SPADES::MakeNewLevelFromCoarse()");
+    amrex::Abort("spades::SPADES::MakeNewLevelFromCoarse(): not implemented");
 }
 
 // Make a new level from scratch using provided BoxArray and
@@ -475,7 +483,7 @@ void SPADES::MakeNewLevelFromScratch(
     const amrex::BoxArray& ba,
     const amrex::DistributionMapping& dm)
 {
-    BL_PROFILE("SPADES::MakeNewLevelFromScratch()");
+    BL_PROFILE("spades::SPADES::MakeNewLevelFromScratch()");
 
     m_state[lev].define(
         ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
@@ -495,7 +503,7 @@ void SPADES::MakeNewLevelFromScratch(
 
 void SPADES::initialize_state(const int lev)
 {
-    BL_PROFILE("SPADES::initialize_state()");
+    BL_PROFILE("spades::SPADES::initialize_state()");
 
     m_ic_op->initialize(lev, geom[lev].data());
 
@@ -510,14 +518,14 @@ void SPADES::RemakeLevel(
     const amrex::BoxArray& ba,
     const amrex::DistributionMapping& dm)
 {
-    BL_PROFILE("SPADES::RemakeLevel()");
-    amrex::Abort("RemakeLevel not implemented");
+    BL_PROFILE("spades::SPADES::RemakeLevel()");
+    amrex::Abort("spades::SPADES::RemakeLevel(): not implemented");
 }
 
 // Delete level data
 void SPADES::ClearLevel(int lev)
 {
-    BL_PROFILE("SPADES::ClearLevel()");
+    BL_PROFILE("spades::SPADES::ClearLevel()");
     m_pc->clear_state();
     m_state[lev].clear();
     m_plt_mf[lev].clear();
@@ -525,20 +533,21 @@ void SPADES::ClearLevel(int lev)
 
 void SPADES::set_ics()
 {
-    BL_PROFILE("SPADES::set_ics()");
+    BL_PROFILE("spades::SPADES::set_ics()");
     if (m_ic_type == "constant") {
         m_ic_op = std::make_unique<ic::Initializer<ic::Constant>>(
             ic::Constant(ic::Constant()), m_state);
     } else {
         amrex::Abort(
-            "SPADES::set_ics(): User must specify a valid initial condition");
+            "spades::SPADES::set_ics(): User must specify a valid initial "
+            "condition");
     }
 }
 
 // Check if a field exists
 bool SPADES::check_field_existence(const std::string& name)
 {
-    BL_PROFILE("SPADES::check_field_existence()");
+    BL_PROFILE("spades::SPADES::check_field_existence()");
     const auto vnames = {m_state_varnames, m_message_counts_varnames};
     return std::any_of(vnames.begin(), vnames.end(), [=](const auto& vn) {
         return get_field_component(name, vn) != -1;
@@ -549,7 +558,7 @@ bool SPADES::check_field_existence(const std::string& name)
 int SPADES::get_field_component(
     const std::string& name, const amrex::Vector<std::string>& varnames)
 {
-    BL_PROFILE("SPADES::get_field_component()");
+    BL_PROFILE("spades::SPADES::get_field_component()");
     const auto itr = std::find(varnames.begin(), varnames.end(), name);
     if (itr != varnames.cend()) {
         return static_cast<int>(std::distance(varnames.begin(), itr));
@@ -561,10 +570,11 @@ int SPADES::get_field_component(
 std::unique_ptr<amrex::MultiFab>
 SPADES::get_field(const std::string& name, const int lev, const int ngrow)
 {
-    BL_PROFILE("SPADES::get_field()");
+    BL_PROFILE("spades::SPADES::get_field()");
 
     if (!check_field_existence(name)) {
-        amrex::Abort("SPADES::get_field(): this field was not found: " + name);
+        amrex::Abort(
+            "spades::SPADES::get_field(): this field was not found: " + name);
     }
 
     const int nc = 1;
@@ -635,7 +645,7 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
 
 void SPADES::write_plot_file()
 {
-    BL_PROFILE("SPADES::write_plot_file()");
+    BL_PROFILE("spades::SPADES::write_plot_file()");
     const std::string& plotfilename = plot_file_name(m_isteps[0]);
     const auto& mf = plot_file_mf();
     const auto& varnames = plot_file_var_names();
@@ -655,7 +665,7 @@ void SPADES::write_plot_file()
 
 void SPADES::write_checkpoint_file() const
 {
-    BL_PROFILE("SPADES::write_checkpoint_file()");
+    BL_PROFILE("spades::SPADES::write_checkpoint_file()");
     const auto& varnames = m_state_varnames;
 
     // chk00010            write a checkpoint file with this root directory
@@ -743,7 +753,7 @@ void SPADES::write_checkpoint_file() const
 
 void SPADES::read_checkpoint_file()
 {
-    BL_PROFILE("SPADES::read_checkpoint_file()");
+    BL_PROFILE("spades::SPADES::read_checkpoint_file()");
     const auto& varnames = m_state_varnames;
 
     amrex::Print() << "Restarting from checkpoint file " << m_restart_chkfile

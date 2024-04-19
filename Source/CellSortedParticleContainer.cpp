@@ -20,7 +20,10 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     int nlevs_max = par_gdb->maxLevel() + 1;
 
     if (par_gdb->maxLevel() > 0) {
-        amrex::Abort("Not supporting multilevel right now");
+        amrex::Abort(
+            "spades::SPADES::CellSortedParticleContainer::"
+            "CellSortedParticleContainer(): not supporting multilevel right "
+            "now");
     }
 
     m_real_data_names.resize(RealData::ncomps, "");
@@ -46,7 +49,7 @@ CellSortedParticleContainer::CellSortedParticleContainer(
 
 void CellSortedParticleContainer::initialize_state()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::init_state()");
+    BL_PROFILE("spades::oCellSortedParticleContainer::init_state()");
 
     const int lev = 0;
 
@@ -619,6 +622,7 @@ void CellSortedParticleContainer::reposition_messages()
 void CellSortedParticleContainer::write_plot_file(
     const std::string& plt_filename)
 {
+    BL_PROFILE("spades::CellSortedParticleContainer::write_plot_file()");
     reposition_messages();
     WritePlotFile(
         plt_filename, "particles", m_writeflags_real, m_writeflags_int,
