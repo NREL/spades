@@ -159,8 +159,9 @@ void CellSortedParticleContainer::initialize_particles(
 
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dlo = Geom(lev).Domain().smallEnd();
-    const auto& dhi = Geom(lev).Domain().bigEnd();
+    const auto& dom = Geom(lev).Domain();
+    const auto& dlo = dom.smallEnd();
+    const auto& dhi = dom.bigEnd();
 
     // // Some test particles
     // #ifdef _OPENMP
@@ -194,9 +195,9 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::type_id) =
     //                         MessageTypes::anti_message;
     //                     p.idata(IntData::sender) =
-    //                     box.index(iv_src);
+    //                     dom.index(iv_src);
     //                     p.idata(IntData::receiver) =
-    //                     box.index(iv_dest);
+    //                     dom.index(iv_dest);
     //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead + 20;
 
@@ -224,9 +225,9 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::type_id) =
     //                         MessageTypes::message;
     //                     p.idata(IntData::sender) =
-    //                     box.index(iv_src);
+    //                     dom.index(iv_src);
     //                     p.idata(IntData::receiver) =
-    //                     box.index(iv_dest2);
+    //                     dom.index(iv_dest2);
     //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead;
 
@@ -255,9 +256,9 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::type_id) =
     //                         MessageTypes::message;
     //                     p.idata(IntData::sender) =
-    //                     box.index(iv_src);
+    //                     dom.index(iv_src);
     //                     p.idata(IntData::receiver) =
-    //                     box.index(iv_dest);
+    //                     dom.index(iv_dest);
     //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead;
 
@@ -285,9 +286,9 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::type_id) =
     //                         MessageTypes::undefined;
     //                     p.idata(IntData::sender) =
-    //                     box.index(iv_src);
+    //                     dom.index(iv_src);
     //                     p.idata(IntData::receiver) =
-    //                     box.index(iv_dest2);
+    //                     dom.index(iv_dest2);
     //                     p.rdata(RealData::timestamp) =
     //                         random_exponential(1.0) + lookahead;
 
@@ -331,8 +332,8 @@ void CellSortedParticleContainer::initialize_particles(
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
 
                 p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
-                p.idata(IntData::sender) = static_cast<int>(box.index(iv));
-                p.idata(IntData::receiver) = static_cast<int>(box.index(iv));
+                p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
+                p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
                 p.rdata(RealData::timestamp) = 0.0;
                 p.rdata(RealData::old_timestamp) = 0.0;
 
@@ -366,6 +367,7 @@ void CellSortedParticleContainer::update_undefined()
     const int lev = 0;
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
+    const auto& dom = Geom(lev).Domain();
     const int lower_count = m_lower_undefined_count;
     const int upper_count = m_upper_undefined_count;
 
@@ -412,8 +414,8 @@ void CellSortedParticleContainer::update_undefined()
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
 
                 p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
-                p.idata(IntData::sender) = static_cast<int>(box.index(iv));
-                p.idata(IntData::receiver) = static_cast<int>(box.index(iv));
+                p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
+                p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
                 p.rdata(RealData::timestamp) = 0.0;
                 p.rdata(RealData::old_timestamp) = 0.0;
 

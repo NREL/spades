@@ -279,8 +279,9 @@ void SPADES::process_messages(const int lev)
 
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dlo = Geom(lev).Domain().smallEnd();
-    const auto& dhi = Geom(lev).Domain().bigEnd();
+    const auto& dom = Geom(lev).Domain();
+    const auto& dlo = dom.smallEnd();
+    const auto& dhi = dom.bigEnd();
     const auto lookahead = m_lookahead;
 
 #ifdef _OPENMP
@@ -337,6 +338,9 @@ void SPADES::process_messages(const int lev)
                     }
 
                     // process the event
+                    AMREX_ALWAYS_ASSERT(
+                        dom.atOffset(
+                            prcv.idata(particles::IntData::receiver)) == iv);
                     prcv.rdata(particles::RealData::old_timestamp) =
                         sarr(iv, constants::LVT_IDX);
                     sarr(iv, constants::LVT_IDX) =
@@ -366,8 +370,8 @@ void SPADES::process_messages(const int lev)
                                            random_exponential(1.0) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     particles::Create()(
-                        psnd, ts, pos, iv_dest, static_cast<int>(box.index(iv)),
-                        static_cast<int>(box.index(iv_dest)));
+                        psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
+                        static_cast<int>(dom.index(iv_dest)));
 
                     // Create the anti-message
                     const int undef_idx1 = undef_idx0 + 1;
@@ -387,8 +391,8 @@ void SPADES::process_messages(const int lev)
 
                     particles::Create()(
                         pant, ts, anti_pos, iv_dest,
-                        static_cast<int>(box.index(iv)),
-                        static_cast<int>(box.index(iv_dest)));
+                        static_cast<int>(dom.index(iv)),
+                        static_cast<int>(dom.index(iv_dest)));
                     pant.idata(particles::IntData::type_id) =
                         particles::MessageTypes::ANTI_MESSAGE;
                 }
