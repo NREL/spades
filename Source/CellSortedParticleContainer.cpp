@@ -14,7 +14,7 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     amrex::AmrParGDB* par_gdb, int ngrow)
     : amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>(
           par_gdb, ngrow)
-    , m_info("message")
+    , m_info(identifier())
     , m_ngrow(ngrow)
 {
     int nlevs_max = par_gdb->maxLevel() + 1;
@@ -454,7 +454,6 @@ void CellSortedParticleContainer::update_undefined()
     Redistribute();
     sort_particles();
     update_counts();
-    amrex::Print() << "updated undefined" << std::endl;
 }
 
 void CellSortedParticleContainer::sort_particles()
@@ -625,7 +624,7 @@ void CellSortedParticleContainer::write_plot_file(
     BL_PROFILE("spades::CellSortedParticleContainer::write_plot_file()");
     reposition_messages();
     WritePlotFile(
-        plt_filename, "particles", m_writeflags_real, m_writeflags_int,
+        plt_filename, identifier(), m_writeflags_real, m_writeflags_int,
         m_real_data_names, m_int_data_names);
 }
 } // namespace spades::particles

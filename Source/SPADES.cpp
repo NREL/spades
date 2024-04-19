@@ -69,9 +69,6 @@ void SPADES::init_data()
     } else {
         // restart from a checkpoint
         read_checkpoint_file();
-        amrex::Abort(
-            "spades::SPADES::init_data(): need to create then grab the "
-            "particle chkp");
     }
 
     if (m_plot_int > 0) {
@@ -135,6 +132,7 @@ void SPADES::evolve()
 
     amrex::Real cur_time = m_ts_new[0];
     int last_plot_file_step = 0;
+    int last_chk_file_step = 0;
 
     for (int step = m_isteps[0]; step < m_max_step && cur_time < m_stop_time;
          ++step) {
@@ -165,6 +163,7 @@ void SPADES::evolve()
         }
 
         if (m_chk_int > 0 && (step + 1) % m_chk_int == 0) {
+            last_chk_file_step = step + 1;
             write_checkpoint_file();
         }
 
@@ -174,6 +173,9 @@ void SPADES::evolve()
     }
     if (m_plot_int > 0 && m_isteps[0] > last_plot_file_step) {
         write_plot_file();
+    }
+    if (m_chk_int > 0 && m_isteps[0] > last_chk_file_step) {
+        write_checkpoint_file();
     }
 }
 
@@ -748,6 +750,8 @@ void SPADES::write_checkpoint_file() const
                               lev, checkpointname, "Level_", varnames[0]));
     }
 
+    m_pc->Checkpoint(checkpointname, m_pc->identifier());
+
     write_info_file(checkpointname);
 }
 
@@ -835,13 +839,13 @@ void SPADES::read_checkpoint_file()
         amrex::VisMF::Read(
             m_state[lev], amrex::MultiFabFileFullPrefix(
                               lev, m_restart_chkfile, "Level_", varnames[0]));
+        update_gvt(lev);
     }
 
-    // Populate the other data
-    for (int lev = 0; lev <= finest_level; ++lev) {
-        m_state[lev].FillBoundary(Geom(lev).periodicity());
-        m_state[lev].setVal(0.0);
-    }
+    init_particle_container();
+    m_pc->Restart(m_restart_chkfile, m_pc->identifier());
+    m_pc->initialize_state();
+    m_pc->update_counts();
 }
 
 void SPADES::write_info_file(const std::string& path) const
