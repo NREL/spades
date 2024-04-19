@@ -7,9 +7,6 @@ include(GNUInstallDirs)
 include(spades-utils)
 
 set(SPADES_DIM "3" CACHE STRING "Number of physical dimensions")
-if(SPADES_DIM EQUAL 1)
-  message(FATAL_ERROR "Spades does not enable 1D.")
-endif()
 
 option(SPADES_ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(SPADES_ENABLE_CLANG_TIDY "Compile with clang-tidy static analysis" OFF)
