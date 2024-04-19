@@ -851,7 +851,7 @@ void SPADES::write_info_file(const std::string& path) const
     }
 
     const std::string dash_line = "\n" + std::string(78, '-') + "\n";
-    const std::string fname(path + "/poudre_info");
+    const std::string fname(path + "/spades_info");
     std::ofstream fh(fname.c_str(), std::ios::out);
     if (!fh.good()) {
         amrex::FileOpenFailed(fname);
