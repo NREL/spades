@@ -140,8 +140,14 @@ private:
     // write job info to disk
     void write_info_file(const std::string& /*path*/) const;
 
-    // utility to skip to next line in Header
-    static void goto_next_line(std::istream& is);
+    // write rng info
+    void write_rng_file(const std::string& /*path*/) const;
+
+    // read rng info
+    void read_rng_file(const std::string& /*path*/) const;
+
+    // initialize the rng
+    void init_rng();
 
     amrex::Vector<int> m_isteps;    // which step?
     amrex::Vector<int> m_nsubsteps; // how many substeps on each level?
@@ -201,11 +207,14 @@ private:
 
     // digits used in chk and plt file names
     int m_file_name_digits{5};
+    int m_rng_file_name_digits{10};
 
     // output particles
     bool m_write_particles{false};
 
     amrex::Real m_lookahead{1.0};
+
+    int m_seed{0};
 
     // // error tags
     // amrex::Vector<amrex::AMRErrorTag> m_err_tags;

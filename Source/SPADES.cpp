@@ -50,6 +50,9 @@ void SPADES::init_data()
     BL_PROFILE("spades::SPADES::init_data()");
 
     if (m_restart_chkfile.empty()) {
+
+        init_rng();
+
         // start simulation from the beginning
         const amrex::Real time = 0.0;
         set_ics();
@@ -108,12 +111,16 @@ void SPADES::read_parameters()
         pp.query("chk_int", m_chk_int);
         pp.query("restart", m_restart_chkfile);
         pp.query("file_name_digits", m_file_name_digits);
+        pp.query("rng_file_name_digits", m_rng_file_name_digits);
+        AMREX_ALWAYS_ASSERT(
+            m_rng_file_name_digits >= amrex::ParallelDescriptor::NProcs());
     }
 
     {
         amrex::ParmParse pp("spades");
         pp.get("ic_type", m_ic_type);
         pp.query("write_particles", m_write_particles);
+        pp.query("seed", m_seed);
     }
 
     // force periodic bcs
@@ -258,18 +265,17 @@ void SPADES::advance(
 {
     BL_PROFILE("spades::SPADES::advance()");
 
-    update_gvt(lev);
-
-    m_pc->garbage_collect(m_gvts[lev]);
-    m_pc->sort_particles();
-    m_pc->update_counts();
-
     process_messages(lev);
 
     m_pc->Redistribute();
     m_pc->sort_particles();
     m_pc->update_counts();
     m_pc->update_undefined();
+
+    update_gvt(lev);
+    m_pc->garbage_collect(m_gvts[lev]);
+    m_pc->sort_particles();
+    m_pc->update_counts();
 
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
     m_ts_new[lev] += dt_lev;       // new time is ahead
@@ -753,6 +759,8 @@ void SPADES::write_checkpoint_file() const
     m_pc->Checkpoint(checkpointname, m_pc->identifier());
 
     write_info_file(checkpointname);
+
+    write_rng_file(checkpointname);
 }
 
 void SPADES::read_checkpoint_file()
@@ -842,6 +850,8 @@ void SPADES::read_checkpoint_file()
         update_gvt(lev);
     }
 
+    read_rng_file(m_restart_chkfile);
+
     init_particle_container();
     m_pc->Restart(m_restart_chkfile, m_pc->identifier());
     m_pc->initialize_state();
@@ -850,6 +860,7 @@ void SPADES::read_checkpoint_file()
 
 void SPADES::write_info_file(const std::string& path) const
 {
+    BL_PROFILE("spades::SPADES::write_info_file()");
     if (!amrex::ParallelDescriptor::IOProcessor()) {
         return;
     }
@@ -878,10 +889,66 @@ void SPADES::write_info_file(const std::string& path) const
     fh.close();
 }
 
-// utility to skip to next line in Header
-void SPADES::goto_next_line(std::istream& is)
+void SPADES::init_rng()
 {
-    constexpr std::streamsize bl_ignore_max{100000};
-    is.ignore(bl_ignore_max, '\n');
+    BL_PROFILE("spades::SPADES::init_rng()");
+
+    if (m_seed > 0) {
+        amrex::InitRandom(
+            m_seed + amrex::ParallelDescriptor::MyProc(),
+            amrex::ParallelDescriptor::NProcs(),
+            m_seed + amrex::ParallelDescriptor::MyProc());
+    } else if (m_seed == 0) {
+        auto now = std::chrono::system_clock::now();
+        auto now_ns =
+            std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+        auto rand_seed = now_ns.time_since_epoch().count();
+        amrex::ParallelDescriptor::Bcast(
+            &rand_seed, 1, amrex::ParallelDescriptor::IOProcessorNumber());
+        amrex::InitRandom(
+            rand_seed + amrex::ParallelDescriptor::MyProc(),
+            amrex::ParallelDescriptor::NProcs(),
+            rand_seed + amrex::ParallelDescriptor::MyProc());
+    } else {
+        amrex::Abort("RNG seed must be non-negative");
+    }
 }
+
+void SPADES::write_rng_file(const std::string& path) const
+{
+    BL_PROFILE("spades::SPADES::write_rng_file()");
+
+    const std::string base(path + "/rng");
+    const std::string& fname = amrex::Concatenate(
+        base, amrex::ParallelDescriptor::MyProc(), m_rng_file_name_digits);
+    std::ofstream fh(fname.c_str(), std::ios::out);
+    if (!fh.good()) {
+        amrex::FileOpenFailed(fname);
+    }
+    amrex::SaveRandomState(fh);
+}
+
+void SPADES::read_rng_file(const std::string& path) const
+{
+    BL_PROFILE("spades::SPADES::read_rng_file()");
+
+    if (m_seed < 0) {
+        const std::string base(path + "/rng");
+        const std::string& fname = amrex::Concatenate(
+            base, amrex::ParallelDescriptor::MyProc(), m_rng_file_name_digits);
+        amrex::Vector<char> file_char_ptr;
+        ReadFile(fname, file_char_ptr, true);
+        std::string file_str(file_char_ptr.dataPtr());
+        std::istringstream is(file_str, std::istringstream::in);
+        amrex::RestoreRandomState(is, 1, 0);
+    } else {
+        amrex::Warning(
+            "Warning: Restarting without using the saved RNG seeds. Run with "
+            "spades.seed=-1 to use those");
+        AMREX_ASSERT_WITH_MESSAGE(
+            m_seed < 0,
+            "Use spades.seed=-1 when debugging and using restart files");
+    }
+}
+
 } // namespace spades

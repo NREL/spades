@@ -21,5 +21,15 @@ random_exponential(const amrex::Real lambda)
 
     return std::log(1 - amrex::Random()) / (-lambda);
 }
+
+// skip to next line in Header
+void goto_next_line(std::istream& is);
+
+// equivalent to amrex::ParallelDescriptor::ReadAndBcastFile but for all ranks
+void ReadFile(
+    const std::string& filename,
+    amrex::Vector<char>& charBuf,
+    bool bExitOnError);
+
 } // namespace spades
 #endif
