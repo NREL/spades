@@ -349,10 +349,6 @@ void SPADES::process_messages(const int lev)
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
-                    AMREX_ALWAYS_ASSERT(
-                        msg_cnt_arr(iv, particles::MessageTypes::UNDEFINED) >
-                        2);
-
                     auto& psnd = particles::Get()(0, iv, particles::MessageTypes::UNDEFINED, msg_cnt_arr, offsets_arr, pstruct);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
