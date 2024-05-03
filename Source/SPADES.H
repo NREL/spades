@@ -106,6 +106,9 @@ private:
     // process messages
     void process_messages(const int lev);
 
+    // rollback
+    void rollback(const int lev);
+
     // update gvt
     void update_gvt(const int lev);
 
@@ -165,29 +168,13 @@ private:
     // variable names for output
     amrex::Vector<std::string> m_spades_varnames;
     amrex::Vector<std::string> m_state_varnames;
-    // amrex::Vector<std::string> m_microdata_varnames;
-    // amrex::Vector<std::string> m_deriveddata_varnames;
     amrex::Vector<std::string> m_message_counts_varnames;
 
     // array of multifabs to store the solution at each level of refinement
     amrex::Vector<amrex::MultiFab> m_state;
-    // amrex::Vector<amrex::MultiFab> m_f;
-    // amrex::Vector<amrex::MultiFab> m_eq;
-    // amrex::Vector<amrex::MultiFab> m_derived;
-    // amrex::Vector<amrex::iMultiFab> m_is_fluid;
     amrex::Vector<amrex::MultiFab> m_plt_mf;
-    // amrex::Vector<amrex::iMultiFab> m_mask;
 
     const int m_state_ngrow = 0;
-
-    // const int m_f_nghost = 2;
-    // const int m_eq_nghost = 0;
-    // const int m_derived_nghost = 0;
-
-    // std::unique_ptr<FillPatchOpsBase> m_fillpatch_op;
-
-    // amrex::Vector<std::unique_ptr<amrex::FabFactory<amrex::FArrayBox>>>
-    //     m_factory;
 
     // how often each level regrids the higher levels of refinement
     // (after a level advances that many time steps)
@@ -215,34 +202,6 @@ private:
     amrex::Real m_lookahead{1.0};
 
     int m_seed{0};
-
-    // // error tags
-    // amrex::Vector<amrex::AMRErrorTag> m_err_tags;
-
-    // // User-input quantities (will be overridden by ParmParse)
-    // amrex::Real m_dx_outer = 1.0;
-    // amrex::Real m_dt_outer = 1.0;
-    // amrex::Real m_nu = 1.0;
-
-    // // save streaming data to plot file
-    // bool m_save_streaming = true;
-
-    // // save derived data to plot file
-    // bool m_save_derived = true;
-
-    // // compute and output forces
-    // bool m_compute_forces = false;
-
-    // // file for forces
-    // std::string m_forces_file{"forces.txt"};
-
-    // // file handle for forces
-    // std::fstream m_forces_stream;
-
-    // // Derived values (will be updated after reading in user inputs)
-    // amrex::Real m_mesh_speed = 1.0;
-    // amrex::Real m_cs = 1.0;
-    // amrex::Real m_cs_2 = 1.0;
 
     std::unique_ptr<ic::InitializerBase> m_ic_op;
     std::string m_ic_type;
