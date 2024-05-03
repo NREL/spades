@@ -355,6 +355,8 @@ void CellSortedParticleContainer::initialize_particles(
                         random_exponential(1.0) + lookahead;
                     p.rdata(RealData::old_timestamp) = 0.0;
                     p.idata(IntData::type_id) = MessageTypes::MESSAGE;
+                    p.idata(IntData::pair) =
+                        static_cast<int>(pairing_function(p.cpu(), p.id()));
                 }
 
                 pti.push_back(p);
@@ -568,8 +570,7 @@ void CellSortedParticleContainer::resolve_pairs()
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
                          m++) {
                         auto& pmsg = getter(m, MessageTypes::MESSAGE);
-                        if (static_cast<int>(
-                                pairing_function(pmsg.cpu(), pmsg.id())) ==
+                        if (pmsg.idata(IntData::pair) ==
                             pant.idata(IntData::pair)) {
                             AMREX_ALWAYS_ASSERT(
                                 pmsg.idata(IntData::sender) ==
