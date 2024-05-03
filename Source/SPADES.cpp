@@ -383,7 +383,7 @@ void SPADES::process_messages(const int lev)
                     particles::Create()(
                         pcnj, ts, anti_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
-                    pcnj.idata(particles::IntData::pair) = pairing_function(psnd.cpu(), psnd.id());
+                    pcnj.idata(particles::IntData::pair) = static_cast<int>(pairing_function(psnd.cpu(), psnd.id()));
                     pcnj.idata(particles::IntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
@@ -400,11 +400,29 @@ void SPADES::rollback(const int lev)
             boxArray(lev), DistributionMap(lev),
             1, 0);
     rollback.setVal(0.0);
-    amrex::Real require_rollback = rollback.sum(0);
+    amrex::Long require_rollback = rollback.sum(0);
 
     const int max_iter = 100;
     int iter = 0;
     while((require_rollback>0) && (iter < max_iter)){
+      
+// #ifdef _OPENMP
+// #pragma omp parallel
+// #endif
+//         for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+//             const amrex::Box& box = mfi.tilebox();
+//             const int gid = mfi.index();
+//             const int tid = mfi.LocalTileIndex();
+//             const auto& sarr = m_state[lev].array(mfi);
+//             const auto& msg_cnt_arr =
+//                 m_pc->message_counts(lev).const_array(mfi);
+//             const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+//             const auto index = std::make_pair(gid, tid);
+//             auto& pti = m_pc->GetParticles(lev)[index];
+//             auto& particles = pti.GetArrayOfStructs();
+//             auto* pstruct = particles().dataPtr();
+//         }
+
       require_rollback = rollback.sum(0);
       iter ++;
     }
@@ -1058,7 +1076,7 @@ void SPADES::write_info_file(const std::string& path) const
     fh.close();
 }
 
-void SPADES::init_rng()
+void SPADES::init_rng() const
 {
     BL_PROFILE("spades::SPADES::init_rng()");
 
@@ -1106,7 +1124,7 @@ void SPADES::read_rng_file(const std::string& path) const
         const std::string& fname = amrex::Concatenate(
             base, amrex::ParallelDescriptor::MyProc(), m_rng_file_name_digits);
         amrex::Vector<char> file_char_ptr;
-        ReadFile(fname, file_char_ptr, true);
+        read_file(fname, file_char_ptr, true);
         std::string file_str(file_char_ptr.dataPtr());
         std::istringstream is(file_str, std::istringstream::in);
         amrex::RestoreRandomState(is, 1, 0);

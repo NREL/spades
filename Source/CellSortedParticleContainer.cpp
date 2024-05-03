@@ -568,7 +568,7 @@ void CellSortedParticleContainer::resolve_pairs()
                   for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
                        m++) {
                     auto& pmsg = Get()(m, MessageTypes::MESSAGE, iv, cnt_arr, offsets_arr, pstruct);
-                    if(pairing_function(pmsg.cpu(), pmsg.id()) == pant.idata(IntData::pair)){
+                    if(static_cast<int>(pairing_function(pmsg.cpu(), pmsg.id())) == pant.idata(IntData::pair)){
                       AMREX_ALWAYS_ASSERT(pmsg.idata(IntData::sender) == pant.idata(IntData::sender));
                       AMREX_ALWAYS_ASSERT(pmsg.idata(IntData::receiver) == pant.idata(IntData::receiver));
                       AMREX_ALWAYS_ASSERT(std::abs(pmsg.rdata(RealData::timestamp) - pant.rdata(RealData::timestamp)) < constants::EPS);

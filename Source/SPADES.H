@@ -101,7 +101,7 @@ private:
         const int ncycle);
 
     // perform work after a time step
-    void post_time_step();
+  static void post_time_step();
 
     // process messages
     void process_messages(const int lev);
@@ -150,7 +150,7 @@ private:
     void read_rng_file(const std::string& /*path*/) const;
 
     // initialize the rng
-    void init_rng();
+    void init_rng() const;
 
     amrex::Vector<int> m_isteps;    // which step?
     amrex::Vector<int> m_nsubsteps; // how many substeps on each level?

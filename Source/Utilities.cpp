@@ -9,7 +9,7 @@ void goto_next_line(std::istream& is)
 }
 
 // equivalent to amrex::ParallelDescriptor::ReadAndBcastFile but for all ranks
-void ReadFile(
+void read_file(
     const std::string& filename,
     amrex::Vector<char>& charBuf,
     bool bExitOnError)
@@ -24,7 +24,7 @@ void ReadFile(
 
     amrex::Vector<Setbuf_Char_Type> io_buffer(IO_Buffer_Size);
 
-    amrex::Long fileLength(0), fileLengthPadded(0);
+    amrex::Long file_length(0), file_length_padded(0);
 
     std::ifstream iss;
 
@@ -34,25 +34,25 @@ void ReadFile(
         if (bExitOnError) {
             amrex::FileOpenFailed(filename);
         } else {
-            fileLength = -1;
+            file_length = -1;
         }
     } else {
         iss.seekg(0, std::ios::end);
-        fileLength = static_cast<std::streamoff>(iss.tellg());
+        file_length = static_cast<std::streamoff>(iss.tellg());
         iss.seekg(0, std::ios::beg);
     }
 
-    if (fileLength == -1) {
+    if (file_length == -1) {
         return;
     }
 
-    fileLengthPadded = fileLength + 1;
-    //    fileLengthPadded += fileLengthPadded % 8;
-    charBuf.resize(fileLengthPadded);
+    file_length_padded = file_length + 1;
+    //    file_length_padded += file_length_padded % 8;
+    charBuf.resize(file_length_padded);
 
-    iss.read(charBuf.dataPtr(), fileLength);
+    iss.read(charBuf.dataPtr(), file_length);
     iss.close();
 
-    charBuf[fileLength] = '\0';
+    charBuf[file_length] = '\0';
 }
 } // namespace spades

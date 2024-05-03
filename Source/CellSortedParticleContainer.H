@@ -37,7 +37,7 @@ class CellSortedParticleContainer
     : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
 {
 public:
-    static const std::string identifier() { return "particles"; }
+    static std::string identifier() { return "particles"; }
 
     explicit CellSortedParticleContainer(
         amrex::AmrParGDB* par_gdb, int ngrow = 0);
