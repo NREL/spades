@@ -80,42 +80,42 @@ struct Create
 struct MarkUndefined
 {
     template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
-              P& p
-    ) const
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
     {
-      p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
-      p.idata(IntData::pair) = -1;
+        p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+        p.idata(IntData::pair) = -1;
     }
 };
 
+template <class P>
 struct Get
 {
-    template <class P>
+    Get(const amrex::IntVect& iv,
+        const amrex::Array4<const int>& counts,
+        const amrex::Array4<const int>& offsets,
+        P* pstruct)
+        : m_iv(iv), m_counts(counts), m_offsets(offsets), m_pstruct(pstruct)
+    {}
+
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE P& operator()(
-      const int n,
-      const int typ,
-      const amrex::IntVect iv,
-      const amrex::Array4<const int>& counts,
-      const amrex::Array4<const int>& offsets,
-            P* pstruct
+        const int n, const int typ
 
     ) const
     {
 
-      AMREX_ALWAYS_ASSERT(counts(iv, typ) > n);
-      const int idx =
-        offsets(
-          iv, typ) +
-                    n;
+        AMREX_ALWAYS_ASSERT(m_counts(m_iv, typ) > n);
+        const int idx = m_offsets(m_iv, typ) + n;
 
-      P& p = pstruct[idx];
-      
-      AMREX_ALWAYS_ASSERT(
-        p.idata(IntData::type_id) == typ);
+        P& p = m_pstruct[idx];
 
-      return p;
+        AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == typ);
+
+        return p;
     }
+    const amrex::IntVect& m_iv;
+    const amrex::Array4<const int>& m_counts;
+    const amrex::Array4<const int>& m_offsets;
+    P* m_pstruct;
 };
 
 } // namespace spades::particles

@@ -23,11 +23,11 @@ random_exponential(const amrex::Real lambda)
 }
 
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE amrex::Long
-pairing_function(const amrex::Long k1, const amrex::Long k2){
-  // Cantor pairing function
-  return (k1+k2) *(k1+k2+1) /2 + k2;
+pairing_function(const amrex::Long k1, const amrex::Long k2)
+{
+    // Cantor pairing function
+    return (k1 + k2) * (k1 + k2 + 1) / 2 + k2;
 }
-
 
 // skip to next line in Header
 void goto_next_line(std::istream& is);

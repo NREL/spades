@@ -440,7 +440,7 @@ void CellSortedParticleContainer::sort_particles()
         // amrex::Gpu::Device::synchronize();
         // BL_PROFILE_VAR_STOP(reorder);
     }
-        update_counts();
+    update_counts();
 }
 
 void CellSortedParticleContainer::update_undefined()
@@ -495,8 +495,8 @@ void CellSortedParticleContainer::update_undefined()
                 ParticleType p;
                 p.id() = ParticleType::NextID();
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
- 
-               MarkUndefined()(p);
+
+                MarkUndefined()(p);
                 p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
                 p.rdata(RealData::timestamp) = 0.0;
@@ -520,8 +520,9 @@ void CellSortedParticleContainer::update_undefined()
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto idx = box.index(iv);
                 const auto np = p_new_counts[idx];
+                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
                 for (int m = 0; m < -np; m++) {
-                  auto& p = Get()(m, MessageTypes::UNDEFINED, iv, cnt_arr, offsets_arr, pstruct);
+                    auto& p = getter(m, MessageTypes::UNDEFINED);
                     p.id() = -1;
                 }
             });
@@ -530,8 +531,6 @@ void CellSortedParticleContainer::update_undefined()
     Redistribute();
 }
 
-
-
 void CellSortedParticleContainer::resolve_pairs()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::resolve_pairs()");
@@ -539,7 +538,7 @@ void CellSortedParticleContainer::resolve_pairs()
     const int lev = 0;
     const auto& dom = Geom(lev).Domain();
 
-    #ifdef _OPENMP
+#ifdef _OPENMP
 #pragma omp parallel
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
@@ -555,34 +554,45 @@ void CellSortedParticleContainer::resolve_pairs()
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 
-                for (int n = 0;
-                     n < cnt_arr(iv, MessageTypes::ANTI_MESSAGE);
+                for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI_MESSAGE);
                      n++) {
 
-                  auto& pant = Get()(n, MessageTypes::ANTI_MESSAGE, iv, cnt_arr, offsets_arr, pstruct);
-                  AMREX_ALWAYS_ASSERT(pant.idata(IntData::pair) != -1);
-                  AMREX_ALWAYS_ASSERT(pant.idata(IntData::receiver) == dom.index(iv));
+                    auto& pant = getter(n, MessageTypes::ANTI_MESSAGE);
+                    AMREX_ALWAYS_ASSERT(pant.idata(IntData::pair) != -1);
+                    AMREX_ALWAYS_ASSERT(
+                        pant.idata(IntData::receiver) == dom.index(iv));
 
-                  bool found_pair = false;
-                  for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
-                       m++) {
-                    auto& pmsg = Get()(m, MessageTypes::MESSAGE, iv, cnt_arr, offsets_arr, pstruct);
-                    if(static_cast<int>(pairing_function(pmsg.cpu(), pmsg.id())) == pant.idata(IntData::pair)){
-                      AMREX_ALWAYS_ASSERT(pmsg.idata(IntData::sender) == pant.idata(IntData::sender));
-                      AMREX_ALWAYS_ASSERT(pmsg.idata(IntData::receiver) == pant.idata(IntData::receiver));
-                      AMREX_ALWAYS_ASSERT(std::abs(pmsg.rdata(RealData::timestamp) - pant.rdata(RealData::timestamp)) < constants::EPS);
-                      MarkUndefined()(pant);
-                      MarkUndefined()(pmsg);
-                      found_pair = true;
-                      break;
-                    }                    
-                  }
-                  AMREX_ALWAYS_ASSERT(found_pair);
+                    bool found_pair = false;
+                    for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
+                         m++) {
+                        auto& pmsg = getter(m, MessageTypes::MESSAGE);
+                        if (static_cast<int>(
+                                pairing_function(pmsg.cpu(), pmsg.id())) ==
+                            pant.idata(IntData::pair)) {
+                            AMREX_ALWAYS_ASSERT(
+                                pmsg.idata(IntData::sender) ==
+                                pant.idata(IntData::sender));
+                            AMREX_ALWAYS_ASSERT(
+                                pmsg.idata(IntData::receiver) ==
+                                pant.idata(IntData::receiver));
+                            AMREX_ALWAYS_ASSERT(
+                                std::abs(
+                                    pmsg.rdata(RealData::timestamp) -
+                                    pant.rdata(RealData::timestamp)) <
+                                constants::EPS);
+                            MarkUndefined()(pant);
+                            MarkUndefined()(pmsg);
+                            found_pair = true;
+                            break;
+                        }
+                    }
+                    AMREX_ALWAYS_ASSERT(found_pair);
                 }
             });
     }
-    
+
     sort_particles();
 }
 
@@ -606,7 +616,7 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
             if (p.rdata(RealData::timestamp) < gvt) {
-              MarkUndefined()(p);
+                MarkUndefined()(p);
                 p.rdata(RealData::timestamp) = gvt;
             }
         });
@@ -641,10 +651,12 @@ void CellSortedParticleContainer::reposition_messages()
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
+
                 for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
                     AMREX_ALWAYS_ASSERT(cnt_arr(iv, typ) < nbins);
                     for (int n = 0; n < cnt_arr(iv, typ); n++) {
-                      auto& p = Get()(n, typ, iv, cnt_arr, offsets_arr, pstruct);
+                        auto& p = getter(n, typ);
 
                         const amrex::IntVect piv(AMREX_D_DECL(
                             p.idata(IntData::i), p.idata(IntData::j),

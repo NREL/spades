@@ -101,7 +101,7 @@ private:
         const int ncycle);
 
     // perform work after a time step
-  static void post_time_step();
+    static void post_time_step();
 
     // process messages
     void process_messages(const int lev);

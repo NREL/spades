@@ -12,7 +12,7 @@ struct RealData
 
 struct IntData
 {
-  enum { AMREX_D_DECL(i, j, k), type_id, sender, receiver, pair, ncomps };
+    enum { AMREX_D_DECL(i, j, k), type_id, sender, receiver, pair, ncomps };
 };
 
 struct MessageTypes

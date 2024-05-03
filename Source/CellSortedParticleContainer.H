@@ -76,9 +76,9 @@ public:
     // update the undefined messages
     void update_undefined();
 
-  void resolve_pairs();
+    void resolve_pairs();
 
-  void garbage_collect(const amrex::Real gvt);
+    void garbage_collect(const amrex::Real gvt);
 
     void write_plot_file(const std::string& plt_filename);
 

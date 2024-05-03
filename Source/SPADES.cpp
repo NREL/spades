@@ -16,26 +16,29 @@ SPADES::SPADES()
 
     m_state_varnames.push_back("lvt");
     m_state_varnames.push_back("rollback");
-    AMREX_ALWAYS_ASSERT(
-      m_state_varnames.size() == constants::N_STATES);
+    AMREX_ALWAYS_ASSERT(m_state_varnames.size() == constants::N_STATES);
 
     m_message_counts_varnames.resize(particles::MessageTypes::NTYPES);
     m_message_counts_varnames[particles::MessageTypes::MESSAGE] = "message";
     m_message_counts_varnames[particles::MessageTypes::PROCESSED] = "processed";
-    m_message_counts_varnames[particles::MessageTypes::ANTI_MESSAGE] = "anti_message";
+    m_message_counts_varnames[particles::MessageTypes::ANTI_MESSAGE] =
+        "anti_message";
     m_message_counts_varnames[particles::MessageTypes::CONJUGATE] = "conjugate";
     m_message_counts_varnames[particles::MessageTypes::UNDEFINED] = "undefined";
-      for(const auto& mm : m_message_counts_varnames){
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!mm.empty(), "Variable name needs to be specified");          
+    for (const auto& mm : m_message_counts_varnames) {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            !mm.empty(), "Variable name needs to be specified");
     }
-      
+
     for (const auto& vname : m_state_varnames) {
         m_spades_varnames.push_back(vname);
     }
     for (const auto& vname : m_message_counts_varnames) {
         m_spades_varnames.push_back(vname);
     }
-    AMREX_ALWAYS_ASSERT(m_spades_varnames.size() == ( constants::N_STATES + particles::MessageTypes::NTYPES));
+    AMREX_ALWAYS_ASSERT(
+        m_spades_varnames.size() ==
+        (constants::N_STATES + particles::MessageTypes::NTYPES));
 
     m_isteps.resize(nlevs_max, 0);
     m_nsubsteps.resize(nlevs_max, 1);
@@ -317,7 +320,7 @@ void SPADES::process_messages(const int lev)
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& sarr = m_state[lev].array(mfi);
-        const auto& msg_cnt_arr = m_pc->message_counts(lev).const_array(mfi);
+        const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
         const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
         const auto index = std::make_pair(gid, tid);
         auto& pti = m_pc->GetParticles(lev)[index];
@@ -329,10 +332,12 @@ void SPADES::process_messages(const int lev)
                      int i, int j, int k,
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto getter =
+                    particles::Get(iv, cnt_arr, offsets_arr, pstruct);
 
-                if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
+                if (cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
 
-                  auto& prcv = particles::Get()(0, particles::MessageTypes::MESSAGE, iv, msg_cnt_arr, offsets_arr, pstruct);
+                    auto& prcv = getter(0, particles::MessageTypes::MESSAGE);
                     AMREX_ALWAYS_ASSERT(
                         sarr(iv, constants::LVT_IDX) <
                         prcv.rdata(particles::RealData::timestamp));
@@ -349,7 +354,7 @@ void SPADES::process_messages(const int lev)
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
-                    auto& psnd = particles::Get()(0, particles::MessageTypes::UNDEFINED, iv, msg_cnt_arr, offsets_arr, pstruct);
+                    auto& psnd = getter(0, particles::MessageTypes::UNDEFINED);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
@@ -367,23 +372,24 @@ void SPADES::process_messages(const int lev)
                         static_cast<int>(dom.index(iv_dest)));
 
                     // Create the conjugate message
-                    auto& pcnj = particles::Get()(1, particles::MessageTypes::UNDEFINED, iv, msg_cnt_arr, offsets_arr, pstruct);
+                    auto& pcnj = getter(1, particles::MessageTypes::UNDEFINED);
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
                     // position is iv but the receiver is
                     // still updated (we need to know who to
                     // send this to)
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> anti_pos = {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> conj_pos = {
                         AMREX_D_DECL(
                             plo[0] + (iv[0] + 0.5) * dx[0],
                             plo[1] + (iv[1] + 0.5) * dx[1],
                             plo[2] + (iv[2] + 0.5) * dx[2])};
 
                     particles::Create()(
-                        pcnj, ts, anti_pos, iv, static_cast<int>(dom.index(iv)),
+                        pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
-                    pcnj.idata(particles::IntData::pair) = static_cast<int>(pairing_function(psnd.cpu(), psnd.id()));
+                    pcnj.idata(particles::IntData::pair) = static_cast<int>(
+                        pairing_function(psnd.cpu(), psnd.id()));
                     pcnj.idata(particles::IntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
@@ -395,220 +401,351 @@ void SPADES::rollback(const int lev)
 {
     BL_PROFILE("spades::SPADES::rollback()");
 
+    const auto& plo = Geom(lev).ProbLoArray();
+    const auto& dx = Geom(lev).CellSizeArray();
+    const auto& dom = Geom(lev).Domain();
 
-    amrex::iMultiFab rollback(
-            boxArray(lev), DistributionMap(lev),
-            1, 0);
-    rollback.setVal(0.0);
+    amrex::iMultiFab rollback(boxArray(lev), DistributionMap(lev), 1, 0);
+    rollback.setVal(1.0);
+    m_state[lev].setVal(0.0, constants::RLB_IDX, 1);
     amrex::Long require_rollback = rollback.sum(0);
 
     const int max_iter = 100;
     int iter = 0;
-    while((require_rollback>0) && (iter < max_iter)){
-      
-// #ifdef _OPENMP
-// #pragma omp parallel
-// #endif
-//         for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
-//             const amrex::Box& box = mfi.tilebox();
-//             const int gid = mfi.index();
-//             const int tid = mfi.LocalTileIndex();
-//             const auto& sarr = m_state[lev].array(mfi);
-//             const auto& msg_cnt_arr =
-//                 m_pc->message_counts(lev).const_array(mfi);
-//             const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
-//             const auto index = std::make_pair(gid, tid);
-//             auto& pti = m_pc->GetParticles(lev)[index];
-//             auto& particles = pti.GetArrayOfStructs();
-//             auto* pstruct = particles().dataPtr();
-//         }
+    while ((require_rollback > 0) && (iter < max_iter)) {
 
-      require_rollback = rollback.sum(0);
-      iter ++;
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+            const amrex::Box& box = mfi.tilebox();
+            const int gid = mfi.index();
+            const int tid = mfi.LocalTileIndex();
+            const auto& sarr = m_state[lev].array(mfi);
+            const auto& rarr = rollback.array(mfi);
+            const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
+            const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+            const auto index = std::make_pair(gid, tid);
+            auto& pti = m_pc->GetParticles(lev)[index];
+            auto& particles = pti.GetArrayOfStructs();
+            auto* pstruct = particles().dataPtr();
+
+            amrex::ParallelFor(
+                box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                    const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                    const auto getter =
+                        particles::Get(iv, cnt_arr, offsets_arr, pstruct);
+
+                    const amrex::Real msg_lvt =
+                        cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0
+                            ? getter(0, particles::MessageTypes::MESSAGE)
+                                  .rdata(particles::RealData::timestamp)
+                            : constants::LARGE_NUM;
+                    const amrex::Real ant_lvt =
+                        cnt_arr(iv, particles::MessageTypes::ANTI_MESSAGE) > 0
+                            ? getter(0, particles::MessageTypes::ANTI_MESSAGE)
+                                  .rdata(particles::RealData::timestamp)
+                            : constants::LARGE_NUM;
+                    const amrex::Real next_lvt =
+                        amrex::min<amrex::Real>(msg_lvt, ant_lvt);
+
+                    rarr(iv) = 0;
+                    if (next_lvt <= sarr(iv, constants::LVT_IDX)) {
+                        AMREX_ALWAYS_ASSERT(
+                            cnt_arr(iv, particles::MessageTypes::PROCESSED) >
+                            0);
+                        rarr(iv) = 1;
+                        sarr(iv, constants::RLB_IDX) += 1;
+
+                        for (int n = 0;
+                             n <
+                             cnt_arr(iv, particles::MessageTypes::PROCESSED);
+                             n++) {
+                            auto& pprd =
+                                getter(n, particles::MessageTypes::PROCESSED);
+                            if (pprd.rdata(particles::RealData::timestamp) >=
+                                next_lvt) {
+
+                                for (int m = 0;
+                                     m <
+                                     cnt_arr(
+                                         iv,
+                                         particles::MessageTypes::CONJUGATE);
+                                     m++) {
+                                    auto& pcnj = getter(
+                                        m, particles::MessageTypes::CONJUGATE);
+
+                                    amrex::Abort(
+                                        "need to check the pprd unique iD?!");
+
+                                    pcnj.idata(particles::IntData::type_id) =
+                                        particles::MessageTypes::ANTI_MESSAGE;
+                                    const auto piv = dom.atOffset(pcnj.idata(
+                                        particles::IntData::receiver));
+                                    AMREX_D_TERM(
+                                        pcnj.pos(0) =
+                                            plo[0] + (piv[0] + 0.5) * dx[0];
+                                        , pcnj.pos(1) =
+                                              plo[1] + (piv[1] + 0.5) * dx[1];
+                                        , pcnj.pos(2) =
+                                              plo[2] + (piv[2] + 0.5) * dx[2];)
+                                    AMREX_D_TERM(
+                                        pcnj.idata(particles::IntData::i) =
+                                            piv[0];
+                                        , pcnj.idata(particles::IntData::j) =
+                                              piv[1];
+                                        , pcnj.idata(particles::IntData::k) =
+                                              piv[2];)
+                                }
+
+                                pprd.idata(particles::IntData::type_id) =
+                                    particles::MessageTypes::MESSAGE;
+                            }
+                        }
+                    }
+                });
+        }
+
+        require_rollback = rollback.sum(0);
+        iter++;
     }
-    if (iter == max_iter){
-      amrex::Abort(
-        "Maximum number of rollbacks reached (max_iter = " + std::to_string(max_iter) + ")");
+    if (iter == max_iter) {
+        amrex::Abort(
+            "Maximum number of rollbacks reached (max_iter = " +
+            std::to_string(max_iter) + ")");
     }
-    else{
-      amrex::Print() << "Rollback performed in " + std::to_string(iter) + " iterations." << std::endl;
+    // fixme, remove this later, kinda confusing in MPI
+    else {
+        amrex::Print() << "Rollback performed in " + std::to_string(iter - 1) +
+                              " iterations."
+                       << std::endl;
+        amrex::Print() << "  minimum number of rollbacks performed: "
+                       << m_state[lev].min(constants::RLB_IDX) << std::endl;
+        amrex::Print() << "  maximum number of rollbacks performed: "
+                       << m_state[lev].max(constants::RLB_IDX) << std::endl;
+        amrex::Print() << "  total number of rollbacks performed: "
+                       << m_state[lev].sum(constants::RLB_IDX) << std::endl;
     }
 
     m_pc->resolve_pairs();
 
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_pc->message_counts(lev).sum(particles::MessageTypes::ANTI_MESSAGE) == 0, "There should be no anti-messages left after rollback");
-    
-    
-//     const auto& plo = Geom(lev).ProbLoArray();
-//     const auto& dx = Geom(lev).CellSizeArray();
-//     const auto& dom = Geom(lev).Domain();
-//     const auto& dlo = dom.smallEnd();
-//     const auto& dhi = dom.bigEnd();
-//     const auto lookahead = m_lookahead;
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        m_pc->message_counts(lev).sum(particles::MessageTypes::ANTI_MESSAGE) ==
+            0,
+        "There should be no anti-messages left after rollback");
 
-// #ifdef _OPENMP
-// #pragma omp parallel
-// #endif
-//     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
-//         const amrex::Box& box = mfi.tilebox();
-//         const int gid = mfi.index();
-//         const int tid = mfi.LocalTileIndex();
-//         const auto& sarr = m_state[lev].array(mfi);
-//         const auto& msg_cnt_arr = m_pc->message_counts(lev).const_array(mfi);
-//         const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
-//         const auto index = std::make_pair(gid, tid);
-//         auto& pti = m_pc->GetParticles(lev)[index];
-//         auto& particles = pti.GetArrayOfStructs();
-//         auto* pstruct = particles().dataPtr();
+    //     const auto& plo = Geom(lev).ProbLoArray();
+    //     const auto& dx = Geom(lev).CellSizeArray();
+    //     const auto& dom = Geom(lev).Domain();
+    //     const auto& dlo = dom.smallEnd();
+    //     const auto& dhi = dom.bigEnd();
+    //     const auto lookahead = m_lookahead;
 
-//         amrex::ParallelFor(
-//             box, [=] AMREX_GPU_DEVICE(
-//                      int i, int j, int k) noexcept {
-//                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+    // #ifdef _OPENMP
+    // #pragma omp parallel
+    // #endif
+    //     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi)
+    //     {
+    //         const amrex::Box& box = mfi.tilebox();
+    //         const int gid = mfi.index();
+    //         const int tid = mfi.LocalTileIndex();
+    //         const auto& sarr = m_state[lev].array(mfi);
+    //         const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
+    //         const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+    //         const auto index = std::make_pair(gid, tid);
+    //         auto& pti = m_pc->GetParticles(lev)[index];
+    //         auto& particles = pti.GetArrayOfStructs();
+    //         auto* pstruct = particles().dataPtr();
 
-//                 // Need to check on 2 things:
-//                 // - if a message time stamp < lvt
-//                 // - if an anti-message (that was sent to me) time stamp < lvt
-//                 // FUCK, I need to know if an anti-msg is sent or in the holding anti-msg queue
+    //         amrex::ParallelFor(
+    //             box, [=] AMREX_GPU_DEVICE(
+    //                      int i, int j, int k) noexcept {
+    //                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
 
-//                 // Loop on all my messages:
-//                 // - if message < lvt: process a rollback (1. unprocess processed msg, 2. restore my state, 3. send corresponding anti-msg)
-//                 // Loop on all my "sent anti-msg"
-//                 // - if ts < lvt: process rollback
-//                 // - 
-//                 if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
-//                     const int msg_idx =
-//                         offsets_arr(iv, particles::MessageTypes::MESSAGE);
-//                     const particles::CellSortedParticleContainer::ParticleType&
-//                         prcv = pstruct[msg_idx];
-//                     AMREX_ALWAYS_ASSERT(
-//                         prcv.idata(particles::IntData::type_id) ==
-//                         particles::MessageTypes::MESSAGE);
+    //                 // Need to check on 2 things:
+    //                 // - if a message time stamp < lvt
+    //                 // - if an anti-message (that was sent to me) time stamp
+    //                 < lvt
+    //                 // FUCK, I need to know if an anti-msg is sent or in the
+    //                 holding anti-msg queue
 
-//                     // amrex::Print()
-//                     //     << "particle: " << msg_idx << " in cell: " << iv
-//                     //     << " has timestamp: "
-//                     //     << pricv.rdata(particles::RealData::timestamp)
-//                     //     << " and type " <<
-//                     //     prcv.idata(particles::IntData::type_id)
-//                     //     << std::endl;
-//                     const auto ptime =
-//                         prcv.rdata(particles::RealData::timestamp);
+    //                 // Loop on all my messages:
+    //                 // - if message < lvt: process a rollback (1. unprocess
+    //                 processed msg, 2. restore my state, 3. send corresponding
+    //                 anti-msg)
+    //                 // Loop on all my "sent anti-msg"
+    //                 // - if ts < lvt: process rollback
+    //                 // -
+    //                 if (cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
+    //                     const int msg_idx =
+    //                         offsets_arr(iv,
+    //                         particles::MessageTypes::MESSAGE);
+    //                     const
+    //                     particles::CellSortedParticleContainer::ParticleType&
+    //                         prcv = pstruct[msg_idx];
+    //                     AMREX_ALWAYS_ASSERT(
+    //                         prcv.idata(particles::IntData::type_id) ==
+    //                         particles::MessageTypes::MESSAGE);
 
-//                     if (sarr(iv, constants::LVT_IDX) > ptime) {
+    //                     // amrex::Print()
+    //                     //     << "particle: " << msg_idx << " in cell: " <<
+    //                     iv
+    //                     //     << " has timestamp: "
+    //                     //     << pricv.rdata(particles::RealData::timestamp)
+    //                     //     << " and type " <<
+    //                     //     prcv.idata(particles::IntData::type_id)
+    //                     //     << std::endl;
+    //                     const auto ptime =
+    //                         prcv.rdata(particles::RealData::timestamp);
 
-//                         amrex::Print()
-//                             << "I have message from the past, initiating rollback" << std::endl;
-//                         amrex::Print()
-//                             << "LVT: " << sarr(iv, constants::LVT_IDX)
-//                             << " and message time stamp is " << ptime
-//                             << " with id " << prcv.id() << " and type "
-//                             << prcv.idata(particles::IntData::type_id)
-//                             << " and sender "
-//                             << prcv.idata(particles::IntData::sender)
-//                             << " and receiver "
-//                             << prcv.idata(particles::IntData::receiver)
-//                             << std::endl;
-//                         // // amrex::Abort("I got a message from the past ");
-                      
-//                         // find all processed messages, unprocess the ones in the future
-//                         for (int n = 0;
-//                              n < msg_cnt_arr(
-//                                      iv, particles::MessageTypes::PROCESSED);
-//                              n++) {
-//                             const int pprd_idx =
-//                                 offsets_arr(
-//                                     iv, particles::MessageTypes::PROCESSED) +
-//                                 n;
-//                             particles::CellSortedParticleContainer::
-//                                 ParticleType& pprd = pstruct[pprd_idx];
-//                             AMREX_ALWAYS_ASSERT(
-//                                 pprd.idata(particles::IntData::type_id) ==
-//                                 particles::MessageTypes::PROCESSED);
-//                             if (pprd.rdata(particles::RealData::timestamp) >
-//                                 ptime) {
-//                                 amrex::Print() << "I have a processed message "
-//                                                   "that should not have been"
-//                                                << std::endl;
-//                                 amrex::Print()
-//                                     << "particle: " << pprd_idx
-//                                     << " in cell: " << iv << " has timestamp: "
-//                                     << pprd.rdata(
-//                                            particles::RealData::timestamp)
-//                                     << " and type "
-//                                     << pprd.idata(particles::IntData::type_id)
-//                                     << " rollback time is " << ptime
-//                                     << std::endl;
+    //                     if (sarr(iv, constants::LVT_IDX) > ptime) {
 
-//                                 pprd.idata(particles::IntData::type_id) =
-//                                     particles::MessageTypes::MESSAGE;
-//                                 sarr(iv, constants::LVT_IDX) = sarr(iv, constants::LVT_IDX)>pprd.rdata(particles::RealData::old_timestamp)?  pprd.rdata(particles::RealData::old_timestamp) : sarr(iv, constants::LVT_IDX);
-//                                 // send out the anti-messages that correspond to this processed event?
-//                                 // loop through my anti-messages
-//                                 // identify those that were created when I processed this event
-//                                 // actually send them out
-//                                 // maybe don't do this, do the thing after this
-//                             }
-//                         }
+    //                         amrex::Print()
+    //                             << "I have message from the past, initiating
+    //                             rollback" << std::endl;
+    //                         amrex::Print()
+    //                             << "LVT: " << sarr(iv, constants::LVT_IDX)
+    //                             << " and message time stamp is " << ptime
+    //                             << " with id " << prcv.id() << " and type "
+    //                             << prcv.idata(particles::IntData::type_id)
+    //                             << " and sender "
+    //                             << prcv.idata(particles::IntData::sender)
+    //                             << " and receiver "
+    //                             << prcv.idata(particles::IntData::receiver)
+    //                             << std::endl;
+    //                         // // amrex::Abort("I got a message from the past
+    //                         ");
 
-//                         // find all anti-messages them, send out the ones we
-//                         // need to send out
-//                         // FIXME: do I send them all out? Or only the one
-//                         // associated to a cancelled process? why are there so many?
-//                         // thought: store the "origination" time of the anti-msg in the old_timestamp.
-//                         // then I can just loop through those, see which one have an origination time > (my new) LVT and then send those out.
-//                         // the value of this is that I don't need to know which processed message originated me
-//                         // make sure these are owned by me, as in I haven't received these from others
-//                         for (int n = 0;
-//                              n < msg_cnt_arr(
-//                                      iv, particles::MessageTypes::ANTI_MESSAGE);
-//                              n++) {
+    //                         // find all processed messages, unprocess the
+    //                         ones in the future for (int n = 0;
+    //                              n < cnt_arr(
+    //                                      iv,
+    //                                      particles::MessageTypes::PROCESSED);
+    //                              n++) {
+    //                             const int pprd_idx =
+    //                                 offsets_arr(
+    //                                     iv,
+    //                                     particles::MessageTypes::PROCESSED) +
+    //                                 n;
+    //                             particles::CellSortedParticleContainer::
+    //                                 ParticleType& pprd = pstruct[pprd_idx];
+    //                             AMREX_ALWAYS_ASSERT(
+    //                                 pprd.idata(particles::IntData::type_id)
+    //                                 == particles::MessageTypes::PROCESSED);
+    //                             if
+    //                             (pprd.rdata(particles::RealData::timestamp) >
+    //                                 ptime) {
+    //                                 amrex::Print() << "I have a processed
+    //                                 message "
+    //                                                   "that should not have
+    //                                                   been"
+    //                                                << std::endl;
+    //                                 amrex::Print()
+    //                                     << "particle: " << pprd_idx
+    //                                     << " in cell: " << iv << " has
+    //                                     timestamp: "
+    //                                     << pprd.rdata(
+    //                                            particles::RealData::timestamp)
+    //                                     << " and type "
+    //                                     <<
+    //                                     pprd.idata(particles::IntData::type_id)
+    //                                     << " rollback time is " << ptime
+    //                                     << std::endl;
 
-//                             const int pant_idx =
-//                                 offsets_arr(
-//                                     iv, particles::MessageTypes::ANTI_MESSAGE) +
-//                                 n;
-//                             particles::CellSortedParticleContainer::
-//                                 ParticleType& pant = pstruct[pant_idx];
-//                             AMREX_ALWAYS_ASSERT(
-//                                 pant.idata(particles::IntData::type_id) ==
-//                                 particles::MessageTypes::ANTI_MESSAGE);
-//                             if (pant.rdata(particles::RealData::timestamp) >
-//                                 ptime) {
-//                                 amrex::Print() << "I have a anti-msg message "
-//                                                   "that should be sent out"
-//                                                << std::endl;
-//                                 amrex::Print()
-//                                     << "particle: " << pant_idx
-//                                     << " in cell: " << iv << " has timestamp: "
-//                                     << pant.rdata(
-//                                            particles::RealData::timestamp)
-//                                     << " and type "
-//                                     << pant.idata(particles::IntData::type_id)
-//                                     << " rollback time is " << ptime
-//                                     << std::endl;
-//                             }
-//                         }
-//                         amrex::Print()
-//                             << "I performed a rollback. Updated stats:" << std::endl;
-//                         amrex::Print()
-//                           << "LVT: " << sarr(iv, constants::LVT_IDX) << std::endl;
-//                     }
-//                     // else!
-//                     // 
-//                     else{}
+    //                                 pprd.idata(particles::IntData::type_id) =
+    //                                     particles::MessageTypes::MESSAGE;
+    //                                 sarr(iv, constants::LVT_IDX) = sarr(iv,
+    //                                 constants::LVT_IDX)>pprd.rdata(particles::RealData::old_timestamp)?
+    //                                 pprd.rdata(particles::RealData::old_timestamp)
+    //                                 : sarr(iv, constants::LVT_IDX);
+    //                                 // send out the anti-messages that
+    //                                 correspond to this processed event?
+    //                                 // loop through my anti-messages
+    //                                 // identify those that were created when
+    //                                 I processed this event
+    //                                 // actually send them out
+    //                                 // maybe don't do this, do the thing
+    //                                 after this
+    //                             }
+    //                         }
 
-                    
-//                 }
-//             });
+    //                         // find all anti-messages them, send out the ones
+    //                         we
+    //                         // need to send out
+    //                         // FIXME: do I send them all out? Or only the one
+    //                         // associated to a cancelled process? why are
+    //                         there so many?
+    //                         // thought: store the "origination" time of the
+    //                         anti-msg in the old_timestamp.
+    //                         // then I can just loop through those, see which
+    //                         one have an origination time > (my new) LVT and
+    //                         then send those out.
+    //                         // the value of this is that I don't need to know
+    //                         which processed message originated me
+    //                         // make sure these are owned by me, as in I
+    //                         haven't received these from others for (int n =
+    //                         0;
+    //                              n < cnt_arr(
+    //                                      iv,
+    //                                      particles::MessageTypes::ANTI_MESSAGE);
+    //                              n++) {
 
-//     }
-//     // I have unprocessed the message, I have marked as send the anti-msg
-//     // send them with redist
-//     // resort list
-//     // annihilate:
-//     // - loop on all sent anti-msg where I am the receiver (which I should always be, nice check)
-//     // - for each of those, I loop on the messages and annihilate -> mark as undefined
+    //                             const int pant_idx =
+    //                                 offsets_arr(
+    //                                     iv,
+    //                                     particles::MessageTypes::ANTI_MESSAGE)
+    //                                     +
+    //                                 n;
+    //                             particles::CellSortedParticleContainer::
+    //                                 ParticleType& pant = pstruct[pant_idx];
+    //                             AMREX_ALWAYS_ASSERT(
+    //                                 pant.idata(particles::IntData::type_id)
+    //                                 ==
+    //                                 particles::MessageTypes::ANTI_MESSAGE);
+    //                             if
+    //                             (pant.rdata(particles::RealData::timestamp) >
+    //                                 ptime) {
+    //                                 amrex::Print() << "I have a anti-msg
+    //                                 message "
+    //                                                   "that should be sent
+    //                                                   out"
+    //                                                << std::endl;
+    //                                 amrex::Print()
+    //                                     << "particle: " << pant_idx
+    //                                     << " in cell: " << iv << " has
+    //                                     timestamp: "
+    //                                     << pant.rdata(
+    //                                            particles::RealData::timestamp)
+    //                                     << " and type "
+    //                                     <<
+    //                                     pant.idata(particles::IntData::type_id)
+    //                                     << " rollback time is " << ptime
+    //                                     << std::endl;
+    //                             }
+    //                         }
+    //                         amrex::Print()
+    //                             << "I performed a rollback. Updated stats:"
+    //                             << std::endl;
+    //                         amrex::Print()
+    //                           << "LVT: " << sarr(iv, constants::LVT_IDX) <<
+    //                           std::endl;
+    //                     }
+    //                     // else!
+    //                     //
+    //                     else{}
+
+    //                 }
+    //             });
+
+    //     }
+    //     // I have unprocessed the message, I have marked as send the anti-msg
+    //     // send them with redist
+    //     // resort list
+    //     // annihilate:
+    //     // - loop on all sent anti-msg where I am the receiver (which I
+    //     should always be, nice check)
+    //     // - for each of those, I loop on the messages and annihilate -> mark
+    //     as undefined
 }
 
 void SPADES::update_gvt(const int lev)
@@ -782,12 +919,12 @@ SPADES::get_field(const std::string& name, const int lev, const int ngrow)
     }
     const int srccomp_id = get_field_component(name, m_message_counts_varnames);
     if (srccomp_id != -1) {
-        auto const& msg_cnt_arrs = m_pc->message_counts(lev).const_arrays();
+        auto const& cnt_arrs = m_pc->message_counts(lev).const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
             *mf, mf->nGrowVect(), m_pc->message_counts(lev).nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-                mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
+                mf_arrs[nbx](i, j, k, n) = cnt_arrs[nbx](i, j, k, n);
             });
         amrex::Gpu::synchronize();
     }
@@ -822,14 +959,13 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
         amrex::MultiFab::Copy(
             m_plt_mf[lev], m_state[lev], 0, cnt, m_state[lev].nComp(), 0);
         cnt += m_state[lev].nComp();
-        auto const& msg_cnt_arrs = m_pc->message_counts(lev).const_arrays();
+        auto const& cnt_arrs = m_pc->message_counts(lev).const_arrays();
         auto const& plt_mf_arrs = m_plt_mf[lev].arrays();
         amrex::ParallelFor(
             m_plt_mf[lev], m_plt_mf[lev].nGrowVect(),
             m_pc->message_counts(lev).nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-                plt_mf_arrs[nbx](i, j, k, n + cnt) =
-                    msg_cnt_arrs[nbx](i, j, k, n);
+                plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
             });
         amrex::Gpu::synchronize();
 
