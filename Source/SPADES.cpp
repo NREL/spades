@@ -332,7 +332,7 @@ void SPADES::process_messages(const int lev)
 
                 if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
 
-                  auto& prcv = particles::Get()(0, iv, particles::MessageTypes::MESSAGE, msg_cnt_arr, offsets_arr, pstruct);
+                  auto& prcv = particles::Get()(0, particles::MessageTypes::MESSAGE, iv, msg_cnt_arr, offsets_arr, pstruct);
                     AMREX_ALWAYS_ASSERT(
                         sarr(iv, constants::LVT_IDX) <
                         prcv.rdata(particles::RealData::timestamp));
@@ -349,7 +349,7 @@ void SPADES::process_messages(const int lev)
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
-                    auto& psnd = particles::Get()(0, iv, particles::MessageTypes::UNDEFINED, msg_cnt_arr, offsets_arr, pstruct);
+                    auto& psnd = particles::Get()(0, particles::MessageTypes::UNDEFINED, iv, msg_cnt_arr, offsets_arr, pstruct);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
@@ -367,7 +367,7 @@ void SPADES::process_messages(const int lev)
                         static_cast<int>(dom.index(iv_dest)));
 
                     // Create the conjugate message
-                    auto& pcnj = particles::Get()(1, iv, particles::MessageTypes::UNDEFINED, msg_cnt_arr, offsets_arr, pstruct);
+                    auto& pcnj = particles::Get()(1, particles::MessageTypes::UNDEFINED, iv, msg_cnt_arr, offsets_arr, pstruct);
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
@@ -383,6 +383,7 @@ void SPADES::process_messages(const int lev)
                     particles::Create()(
                         pcnj, ts, anti_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
+                    pcnj.idata(particles::IntData::pair) = pairing_function(psnd.cpu(), psnd.id());
                     pcnj.idata(particles::IntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
@@ -590,11 +591,6 @@ void SPADES::rollback(const int lev)
 //     // annihilate:
 //     // - loop on all sent anti-msg where I am the receiver (which I should always be, nice check)
 //     // - for each of those, I loop on the messages and annihilate -> mark as undefined
-//     // - also, I loop on all the processed messages. Nope don't do this
-//     // resort again
-//     // if there was any rollback in the system, do this all over again. Which means I need a pointwise vector of bools indicating if an LP did a rollback and then a reduction on those bools. Only move on if they are all false.
-
-//     // at the end of this mess, "sent anti-msg" count should be == 0
 }
 
 void SPADES::update_gvt(const int lev)

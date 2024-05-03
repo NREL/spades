@@ -42,6 +42,8 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     m_writeflags_int[IntData::sender] = 1;
     m_int_data_names[IntData::receiver] = "receiver";
     m_writeflags_int[IntData::receiver] = 1;
+    m_int_data_names[IntData::receiver] = "pair";
+    m_writeflags_int[IntData::receiver] = 0;
 
     m_message_counts.resize(nlevs_max);
     m_offsets.resize(nlevs_max);
@@ -334,7 +336,7 @@ void CellSortedParticleContainer::initialize_particles(
                 p.id() = ParticleType::NextID();
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-                p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+                MarkUndefined()(p);
                 p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
                 p.rdata(RealData::timestamp) = 0.0;
@@ -493,8 +495,8 @@ void CellSortedParticleContainer::update_undefined()
                 ParticleType p;
                 p.id() = ParticleType::NextID();
                 p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-                p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+ 
+               MarkUndefined()(p);
                 p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
                 p.rdata(RealData::timestamp) = 0.0;
@@ -519,7 +521,7 @@ void CellSortedParticleContainer::update_undefined()
                 const auto idx = box.index(iv);
                 const auto np = p_new_counts[idx];
                 for (int m = 0; m < -np; m++) {
-                  auto& p = Get()(m, iv, MessageTypes::UNDEFINED, cnt_arr, offsets_arr, pstruct);
+                  auto& p = Get()(m, MessageTypes::UNDEFINED, iv, cnt_arr, offsets_arr, pstruct);
                     p.id() = -1;
                 }
             });
@@ -535,6 +537,7 @@ void CellSortedParticleContainer::resolve_pairs()
     BL_PROFILE("spades::CellSortedParticleContainer::resolve_pairs()");
 
     const int lev = 0;
+    const auto& dom = Geom(lev).Domain();
 
     #ifdef _OPENMP
 #pragma omp parallel
@@ -557,14 +560,27 @@ void CellSortedParticleContainer::resolve_pairs()
                      n < cnt_arr(iv, MessageTypes::ANTI_MESSAGE);
                      n++) {
 
-                  auto& pant = Get()(n, iv, MessageTypes::ANTI_MESSAGE, cnt_arr, offsets_arr, pstruct);
+                  auto& pant = Get()(n, MessageTypes::ANTI_MESSAGE, iv, cnt_arr, offsets_arr, pstruct);
+                  AMREX_ALWAYS_ASSERT(pant.idata(IntData::pair) != -1);
+                  AMREX_ALWAYS_ASSERT(pant.idata(IntData::receiver) == dom.index(iv));
 
+                  bool found_pair = false;
+                  for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
+                       m++) {
+                    auto& pmsg = Get()(m, MessageTypes::MESSAGE, iv, cnt_arr, offsets_arr, pstruct);
+                    if(pairing_function(pmsg.cpu(), pmsg.id()) == pant.idata(IntData::pair)){
+                      AMREX_ALWAYS_ASSERT(pmsg.idata(IntData::sender) == pant.idata(IntData::sender));
+                      AMREX_ALWAYS_ASSERT(pmsg.idata(IntData::receiver) == pant.idata(IntData::receiver));
+                      AMREX_ALWAYS_ASSERT(std::abs(pmsg.rdata(RealData::timestamp) - pant.rdata(RealData::timestamp)) < constants::EPS);
+                      MarkUndefined()(pant);
+                      MarkUndefined()(pmsg);
+                      found_pair = true;
+                      break;
+                    }                    
+                  }
+                  AMREX_ALWAYS_ASSERT(found_pair);
                 }
-
-
-
             });
-
     }
     
     sort_particles();
@@ -590,7 +606,7 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
             if (p.rdata(RealData::timestamp) < gvt) {
-                p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
+              MarkUndefined()(p);
                 p.rdata(RealData::timestamp) = gvt;
             }
         });
@@ -628,7 +644,7 @@ void CellSortedParticleContainer::reposition_messages()
                 for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
                     AMREX_ALWAYS_ASSERT(cnt_arr(iv, typ) < nbins);
                     for (int n = 0; n < cnt_arr(iv, typ); n++) {
-                      auto& p = Get()(n, iv, typ, cnt_arr, offsets_arr, pstruct);
+                      auto& p = Get()(n, typ, iv, cnt_arr, offsets_arr, pstruct);
 
                         const amrex::IntVect piv(AMREX_D_DECL(
                             p.idata(IntData::i), p.idata(IntData::j),

@@ -14,6 +14,9 @@ static constexpr amrex::Real LOW_NUM = static_cast<amrex::Real>(
 static constexpr amrex::Real SMALL_NUM = static_cast<amrex::Real>(
     std::numeric_limits<amrex::Real>::epsilon() * 1e10);
 
+static constexpr amrex::Real EPS = static_cast<amrex::Real>(
+    std::numeric_limits<amrex::Real>::epsilon());
+
 static constexpr amrex::Real LARGE_NUM =
     static_cast<amrex::Real>(std::numeric_limits<amrex::Real>::max() * 1e-10);
 
