@@ -97,10 +97,8 @@ struct Get
         : m_iv(iv), m_counts(counts), m_offsets(offsets), m_pstruct(pstruct)
     {}
 
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE P& operator()(
-        const int n, const int typ
-
-    ) const
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE P&
+    operator()(const int n, const int typ) const
     {
 
         AMREX_ALWAYS_ASSERT(m_counts(m_iv, typ) > n);
@@ -112,6 +110,16 @@ struct Get
 
         return p;
     }
+
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
+    check(const int n, const int typ) const
+    {
+        AMREX_ALWAYS_ASSERT(m_counts(m_iv, typ) > n);
+        const int idx = m_offsets(m_iv, typ) + n;
+        P& p = m_pstruct[idx];
+        return p.idata(IntData::type_id) == typ;
+    }
+
     const amrex::IntVect& m_iv;
     const amrex::Array4<const int>& m_counts;
     const amrex::Array4<const int>& m_offsets;

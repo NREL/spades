@@ -409,11 +409,11 @@ void SPADES::rollback(const int lev)
 
     amrex::iMultiFab rollback(boxArray(lev), DistributionMap(lev), 1, 0);
     rollback.setVal(1.0);
-    m_state[lev].setVal(0.0, constants::RLB_IDX, 1);
     amrex::Long require_rollback = rollback.sum(0);
 
     const int max_iter = 100;
     int iter = 0;
+    m_state[lev].setVal(0.0, constants::RLB_IDX, 1);
     while ((require_rollback > 0) && (iter < max_iter)) {
 
 #ifdef _OPENMP
@@ -489,6 +489,15 @@ void SPADES::rollback(const int lev)
                                          iv,
                                          particles::MessageTypes::CONJUGATE);
                                      m++) {
+
+                                    // This is a conjugate message that was
+                                    // already treated
+                                    if (!getter.check(
+                                            m, particles::MessageTypes::
+                                                   CONJUGATE)) {
+                                        continue;
+                                    }
+
                                     auto& pcnj = getter(
                                         m, particles::MessageTypes::CONJUGATE);
 

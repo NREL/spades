@@ -569,6 +569,11 @@ void CellSortedParticleContainer::resolve_pairs()
                     bool found_pair = false;
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
                          m++) {
+                        // This is a message that was already treated
+                        if (!getter.check(
+                                m, particles::MessageTypes::MESSAGE)) {
+                            continue;
+                        }
                         auto& pmsg = getter(m, MessageTypes::MESSAGE);
                         if (pmsg.idata(IntData::pair) ==
                             pant.idata(IntData::pair)) {
