@@ -77,5 +77,34 @@ struct Create
     }
 };
 
+struct Get
+{
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE P& operator()(
+      const int n,
+      const amrex::IntVect iv,
+      const int typ,
+      const amrex::Array4<const int>& counts,
+      const amrex::Array4<const int>& offsets,
+            P* pstruct
+
+    ) const
+    {
+
+      AMREX_ALWAYS_ASSERT(counts(iv, typ) > n);
+      const int idx =
+        offsets(
+          iv, typ) +
+                    n;
+
+      P& p = pstruct[idx];
+      
+      AMREX_ALWAYS_ASSERT(
+        p.idata(IntData::type_id) == typ);
+
+      return p;
+    }
+};
+
 } // namespace spades::particles
 #endif

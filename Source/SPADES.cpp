@@ -26,7 +26,6 @@ SPADES::SPADES()
     m_message_counts_varnames[particles::MessageTypes::CONJUGATE] = "conjugate";
     m_message_counts_varnames[particles::MessageTypes::UNDEFINED] = "undefined";
       for(const auto& mm : m_message_counts_varnames){
-        amrex::Print() << mm << std::endl;
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!mm.empty(), "Variable name needs to be specified");          
     }
       
@@ -281,13 +280,11 @@ void SPADES::advance(
 
     m_pc->Redistribute();
     m_pc->sort_particles();
-    m_pc->update_counts();
     m_pc->update_undefined();
 
     update_gvt(lev);
     m_pc->garbage_collect(m_gvts[lev]);
     m_pc->sort_particles();
-    m_pc->update_counts();
 
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
     m_ts_new[lev] += dt_lev;       // new time is ahead
@@ -334,13 +331,8 @@ void SPADES::process_messages(const int lev)
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
 
                 if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
-                    const int msg_idx =
-                        offsets_arr(iv, particles::MessageTypes::MESSAGE);
-                    particles::CellSortedParticleContainer::ParticleType& prcv =
-                        pstruct[msg_idx];
-                    AMREX_ALWAYS_ASSERT(
-                        prcv.idata(particles::IntData::type_id) ==
-                        particles::MessageTypes::MESSAGE);
+
+                  auto& prcv = particles::Get()(0, iv, particles::MessageTypes::MESSAGE, msg_cnt_arr, offsets_arr, pstruct);
                     AMREX_ALWAYS_ASSERT(
                         sarr(iv, constants::LVT_IDX) <
                         prcv.rdata(particles::RealData::timestamp));
@@ -361,13 +353,7 @@ void SPADES::process_messages(const int lev)
                         msg_cnt_arr(iv, particles::MessageTypes::UNDEFINED) >
                         2);
 
-                    const int undef_idx0 =
-                        offsets_arr(iv, particles::MessageTypes::UNDEFINED);
-                    particles::CellSortedParticleContainer::ParticleType& psnd =
-                        pstruct[undef_idx0];
-                    AMREX_ALWAYS_ASSERT(
-                        psnd.idata(particles::IntData::type_id) ==
-                        particles::MessageTypes::UNDEFINED);
+                    auto& psnd = particles::Get()(0, iv, particles::MessageTypes::UNDEFINED, msg_cnt_arr, offsets_arr, pstruct);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
@@ -385,12 +371,7 @@ void SPADES::process_messages(const int lev)
                         static_cast<int>(dom.index(iv_dest)));
 
                     // Create the conjugate message
-                    const int undef_idx1 = undef_idx0 + 1;
-                    particles::CellSortedParticleContainer::ParticleType& pant =
-                        pstruct[undef_idx1];
-                    AMREX_ALWAYS_ASSERT(
-                        pant.idata(particles::IntData::type_id) ==
-                        particles::MessageTypes::UNDEFINED);
+                    auto& pcnj = particles::Get()(1, iv, particles::MessageTypes::UNDEFINED, msg_cnt_arr, offsets_arr, pstruct);
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
@@ -404,9 +385,9 @@ void SPADES::process_messages(const int lev)
                             plo[2] + (iv[2] + 0.5) * dx[2])};
 
                     particles::Create()(
-                        pant, ts, anti_pos, iv, static_cast<int>(dom.index(iv)),
+                        pcnj, ts, anti_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
-                    pant.idata(particles::IntData::type_id) =
+                    pcnj.idata(particles::IntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
             });
@@ -438,6 +419,10 @@ void SPADES::rollback(const int lev)
       amrex::Print() << "Rollback performed in " + std::to_string(iter) + " iterations." << std::endl;
     }
 
+    m_pc->resolve_pairs();
+
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_pc->message_counts(lev).sum(particles::MessageTypes::ANTI_MESSAGE) == 0, "There should be no anti-messages left after rollback");
+    
     
 //     const auto& plo = Geom(lev).ProbLoArray();
 //     const auto& dx = Geom(lev).CellSizeArray();
@@ -698,7 +683,7 @@ void SPADES::MakeNewLevelFromScratch(
     m_pc->Define(Geom(lev), dm, ba);
     m_pc->initialize_particles(m_lookahead);
     m_pc->initialize_state();
-    m_pc->update_counts();
+    m_pc->sort_particles();
 }
 
 void SPADES::initialize_state(const int lev)
@@ -1047,7 +1032,7 @@ void SPADES::read_checkpoint_file()
     init_particle_container();
     m_pc->Restart(m_restart_chkfile, m_pc->identifier());
     m_pc->initialize_state();
-    m_pc->update_counts();
+    m_pc->sort_particles();
 }
 
 void SPADES::write_info_file(const std::string& path) const
