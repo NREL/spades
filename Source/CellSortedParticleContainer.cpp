@@ -569,9 +569,12 @@ void CellSortedParticleContainer::resolve_pairs()
                     bool found_pair = false;
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
                          m++) {
-                        // This is a message that was already treated
-                        if (!getter.check(
-                                m, particles::MessageTypes::MESSAGE)) {
+                        // This is a message that was already treated, expect it
+                        // to be undefined
+                        if (!getter.check(m, MessageTypes::MESSAGE)) {
+                            getter.assert_different(
+                                m, MessageTypes::MESSAGE,
+                                MessageTypes::UNDEFINED);
                             continue;
                         }
                         auto& pmsg = getter(m, MessageTypes::MESSAGE);

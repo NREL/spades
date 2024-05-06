@@ -468,19 +468,6 @@ void SPADES::rollback(const int lev)
                             if (pprd.rdata(particles::RealData::timestamp) >=
                                 next_lvt) {
 
-                                amrex::Print() << "I have a processed  message "
-                                                  "that should not have  been "
-                                               << std::endl;
-                                amrex::Print()
-                                    << "particle in cell: " << iv
-                                    << " has timestamp: "
-                                    << pprd.rdata(
-                                           particles::RealData::timestamp)
-                                    << " and type "
-                                    << pprd.idata(particles::IntData::type_id)
-                                    << " rollback time is " << next_lvt
-                                    << std::endl;
-
                                 const int pair = static_cast<int>(
                                     pairing_function(pprd.cpu(), pprd.id()));
                                 for (int m = 0;
@@ -491,10 +478,16 @@ void SPADES::rollback(const int lev)
                                      m++) {
 
                                     // This is a conjugate message that was
-                                    // already treated
+                                    // already treated, expect it to be an anti
+                                    // message
                                     if (!getter.check(
                                             m, particles::MessageTypes::
                                                    CONJUGATE)) {
+                                        getter.assert_different(
+                                            m,
+                                            particles::MessageTypes::CONJUGATE,
+                                            particles::MessageTypes::
+                                                ANTI_MESSAGE);
                                         continue;
                                     }
 
@@ -557,12 +550,8 @@ void SPADES::rollback(const int lev)
         amrex::Abort(
             "Maximum number of rollbacks reached (max_iter = " +
             std::to_string(max_iter) + ")");
-    }
-    // fixme, remove this later, kinda confusing in MPI
-    else {
-        amrex::Print() << "Rollback performed in " + std::to_string(iter - 1) +
-                              " iterations."
-                       << std::endl;
+    } else {
+        amrex::Print() << "Rollback statistics:" << std::endl;
         amrex::Print() << "  minimum number of rollbacks performed: "
                        << m_state[lev].min(constants::RLB_IDX) << std::endl;
         amrex::Print() << "  maximum number of rollbacks performed: "

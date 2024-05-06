@@ -120,6 +120,14 @@ struct Get
         return p.idata(IntData::type_id) == typ;
     }
 
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
+    assert_different(const int n, const int typ, const int expected_type) const
+    {
+        const int idx = m_offsets(m_iv, typ) + n;
+        P& p = m_pstruct[idx];
+        AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == expected_type);
+    }
+
     const amrex::IntVect& m_iv;
     const amrex::Array4<const int>& m_counts;
     const amrex::Array4<const int>& m_offsets;
