@@ -11,7 +11,6 @@ namespace spades {
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE amrex::Real
 random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
 {
-
     return std::log(1 - amrex::Random(engine)) / (-lambda);
 }
 

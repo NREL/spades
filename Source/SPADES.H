@@ -200,6 +200,8 @@ private:
     bool m_write_particles{false};
 
     amrex::Real m_lookahead{1.0};
+    amrex::Real m_window_size{constants::LARGE_NUM};
+    int m_messages_per_step{1};
 
     int m_seed{0};
 

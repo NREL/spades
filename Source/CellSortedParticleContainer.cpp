@@ -641,7 +641,7 @@ void CellSortedParticleContainer::reposition_messages()
     const auto& dx = Geom(lev).CellSizeArray();
     const auto& dxi = Geom(lev).InvCellSizeArray();
     const auto& dom = Geom(lev).Domain();
-    const int nbins = 100;
+    const int nbins = 500;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())

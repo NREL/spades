@@ -133,6 +133,9 @@ void SPADES::read_parameters()
         pp.get("ic_type", m_ic_type);
         pp.query("write_particles", m_write_particles);
         pp.query("seed", m_seed);
+        pp.query("lookahead", m_lookahead);
+        pp.query("window_size", m_window_size);
+        pp.query("messages_per_step", m_messages_per_step);
     }
 
     // force periodic bcs
@@ -310,7 +313,10 @@ void SPADES::process_messages(const int lev)
     const auto& dom = Geom(lev).Domain();
     const auto& dlo = dom.smallEnd();
     const auto& dhi = dom.bigEnd();
+    const auto gvt = m_gvts[lev];
     const auto lookahead = m_lookahead;
+    const auto window_size = m_window_size;
+    const auto messages_per_step = m_messages_per_step;
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -335,9 +341,17 @@ void SPADES::process_messages(const int lev)
                 const auto getter =
                     particles::Get(iv, cnt_arr, offsets_arr, pstruct);
 
-                if (cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
+                for (int n = 0;
+                     n < amrex::min<int>(
+                             cnt_arr(iv, particles::MessageTypes::MESSAGE),
+                             messages_per_step);
+                     n++) {
 
-                    auto& prcv = getter(0, particles::MessageTypes::MESSAGE);
+                    auto& prcv = getter(n, particles::MessageTypes::MESSAGE);
+                    if (prcv.rdata(particles::RealData::timestamp) >=
+                        gvt + lookahead + window_size) {
+                        return;
+                    }
                     AMREX_ALWAYS_ASSERT(
                         sarr(iv, constants::LVT_IDX) <
                         prcv.rdata(particles::RealData::timestamp));
@@ -354,7 +368,8 @@ void SPADES::process_messages(const int lev)
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
-                    auto& psnd = getter(0, particles::MessageTypes::UNDEFINED);
+                    auto& psnd =
+                        getter(2 * n, particles::MessageTypes::UNDEFINED);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
@@ -375,7 +390,8 @@ void SPADES::process_messages(const int lev)
                     psnd.idata(particles::IntData::pair) = pair;
 
                     // Create the conjugate message
-                    auto& pcnj = getter(1, particles::MessageTypes::UNDEFINED);
+                    auto& pcnj =
+                        getter(2 * n + 1, particles::MessageTypes::UNDEFINED);
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
