@@ -448,11 +448,11 @@ void SPADES::rollback(const int lev)
                             ? getter(0, particles::MessageTypes::ANTI_MESSAGE)
                                   .rdata(particles::RealData::timestamp)
                             : constants::LARGE_NUM;
-                    const amrex::Real next_lvt =
+                    const amrex::Real rollback_timestamp =
                         amrex::min<amrex::Real>(msg_lvt, ant_lvt);
 
                     rarr(iv) = 0;
-                    if (next_lvt <= sarr(iv, constants::LVT_IDX)) {
+                    if (rollback_timestamp <= sarr(iv, constants::LVT_IDX)) {
                         AMREX_ALWAYS_ASSERT(
                             cnt_arr(iv, particles::MessageTypes::PROCESSED) >
                             0);
@@ -466,7 +466,7 @@ void SPADES::rollback(const int lev)
                             auto& pprd =
                                 getter(n, particles::MessageTypes::PROCESSED);
                             if (pprd.rdata(particles::RealData::timestamp) >=
-                                next_lvt) {
+                                rollback_timestamp) {
 
                                 const int pair = static_cast<int>(
                                     pairing_function(pprd.cpu(), pprd.id()));
