@@ -7,12 +7,19 @@ namespace spades::particles {
 
 struct RealData
 {
-    enum { timestamp, old_timestamp, ncomps };
+    enum : std::uint8_t { timestamp, old_timestamp, ncomps };
 };
 
 struct IntData
 {
-    enum { AMREX_D_DECL(i, j, k), type_id, sender, receiver, pair, ncomps };
+    enum : std::uint8_t {
+        AMREX_D_DECL(i, j, k),
+        type_id,
+        sender,
+        receiver,
+        pair,
+        ncomps
+    };
 };
 
 struct MessageTypes

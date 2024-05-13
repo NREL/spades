@@ -475,12 +475,13 @@ void CellSortedParticleContainer::update_undefined()
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
-            const int new_count = (lower_count > current_count)
-                                      ? lower_count - current_count
-                                      : ((current_count > upper_count)
-                                             ? upper_count - current_count
-                                             : 0);
-            p_new_counts[icell] = new_count;
+            if (lower_count > current_count) {
+                p_new_counts[icell] = lower_count - current_count;
+            } else if (current_count > upper_count) {
+                p_new_counts[icell] = upper_count - current_count;
+            } else {
+                p_new_counts[icell] = 0;
+            }
         });
 
         // host vector for the particle adds

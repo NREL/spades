@@ -15,7 +15,7 @@ struct Constant
     {
 
         AMREX_GPU_DEVICE
-        inline void operator()(
+        void operator()(
             const amrex::IntVect& /*iv*/,
             amrex::GeometryData const& /*geom*/,
             amrex::Real& state) const

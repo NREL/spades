@@ -1,6 +1,7 @@
 target_sources(${spades_lib_name}
   PRIVATE
     CellSortedParticleContainer.cpp
+    ConsoleIO.cpp
     IC.cpp
     SPADES.cpp
     Utilities.cpp
