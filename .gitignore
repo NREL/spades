@@ -21,6 +21,7 @@ Build/SpadesConfig.cmake
 Build/Source/
 Build/Submodules/
 Build/Tests/
+Build/Testing/
 Build/cmake_install.cmake
 Build/spades
 Build/spades_obj/

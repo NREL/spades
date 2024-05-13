@@ -21,6 +21,7 @@ function clean(){
     rm -rf cppcheck-ci-report.txt
     rm -rf cppcheck
     rm -rf build-docs
+    rm -rf bin
 }
 
 CLEAN='false'
