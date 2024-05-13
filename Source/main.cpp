@@ -8,7 +8,7 @@
 #include "SPADES.H"
 #include "ConsoleIO.H"
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 {
 #ifdef AMREX_USE_MPI
     MPI_Init(&argc, &argv);
