@@ -335,7 +335,7 @@ void SPADES::process_messages(const int lev)
 
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int k,
+                     int i, int j, int AMREX_D_PICK(, , k),
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter =
@@ -450,7 +450,8 @@ void SPADES::rollback(const int lev)
             auto* pstruct = particles().dataPtr();
 
             amrex::ParallelFor(
-                box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                box, [=] AMREX_GPU_DEVICE(
+                         int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                     const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                     const auto getter =
                         particles::Get(iv, cnt_arr, offsets_arr, pstruct);

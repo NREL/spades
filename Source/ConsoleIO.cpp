@@ -5,17 +5,17 @@
 #include "Source/SpadesVersion.H"
 
 namespace amrex {
-const char* buildInfoGetBuildDate();
-const char* buildInfoGetComp();
-const char* buildInfoGetGitHash(int i);
-const char* buildInfoGetCompVersion();
+const char* buildInfoGetBuildDate();    // NOLINT(readability-identifier-naming)
+const char* buildInfoGetComp();         // NOLINT(readability-identifier-naming)
+const char* buildInfoGetGitHash(int i); // NOLINT(readability-identifier-naming)
+const char* buildInfoGetCompVersion();  // NOLINT(readability-identifier-naming)
 } // namespace amrex
 
 namespace spades::io {
 
 namespace {
-const std::string dbl_line = std::string(78, '=') + "\n";
-const std::string dash_line = "\n" + std::string(78, '-') + "\n";
+const std::string DBL_LINE = std::string(78, '=') + "\n";
+const std::string DASH_LINE = "\n" + std::string(78, '-') + "\n";
 } // namespace
 
 void print_usage(MPI_Comm comm, std::ostream& out)
@@ -86,14 +86,14 @@ void print_banner(MPI_Comm comm, std::ostream& out)
     ctime_r(&etimet, time_buf.begin());
     const std::string tstamp(time_buf.begin());
 
-    const std::string dirty_tag = (version::spades_dirty_repo == "DIRTY")
-                                      ? ("-" + version::spades_dirty_repo)
+    const std::string dirty_tag = (version::SPADES_DIRTY_REPO == "DIRTY")
+                                      ? ("-" + version::SPADES_DIRTY_REPO)
                                       : "";
-    const std::string spades_version = version::spades_version + dirty_tag;
-    const std::string spades_git_sha = version::spades_git_sha + dirty_tag;
+    const std::string spades_version = version::SPADES_VERSION + dirty_tag;
+    const std::string spades_git_sha = version::SPADES_GIT_SHA + dirty_tag;
 
     // clang-format off
-    out << dbl_line
+    out << DBL_LINE
         << "                SPADES (https://github.com/NREL/spades)"
         << std::endl << std::endl
         << "  SPADES version :: " << spades_version << std::endl
@@ -134,7 +134,7 @@ void print_banner(MPI_Comm comm, std::ostream& out)
     out << " This software is released under the Apache 2.0 license.           "
         << std::endl
         << " See https://github.com/NREL/spades/blob/main/LICENSE for details. "
-        << dash_line << std::endl;
+        << DASH_LINE << std::endl;
     // clang-format on
 }
 

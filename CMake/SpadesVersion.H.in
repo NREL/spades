@@ -12,13 +12,13 @@ namespace spades::version {
 #cmakedefine SPADES_HAVE_GIT_INFO
 
 #ifdef SPADES_HAVE_GIT_INFO
-const std::string spades_version = "@SPADES_VERSION_TAG@";
-const std::string spades_git_sha = "@SPADES_GIT_COMMIT_SHA@";
-const std::string spades_dirty_repo = "@SPADES_REPO_DIRTY@";
+const std::string SPADES_VERSION = "@SPADES_VERSION_TAG@";
+const std::string SPADES_GIT_SHA = "@SPADES_GIT_COMMIT_SHA@";
+const std::string SPADES_DIRTY_REPO = "@SPADES_REPO_DIRTY@";
 #else
-const std::string spades_version = "v0.0.1";
-const std::string spades_git_sha = "UNKNOWN";
-const std::string spades_dirty_repo = "UNKNOWN";
+const std::string SPADES_VERSION = "v0.0.1";
+const std::string SPADES_GIT_SHA = "UNKNOWN";
+const std::string SPADES_DIRTY_REPO = "UNKNOWN";
 #endif
 
 } // namespace spades::version

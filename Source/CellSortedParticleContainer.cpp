@@ -143,7 +143,8 @@ void CellSortedParticleContainer::count_offsets()
             amrex::Scan::Type::exclusive, amrex::Scan::noRetSum);
 
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 for (int typ = 1; typ < MessageTypes::NTYPES; typ++) {
                     offsets_arr(iv, typ) =
@@ -519,7 +520,8 @@ void CellSortedParticleContainer::update_undefined()
 
         // remove particles
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto idx = box.index(iv);
                 const auto np = p_new_counts[idx];
@@ -555,7 +557,8 @@ void CellSortedParticleContainer::resolve_pairs()
         auto* pstruct = particles().dataPtr();
 
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 
@@ -659,7 +662,8 @@ void CellSortedParticleContainer::reposition_messages()
         auto* pstruct = particles().dataPtr();
 
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 
