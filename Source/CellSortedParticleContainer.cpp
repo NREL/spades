@@ -165,8 +165,8 @@ void CellSortedParticleContainer::initialize_particles(
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
     const auto& dom = Geom(lev).Domain();
-    const auto& dlo = dom.smallEnd();
-    const auto& dhi = dom.bigEnd();
+    // const auto& dlo = dom.smallEnd();
+    // const auto& dhi = dom.bigEnd();
 
     // // Some test particles
     // #ifdef _OPENMP
@@ -204,7 +204,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead + 20;
+    //                         random_exponential(1.0, engine) + lookahead + 20;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
@@ -234,7 +234,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest2);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
+    //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest2[0] + 0.5) * dx[0];
@@ -265,7 +265,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
+    //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
@@ -295,7 +295,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest2);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
+    //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest2[0] + 0.5) * dx[0];

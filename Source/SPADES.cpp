@@ -380,7 +380,8 @@ void SPADES::process_messages(const int lev)
                             plo[1] + (iv_dest[1] + 0.5) * dx[1],
                             plo[2] + (iv_dest[2] + 0.5) * dx[2])};
                     const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
-                                           random_exponential(1.0) + lookahead;
+                                           random_exponential(1.0, engine) +
+                                           lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     particles::Create()(
                         psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
@@ -633,10 +634,10 @@ amrex::Real SPADES::est_time_step(const int /*lev*/)
 // Make a new level using provided BoxArray and DistributionMapping and
 // fill with interpolated coarse level data.
 void SPADES::MakeNewLevelFromCoarse(
-    int lev,
-    amrex::Real time,
-    const amrex::BoxArray& ba,
-    const amrex::DistributionMapping& dm)
+    int /*lev*/,
+    amrex::Real /*time*/,
+    const amrex::BoxArray& /*ba*/,
+    const amrex::DistributionMapping& /*dm*/)
 {
     BL_PROFILE("spades::SPADES::MakeNewLevelFromCoarse()");
     amrex::Abort("spades::SPADES::MakeNewLevelFromCoarse(): not implemented");
@@ -681,10 +682,10 @@ void SPADES::initialize_state(const int lev)
 // Remake an existing level using provided BoxArray and DistributionMapping
 // and fill with existing fine and coarse data.
 void SPADES::RemakeLevel(
-    int lev,
-    amrex::Real time,
-    const amrex::BoxArray& ba,
-    const amrex::DistributionMapping& dm)
+    int /*lev*/,
+    amrex::Real /* time*/,
+    const amrex::BoxArray& /*ba*/,
+    const amrex::DistributionMapping& /*dm*/)
 {
     BL_PROFILE("spades::SPADES::RemakeLevel()");
     amrex::Abort("spades::SPADES::RemakeLevel(): not implemented");
@@ -996,7 +997,7 @@ void SPADES::read_checkpoint_file()
 
         // build MultiFabs
         const int ncomp = static_cast<int>(varnames.size());
-        AMREX_ASSERT(ncomp == constants::N_STATES);
+        AMREX_ALWAYS_ASSERT(ncomp == constants::N_STATES);
         m_state[lev].define(
             ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
     }

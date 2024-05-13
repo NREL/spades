@@ -63,7 +63,10 @@ public:
     // tag all cells for refinement
     // overrides the pure virtual function in AmrCore
     void ErrorEst(
-        int lev, amrex::TagBoxArray& tags, amrex::Real time, int ngrow) override
+        int /*lev*/,
+        amrex::TagBoxArray& /*tags*/,
+        amrex::Real /*time*/,
+        int /*ngrow*/) override
     {}
 
     // compute dt
