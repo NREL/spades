@@ -82,7 +82,7 @@ add_executable(${spades_exe_name})
 init_code_checks()
 if(CLANG_TIDY_EXE)
   set_target_properties(${spades_lib_name} ${spades_api_lib} ${spades_exe_name}
-                        PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;--fix")
+                        PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
 endif()
 
 include(set_compile_flags)
