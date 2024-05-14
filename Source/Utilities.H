@@ -9,20 +9,20 @@
 #include "Constants.H"
 
 namespace spades {
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE amrex::Real
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
 random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
 {
     return std::log(1 - amrex::Random(engine)) / (-lambda);
 }
 
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE amrex::Real
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
 random_exponential(const amrex::Real lambda)
 {
 
     return std::log(1 - amrex::Random()) / (-lambda);
 }
 
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE amrex::Long
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Long
 pairing_function(const amrex::Long k1, const amrex::Long k2)
 {
     // Cantor pairing function
