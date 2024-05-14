@@ -4,6 +4,7 @@
 #include <AMReX_AmrCore.H>
 #include <AMReX_AmrParGDB.H>
 #include <AMReX_NeighborParticles.H>
+#include <AMReX_Random.H>
 #include "ParticleData.H"
 #include "ParticleOps.H"
 #include "Utilities.H"

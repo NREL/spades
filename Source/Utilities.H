@@ -5,6 +5,7 @@
 #include <AMReX_RealVect.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_MultiFabUtil.H>
+#include <AMReX_Random.H>
 #include "Constants.H"
 
 namespace spades {

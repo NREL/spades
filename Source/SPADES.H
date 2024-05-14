@@ -10,6 +10,7 @@
 #include <AMReX_FluxRegister.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ErrorList.H>
+#include <AMReX_Random.H>
 #include "Constants.H"
 #include "IC.H"
 #include "Utilities.H"
