@@ -1,6 +1,10 @@
 #include <utility>
-
 #include "CellSortedParticleContainer.H"
+
+#if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+#include <thrust/sort.h>
+#include <thrust/execution_policy.h>
+#endif
 
 namespace spades::particles {
 
