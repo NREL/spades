@@ -55,7 +55,7 @@ CellSortedParticleContainer::CellSortedParticleContainer(
 
 void CellSortedParticleContainer::initialize_state()
 {
-    BL_PROFILE("spades::oCellSortedParticleContainer::init_state()");
+    BL_PROFILE("spades::CellSortedParticleContainer::init_state()");
 
     const int lev = 0;
 
@@ -386,8 +386,9 @@ void CellSortedParticleContainer::sort_particles()
             continue;
         }
 
-        // BL_PROFILE_VAR("spades::CellSortedParticleContainer::sort_prep",
-        // prep);
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::sort_particles::sort_prep",
+        //     prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
@@ -397,8 +398,9 @@ void CellSortedParticleContainer::sort_particles()
         // BL_PROFILE_VAR_STOP(prep);
 
         // Sort particle indices based on the cell index
-        // BL_PROFILE_VAR("spades::CellSortedParticleContainer::sort_particles::sort",
-        // sort);
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::sort_particles::sort",
+        //     sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
 #ifdef AMREX_USE_GPU
@@ -441,8 +443,10 @@ void CellSortedParticleContainer::sort_particles()
         // BL_PROFILE_VAR_STOP(sort);
 
         // Reorder the particles in memory
-        // BL_PROFILE_VAR("spades::CellSortedParticleContainer::sort_particles::ReorderParticles",
-        // reorder);
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::sort_particles::"
+        //     "ReorderParticles",
+        //     reorder);
         ReorderParticles(lev, mfi, cell_list.data());
         // amrex::Gpu::Device::synchronize();
         // BL_PROFILE_VAR_STOP(reorder);
@@ -477,6 +481,9 @@ void CellSortedParticleContainer::update_undefined()
         const auto ncells = static_cast<int>(box.numPts());
         amrex::Gpu::DeviceVector<int> new_counts(ncells, 0);
         auto* p_new_counts = new_counts.data();
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::update_undefined::new_counts",
+        //     new_counts);
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
@@ -488,14 +495,24 @@ void CellSortedParticleContainer::update_undefined()
                 p_new_counts[icell] = 0;
             }
         });
+        // amrex::Gpu::Device::synchronize();
+        // BL_PROFILE_VAR_STOP(new_counts);
 
         // host vector for the particle adds
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::update_undefined::host_vec",
+        //     host_vec);
         amrex::Vector<int> h_new_counts(ncells, 0);
         amrex::Gpu::copy(
             amrex::Gpu::deviceToHost, new_counts.begin(), new_counts.end(),
             h_new_counts.begin());
+        // amrex::Gpu::Device::synchronize();
+        // BL_PROFILE_VAR_STOP(host_vec);
 
         // add particles
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::update_undefined::add",
+        //     add);
         for (int i = 0; i < h_new_counts.size(); i++) {
             const auto iv = box.atOffset(i);
             const auto np = h_new_counts[i];
@@ -521,8 +538,13 @@ void CellSortedParticleContainer::update_undefined()
                 particle_tile.push_back(p);
             }
         }
+        // amrex::Gpu::Device::synchronize();
+        // BL_PROFILE_VAR_STOP(add);
 
         // remove particles
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::update_undefined::remove",
+        //     remove);
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
@@ -535,6 +557,8 @@ void CellSortedParticleContainer::update_undefined()
                     p.id() = -1;
                 }
             });
+        // amrex::Gpu::Device::synchronize();
+        // BL_PROFILE_VAR_STOP(remove);
     }
 
     Redistribute();
