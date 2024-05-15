@@ -86,6 +86,12 @@ public:
     // Initialize the particle container
     void init_particle_container();
 
+    // process messages
+    void process_messages(const int lev);
+
+    // rollback
+    void rollback(const int lev);
+
 private:
     // read parameters
     void read_parameters();
@@ -106,12 +112,6 @@ private:
 
     // perform work after a time step
     static void post_time_step();
-
-    // process messages
-    void process_messages(const int lev);
-
-    // rollback
-    void rollback(const int lev);
 
     // update gvt
     void update_gvt(const int lev);
