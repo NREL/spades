@@ -1,6 +1,10 @@
 #include <utility>
-
 #include "CellSortedParticleContainer.H"
+
+#if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+#include <thrust/sort.h>
+#include <thrust/execution_policy.h>
+#endif
 
 namespace spades::particles {
 
@@ -143,7 +147,8 @@ void CellSortedParticleContainer::count_offsets()
             amrex::Scan::Type::exclusive, amrex::Scan::noRetSum);
 
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 for (int typ = 1; typ < MessageTypes::NTYPES; typ++) {
                     offsets_arr(iv, typ) =
@@ -165,8 +170,8 @@ void CellSortedParticleContainer::initialize_particles(
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
     const auto& dom = Geom(lev).Domain();
-    const auto& dlo = dom.smallEnd();
-    const auto& dhi = dom.bigEnd();
+    // const auto& dlo = dom.smallEnd();
+    // const auto& dhi = dom.bigEnd();
 
     // // Some test particles
     // #ifdef _OPENMP
@@ -204,7 +209,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead + 20;
+    //                         random_exponential(1.0, engine) + lookahead + 20;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
@@ -234,7 +239,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest2);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
+    //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest2[0] + 0.5) * dx[0];
@@ -265,7 +270,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
+    //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
@@ -295,7 +300,7 @@ void CellSortedParticleContainer::initialize_particles(
     //                     p.idata(IntData::receiver) =
     //                     dom.index(iv_dest2);
     //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
+    //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
     //                         p.pos(0) = plo[0] + (iv_dest2[0] + 0.5) * dx[0];
@@ -475,12 +480,13 @@ void CellSortedParticleContainer::update_undefined()
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
-            const int new_count = (lower_count > current_count)
-                                      ? lower_count - current_count
-                                      : ((current_count > upper_count)
-                                             ? upper_count - current_count
-                                             : 0);
-            p_new_counts[icell] = new_count;
+            if (lower_count > current_count) {
+                p_new_counts[icell] = lower_count - current_count;
+            } else if (current_count > upper_count) {
+                p_new_counts[icell] = upper_count - current_count;
+            } else {
+                p_new_counts[icell] = 0;
+            }
         });
 
         // host vector for the particle adds
@@ -518,7 +524,8 @@ void CellSortedParticleContainer::update_undefined()
 
         // remove particles
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto idx = box.index(iv);
                 const auto np = p_new_counts[idx];
@@ -554,7 +561,8 @@ void CellSortedParticleContainer::resolve_pairs()
         auto* pstruct = particles().dataPtr();
 
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 
@@ -658,7 +666,8 @@ void CellSortedParticleContainer::reposition_messages()
         auto* pstruct = particles().dataPtr();
 
         amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 

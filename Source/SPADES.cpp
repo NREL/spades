@@ -335,7 +335,7 @@ void SPADES::process_messages(const int lev)
 
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int k,
+                     int i, int j, int AMREX_D_PICK(, , k),
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter =
@@ -371,16 +371,18 @@ void SPADES::process_messages(const int lev)
                     auto& psnd =
                         getter(2 * n, particles::MessageTypes::UNDEFINED);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
-                        amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
-                        amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
-                        amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
+                        amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
+                        amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
+                        amrex::Random_int(dhi[2] - dlo[2] + 1, engine) +
+                            dlo[2]));
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
                         AMREX_D_DECL(
                             plo[0] + (iv_dest[0] + 0.5) * dx[0],
                             plo[1] + (iv_dest[1] + 0.5) * dx[1],
                             plo[2] + (iv_dest[2] + 0.5) * dx[2])};
                     const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
-                                           random_exponential(1.0) + lookahead;
+                                           random_exponential(1.0, engine) +
+                                           lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     particles::Create()(
                         psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
@@ -449,7 +451,8 @@ void SPADES::rollback(const int lev)
             auto* pstruct = particles().dataPtr();
 
             amrex::ParallelFor(
-                box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+                box, [=] AMREX_GPU_DEVICE(
+                         int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                     const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                     const auto getter =
                         particles::Get(iv, cnt_arr, offsets_arr, pstruct);
@@ -633,10 +636,10 @@ amrex::Real SPADES::est_time_step(const int /*lev*/)
 // Make a new level using provided BoxArray and DistributionMapping and
 // fill with interpolated coarse level data.
 void SPADES::MakeNewLevelFromCoarse(
-    int lev,
-    amrex::Real time,
-    const amrex::BoxArray& ba,
-    const amrex::DistributionMapping& dm)
+    int /*lev*/,
+    amrex::Real /*time*/,
+    const amrex::BoxArray& /*ba*/,
+    const amrex::DistributionMapping& /*dm*/)
 {
     BL_PROFILE("spades::SPADES::MakeNewLevelFromCoarse()");
     amrex::Abort("spades::SPADES::MakeNewLevelFromCoarse(): not implemented");
@@ -681,10 +684,10 @@ void SPADES::initialize_state(const int lev)
 // Remake an existing level using provided BoxArray and DistributionMapping
 // and fill with existing fine and coarse data.
 void SPADES::RemakeLevel(
-    int lev,
-    amrex::Real time,
-    const amrex::BoxArray& ba,
-    const amrex::DistributionMapping& dm)
+    int /*lev*/,
+    amrex::Real /* time*/,
+    const amrex::BoxArray& /*ba*/,
+    const amrex::DistributionMapping& /*dm*/)
 {
     BL_PROFILE("spades::SPADES::RemakeLevel()");
     amrex::Abort("spades::SPADES::RemakeLevel(): not implemented");
@@ -996,7 +999,7 @@ void SPADES::read_checkpoint_file()
 
         // build MultiFabs
         const int ncomp = static_cast<int>(varnames.size());
-        AMREX_ASSERT(ncomp == constants::N_STATES);
+        AMREX_ALWAYS_ASSERT(ncomp == constants::N_STATES);
         m_state[lev].define(
             ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
     }

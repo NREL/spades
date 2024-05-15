@@ -2,6 +2,7 @@
 #define PARTICLEOPS_H
 
 #include <AMReX.H>
+#include <AMReX_Array4.H>
 #include "ParticleData.H"
 
 namespace spades::particles {
@@ -80,7 +81,7 @@ struct Create
 struct MarkUndefined
 {
     template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
     {
         p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
         p.idata(IntData::pair) = -1;
@@ -90,6 +91,7 @@ struct MarkUndefined
 template <class P>
 struct Get
 {
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE
     Get(const amrex::IntVect& iv,
         const amrex::Array4<const int>& counts,
         const amrex::Array4<const int>& offsets,

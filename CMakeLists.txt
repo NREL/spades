@@ -6,7 +6,7 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 include(spades-utils)
 
-set(SPADES_DIM "3" CACHE STRING "Number of physical dimensions")
+set(SPADES_DIM "2" CACHE STRING "Number of physical dimensions")
 
 option(SPADES_ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(SPADES_ENABLE_CLANG_TIDY "Compile with clang-tidy static analysis" OFF)

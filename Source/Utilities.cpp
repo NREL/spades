@@ -1,6 +1,12 @@
 #include "Utilities.H"
 
 namespace spades {
+amrex::Real random_exponential(const amrex::Real lambda)
+{
+
+    return std::log(1 - amrex::Random()) / (-lambda);
+}
+
 // skip to next line in Header
 void goto_next_line(std::istream& is)
 {

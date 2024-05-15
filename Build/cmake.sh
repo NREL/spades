@@ -21,6 +21,7 @@ function clean(){
     rm -rf cppcheck-ci-report.txt
     rm -rf cppcheck
     rm -rf build-docs
+    rm -rf bin
 }
 
 CLEAN='false'
@@ -56,7 +57,7 @@ cmake -DCMAKE_INSTALL_PREFIX:PATH=./install \
       -DCMAKE_CXX_COMPILER:STRING=clang++ \
       -DCMAKE_C_COMPILER:STRING=clang \
       -DCMAKE_BUILD_TYPE:STRING=Release \
-      -DSPADES_DIM:STRING=3 \
+      -DSPADES_DIM:STRING=2 \
       -DSPADES_ENABLE_MPI:BOOL=OFF \
       -DSPADES_ENABLE_CPPCHECK:BOOL=OFF \
       -DSPADES_ENABLE_CLANG_TIDY:BOOL=OFF \

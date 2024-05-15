@@ -10,6 +10,7 @@
 #include <AMReX_FluxRegister.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ErrorList.H>
+#include <AMReX_Random.H>
 #include "Constants.H"
 #include "IC.H"
 #include "Utilities.H"
@@ -63,7 +64,10 @@ public:
     // tag all cells for refinement
     // overrides the pure virtual function in AmrCore
     void ErrorEst(
-        int lev, amrex::TagBoxArray& tags, amrex::Real time, int ngrow) override
+        int /*lev*/,
+        amrex::TagBoxArray& /*tags*/,
+        amrex::Real /*time*/,
+        int /*ngrow*/) override
     {}
 
     // compute dt
@@ -81,6 +85,12 @@ public:
 
     // Initialize the particle container
     void init_particle_container();
+
+    // process messages
+    void process_messages(const int lev);
+
+    // rollback
+    void rollback(const int lev);
 
 private:
     // read parameters
@@ -102,12 +112,6 @@ private:
 
     // perform work after a time step
     static void post_time_step();
-
-    // process messages
-    void process_messages(const int lev);
-
-    // rollback
-    void rollback(const int lev);
 
     // update gvt
     void update_gvt(const int lev);

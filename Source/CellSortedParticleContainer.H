@@ -4,6 +4,7 @@
 #include <AMReX_AmrCore.H>
 #include <AMReX_AmrParGDB.H>
 #include <AMReX_NeighborParticles.H>
+#include <AMReX_Random.H>
 #include "ParticleData.H"
 #include "ParticleOps.H"
 #include "Utilities.H"
@@ -46,8 +47,14 @@ public:
 
     void clear_state();
 
-    // count messages
+    // count messages and offsets
     void update_counts();
+
+    // count messages
+    void count_messages();
+
+    // count offsets
+    void count_offsets();
 
     const amrex::Vector<amrex::iMultiFab>& message_counts() const
     {
@@ -80,20 +87,14 @@ public:
 
     void garbage_collect(const amrex::Real gvt);
 
+    // reposition the messages inside a cell
+    void reposition_messages();
+
     void write_plot_file(const std::string& plt_filename);
 
     int ngrow() const { return m_ngrow; }
 
 private:
-    // count messages
-    void count_messages();
-
-    // count offsets
-    void count_offsets();
-
-    // reposition the messages inside a cell
-    void reposition_messages();
-
     //! Data for particle container
     ParticleContainerInfo m_info;
 
