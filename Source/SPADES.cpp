@@ -371,9 +371,10 @@ void SPADES::process_messages(const int lev)
                     auto& psnd =
                         getter(2 * n, particles::MessageTypes::UNDEFINED);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
-                        amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
-                        amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
-                        amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
+                        amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
+                        amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
+                        amrex::Random_int(dhi[2] - dlo[2] + 1, engine) +
+                            dlo[2]));
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
                         AMREX_D_DECL(
                             plo[0] + (iv_dest[0] + 0.5) * dx[0],
