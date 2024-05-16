@@ -322,6 +322,7 @@ void CellSortedParticleContainer::initialize_particles(
 
     const int np_per_cell = 100;
     const int msg_per_cell = 10;
+    AMREX_ALWAYS_ASSERT(np_per_cell > 2 * msg_per_cell);
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
@@ -381,14 +382,23 @@ void CellSortedParticleContainer::initialize_particles(
                     AMREX_D_TERM(p.idata(IntData::i) = iv[0];
                                  , p.idata(IntData::j) = iv[1];
                                  , p.idata(IntData::k) = iv[2];)
-                    if ((n - start) < msg_per_cell) {
-                        p.rdata(RealData::timestamp) =
-                            random_exponential(1.0, engine) + lookahead;
-                        p.rdata(RealData::old_timestamp) = 0.0;
-                        p.idata(IntData::type_id) = MessageTypes::MESSAGE;
-                        p.idata(IntData::pair) =
-                            static_cast<int>(pairing_function(p.cpu(), p.id()));
-                    }
+                }
+
+                for (int n = start; n < start + msg_per_cell; n++) {
+                    auto& pmsg = aos[n];
+                    const auto pair = static_cast<int>(
+                        pairing_function(pmsg.cpu(), pmsg.id()));
+                    const amrex::Real ts =
+                        random_exponential(1.0, engine) + lookahead;
+
+                    pmsg.rdata(RealData::timestamp) = ts;
+                    pmsg.idata(IntData::type_id) = MessageTypes::MESSAGE;
+                    pmsg.idata(IntData::pair) = pair;
+
+                    auto& pcnj = aos[n + msg_per_cell];
+                    pcnj.rdata(RealData::timestamp) = ts;
+                    pcnj.idata(IntData::type_id) = MessageTypes::CONJUGATE;
+                    pcnj.idata(IntData::pair) = pair;
                 }
             });
     }
