@@ -60,12 +60,12 @@ void CellSortedParticleContainer::initialize_state()
     const int lev = 0;
 
     m_message_counts[lev].define(
-        m_gdb->boxArray(lev), m_gdb->DistributionMap(lev), MessageTypes::NTYPES,
-        m_ngrow, amrex::MFInfo());
+        ParticleBoxArray(lev), ParticleDistributionMap(lev),
+        MessageTypes::NTYPES, m_ngrow, amrex::MFInfo());
 
     m_offsets[lev].define(
-        m_gdb->boxArray(lev), m_gdb->DistributionMap(lev), MessageTypes::NTYPES,
-        m_ngrow, amrex::MFInfo());
+        ParticleBoxArray(lev), ParticleDistributionMap(lev),
+        MessageTypes::NTYPES, m_ngrow, amrex::MFInfo());
 
     m_message_counts[lev].setVal(0);
     m_offsets[lev].setVal(0);
@@ -321,58 +321,6 @@ void CellSortedParticleContainer::initialize_particles(
     //             }
     //         }
     //     }
-
-    //     const int np_per_cell = 100;
-    //     const int msg_per_cell = 10;
-    // #ifdef _OPENMP
-    // #pragma omp parallel
-    // #endif
-    //     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
-    //         const amrex::Box& box = mfi.tilebox();
-    //         const int gid = mfi.index();
-    //         const int tid = mfi.LocalTileIndex();
-    //         auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
-
-    //         for (amrex::IntVect iv = box.smallEnd(); iv <= box.bigEnd();
-    //              box.next(iv)) {
-
-    //             for (int i = 0; i < np_per_cell; i++) {
-    //                 ParticleType p;
-    //                 p.id() = ParticleType::NextID();
-    //                 p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-    //                 MarkUndefined()(p);
-    //                 p.idata(IntData::sender) =
-    //                 static_cast<int>(dom.index(iv));
-    //                 p.idata(IntData::receiver) =
-    //                 static_cast<int>(dom.index(iv));
-    //                 p.rdata(RealData::timestamp) = 0.0;
-    //                 p.rdata(RealData::old_timestamp) = 0.0;
-
-    //                 AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
-    //                              , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
-    //                              , p.pos(2) = plo[2] + (iv[2] + 0.5) *
-    //                              dx[2];)
-
-    //                 AMREX_D_TERM(p.idata(IntData::i) = iv[0];
-    //                              , p.idata(IntData::j) = iv[1];
-    //                              , p.idata(IntData::k) = iv[2];)
-
-    //                 if (i < msg_per_cell) {
-    //                     p.rdata(RealData::timestamp) =
-    //                         random_exponential(1.0) + lookahead;
-    //                     p.rdata(RealData::old_timestamp) = 0.0;
-    //                     p.idata(IntData::type_id) = MessageTypes::MESSAGE;
-    //                     p.idata(IntData::pair) =
-    //                         static_cast<int>(pairing_function(p.cpu(),
-    //                         p.id()));
-    //                 }
-
-    //                 pti.push_back(p);
-    //             }
-    //         }
-    //     }
-    //     Redistribute();
 
     const int np_per_cell = 100;
     const int msg_per_cell = 10;
