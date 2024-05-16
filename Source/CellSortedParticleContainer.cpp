@@ -165,8 +165,6 @@ void CellSortedParticleContainer::initialize_particles(
 
     const int lev = 0;
 
-    // FIXME this happens on CPU
-
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
     const auto& dom = Geom(lev).Domain();
@@ -337,8 +335,6 @@ void CellSortedParticleContainer::initialize_particles(
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
-        const int gid = mfi.index();
-        const int tid = mfi.LocalTileIndex();
 
         const auto ncells = static_cast<int>(box.numPts());
         const int* in = num_particles[mfi].dataPtr();
@@ -359,7 +355,7 @@ void CellSortedParticleContainer::initialize_particles(
         const auto& num_particles_arr = num_particles[mfi].const_array();
         auto& pti = DefineAndReturnParticleTile(lev, mfi);
         pti.resize(np);
-        auto aos = &pti.GetArrayOfStructs()[0];
+        auto* aos = pti.GetArrayOfStructs().data();
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k),

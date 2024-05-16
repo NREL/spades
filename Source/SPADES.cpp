@@ -96,8 +96,8 @@ void SPADES::init_data()
         amrex::Print() << "Particle summary: " << std::endl;
         for (int lev = 0; lev <= finest_level; ++lev) {
             amrex::Print() << "  Level " << lev << "   "
-                           << m_pc->TotalNumberOfParticles(lev) << " particles"
-                           << std::endl;
+                           << m_pc->TotalNumberOfParticles(lev != 0)
+                           << " particles" << std::endl;
         }
     }
 }
