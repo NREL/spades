@@ -412,9 +412,10 @@ void CellSortedParticleContainer::initialize_particles(
         auto& pti = DefineAndReturnParticleTile(lev, mfi);
         pti.resize(np);
         auto aos = &pti.GetArrayOfStructs()[0];
-        ParallelFor(
+        amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
+                     int i, int j, int AMREX_D_PICK(, , k),
+                     amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const int start = offset_arr(iv);
                 for (int n = start; n < start + num_particles_arr(iv); n++) {
@@ -438,7 +439,7 @@ void CellSortedParticleContainer::initialize_particles(
                                  , p.idata(IntData::k) = iv[2];)
                     if ((n - start) < msg_per_cell) {
                         p.rdata(RealData::timestamp) =
-                            random_exponential(1.0) + lookahead;
+                            random_exponential(1.0, engine) + lookahead;
                         p.rdata(RealData::old_timestamp) = 0.0;
                         p.idata(IntData::type_id) = MessageTypes::MESSAGE;
                         p.idata(IntData::pair) =
