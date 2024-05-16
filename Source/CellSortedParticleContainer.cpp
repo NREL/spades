@@ -322,8 +322,68 @@ void CellSortedParticleContainer::initialize_particles(
     //         }
     //     }
 
+    //     const int np_per_cell = 100;
+    //     const int msg_per_cell = 10;
+    // #ifdef _OPENMP
+    // #pragma omp parallel
+    // #endif
+    //     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    //         const amrex::Box& box = mfi.tilebox();
+    //         const int gid = mfi.index();
+    //         const int tid = mfi.LocalTileIndex();
+    //         auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
+
+    //         for (amrex::IntVect iv = box.smallEnd(); iv <= box.bigEnd();
+    //              box.next(iv)) {
+
+    //             for (int i = 0; i < np_per_cell; i++) {
+    //                 ParticleType p;
+    //                 p.id() = ParticleType::NextID();
+    //                 p.cpu() = amrex::ParallelDescriptor::MyProc();
+
+    //                 MarkUndefined()(p);
+    //                 p.idata(IntData::sender) =
+    //                 static_cast<int>(dom.index(iv));
+    //                 p.idata(IntData::receiver) =
+    //                 static_cast<int>(dom.index(iv));
+    //                 p.rdata(RealData::timestamp) = 0.0;
+    //                 p.rdata(RealData::old_timestamp) = 0.0;
+
+    //                 AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
+    //                              , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
+    //                              , p.pos(2) = plo[2] + (iv[2] + 0.5) *
+    //                              dx[2];)
+
+    //                 AMREX_D_TERM(p.idata(IntData::i) = iv[0];
+    //                              , p.idata(IntData::j) = iv[1];
+    //                              , p.idata(IntData::k) = iv[2];)
+
+    //                 if (i < msg_per_cell) {
+    //                     p.rdata(RealData::timestamp) =
+    //                         random_exponential(1.0) + lookahead;
+    //                     p.rdata(RealData::old_timestamp) = 0.0;
+    //                     p.idata(IntData::type_id) = MessageTypes::MESSAGE;
+    //                     p.idata(IntData::pair) =
+    //                         static_cast<int>(pairing_function(p.cpu(),
+    //                         p.id()));
+    //                 }
+
+    //                 pti.push_back(p);
+    //             }
+    //         }
+    //     }
+    //     Redistribute();
+
     const int np_per_cell = 100;
     const int msg_per_cell = 10;
+
+    amrex::iMultiFab num_particles(
+        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
+    amrex::iMultiFab offsets(
+        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
+    num_particles.setVal(np_per_cell);
+    offsets.setVal(0);
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -331,42 +391,61 @@ void CellSortedParticleContainer::initialize_particles(
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
 
-        for (amrex::IntVect iv = box.smallEnd(); iv <= box.bigEnd();
-             box.next(iv)) {
+        const auto ncells = static_cast<int>(box.numPts());
+        const int* in = num_particles[mfi].dataPtr();
+        int* out = offsets[mfi].dataPtr();
+        const auto np = amrex::Scan::PrefixSum<int>(
+            ncells, [=] AMREX_GPU_DEVICE(int i) -> int { return in[i]; },
+            [=] AMREX_GPU_DEVICE(int i, int const& x) { out[i] = x; },
+            amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
-            for (int i = 0; i < np_per_cell; i++) {
-                ParticleType p;
-                p.id() = ParticleType::NextID();
-                p.cpu() = amrex::ParallelDescriptor::MyProc();
+        const amrex::Long pid = ParticleType::NextID();
+        ParticleType::NextID(pid + np);
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            static_cast<amrex::Long>(pid + np) < amrex::LastParticleID,
+            "Error: overflow on particle id numbers!");
 
-                MarkUndefined()(p);
-                p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
-                p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
-                p.rdata(RealData::timestamp) = 0.0;
-                p.rdata(RealData::old_timestamp) = 0.0;
+        const auto my_proc = amrex::ParallelDescriptor::MyProc();
+        const auto& offset_arr = offsets[mfi].const_array();
+        const auto& num_particles_arr = num_particles[mfi].const_array();
+        auto& pti = DefineAndReturnParticleTile(lev, mfi);
+        pti.resize(np);
+        auto aos = &pti.GetArrayOfStructs()[0];
+        ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const int start = offset_arr(iv);
+                for (int n = start; n < start + num_particles_arr(iv); n++) {
+                    auto& p = aos[n];
+                    p.id() = pid + n;
+                    p.cpu() = my_proc;
 
-                AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
-                             , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
-                             , p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
-
-                AMREX_D_TERM(p.idata(IntData::i) = iv[0];
-                             , p.idata(IntData::j) = iv[1];
-                             , p.idata(IntData::k) = iv[2];)
-
-                if (i < msg_per_cell) {
-                    p.rdata(RealData::timestamp) =
-                        random_exponential(1.0) + lookahead;
+                    MarkUndefined()(p);
+                    p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
+                    p.idata(IntData::receiver) =
+                        static_cast<int>(dom.index(iv));
+                    p.rdata(RealData::timestamp) = 0.0;
                     p.rdata(RealData::old_timestamp) = 0.0;
-                    p.idata(IntData::type_id) = MessageTypes::MESSAGE;
-                    p.idata(IntData::pair) =
-                        static_cast<int>(pairing_function(p.cpu(), p.id()));
-                }
 
-                pti.push_back(p);
-            }
-        }
+                    AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
+                                 , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
+                                 , p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
+
+                    AMREX_D_TERM(p.idata(IntData::i) = iv[0];
+                                 , p.idata(IntData::j) = iv[1];
+                                 , p.idata(IntData::k) = iv[2];)
+                    if ((n - start) < msg_per_cell) {
+                        p.rdata(RealData::timestamp) =
+                            random_exponential(1.0) + lookahead;
+                        p.rdata(RealData::old_timestamp) = 0.0;
+                        p.idata(IntData::type_id) = MessageTypes::MESSAGE;
+                        p.idata(IntData::pair) =
+                            static_cast<int>(pairing_function(p.cpu(), p.id()));
+                    }
+                }
+            });
     }
     Redistribute();
 }
