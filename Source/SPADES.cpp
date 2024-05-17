@@ -50,6 +50,7 @@ SPADES::SPADES()
     m_ts_new.resize(nlevs_max, 0.0);
     m_ts_old.resize(nlevs_max, constants::LOW_NUM);
     m_dts.resize(nlevs_max, constants::LARGE_NUM);
+    m_lbts.resize(nlevs_max, constants::LOW_NUM);
 
     m_state.resize(nlevs_max);
     m_plt_mf.resize(nlevs_max);
@@ -75,6 +76,7 @@ void SPADES::init_data()
 
         const int lev = 0;
         update_gvt(lev);
+        update_lbts(lev);
 
         compute_dt();
 
@@ -255,7 +257,7 @@ void SPADES::time_step(
                        << "] ";
         amrex::Print() << "Advance with time = " << m_ts_new[lev]
                        << " dt = " << m_dts[lev] << " gvt = " << m_gvts[lev]
-                       << std::endl;
+                       << " lbts = " << m_lbts[lev] << std::endl;
     }
 
     if (lev < finest_level) {
@@ -298,6 +300,8 @@ void SPADES::advance(
     m_pc->garbage_collect(m_gvts[lev]);
     m_pc->sort_particles();
 
+    update_lbts(lev);
+
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
     m_ts_new[lev] += dt_lev;       // new time is ahead
 }
@@ -319,7 +323,7 @@ void SPADES::process_messages(const int lev)
     const auto& dom = Geom(lev).Domain();
     const auto& dlo = dom.smallEnd();
     const auto& dhi = dom.bigEnd();
-    const auto gvt = m_gvts[lev];
+    const auto lbts = m_lbts[lev];
     const auto lookahead = m_lookahead;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
@@ -355,7 +359,7 @@ void SPADES::process_messages(const int lev)
 
                     auto& prcv = getter(n, particles::MessageTypes::MESSAGE);
                     if (prcv.rdata(particles::RealData::timestamp) >=
-                        gvt + lookahead + window_size) {
+                        lbts + lookahead + window_size) {
                         return;
                     }
                     AMREX_ALWAYS_ASSERT(
@@ -426,6 +430,10 @@ void SPADES::process_messages(const int lev)
 void SPADES::rollback(const int lev)
 {
     BL_PROFILE("spades::SPADES::rollback()");
+
+    if (m_window_size <= 0) {
+        return;
+    }
 
     const auto& plo = Geom(lev).ProbLoArray();
     const auto& dx = Geom(lev).CellSizeArray();
@@ -596,7 +604,46 @@ void SPADES::rollback(const int lev)
 void SPADES::update_gvt(const int lev)
 {
     BL_PROFILE("spades::SPADES::update_gvt()");
-    m_gvts[lev] = m_state[lev].min(0, 0);
+    m_gvts[lev] = m_state[lev].min(constants::LVT_IDX, 0);
+}
+
+void SPADES::update_lbts(const int lev)
+{
+    BL_PROFILE("spades::SPADES::update_lbts()");
+    amrex::MultiFab lbts(boxArray(lev), DistributionMap(lev), 1, 0);
+    lbts.setVal(constants::LARGE_NUM);
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
+        const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+        const auto& lbts_arr = lbts.array(mfi);
+        const auto index = std::make_pair(gid, tid);
+        auto& pti = m_pc->GetParticles(lev)[index];
+        auto& particles = pti.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto getter =
+                    particles::Get(iv, cnt_arr, offsets_arr, pstruct);
+
+                if (cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
+                    auto& prcv = getter(0, particles::MessageTypes::MESSAGE);
+                    lbts_arr(iv) = prcv.rdata(particles::RealData::timestamp);
+                }
+            });
+    }
+
+    m_lbts[lev] = lbts.min(0, 0);
+    AMREX_ALWAYS_ASSERT(m_lbts[lev] >= m_gvts[lev]);
 }
 
 // a wrapper for EstTimeStep
