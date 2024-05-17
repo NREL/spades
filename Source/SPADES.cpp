@@ -621,7 +621,8 @@ void SPADES::rollback_statistics(const int lev)
             });
     }
     amrex::ParallelDescriptor::ReduceRealSum(
-        nrlbks.data(), nrlbks.size(), amrex::ParallelDescriptor::IOProcessor());
+        nrlbks.data(), static_cast<int>(nrlbks.size()),
+        amrex::ParallelDescriptor::IOProcessorNumber());
 
     if (amrex::ParallelDescriptor::IOProcessor()) {
         amrex::Print() << "Rollback statistics at level " << lev << std::endl;
@@ -630,8 +631,8 @@ void SPADES::rollback_statistics(const int lev)
                            << " rollbacks: " << nrlbks[n] << std::endl;
         }
         AMREX_ALWAYS_ASSERT(
-            std::accumulate(nrlbks.begin(), nrlbks.end(), 0) ==
-            boxArray(lev).numPts());
+            static_cast<int>(std::accumulate(
+                nrlbks.begin(), nrlbks.end(), 0)) == boxArray(lev).numPts());
     }
 }
 
