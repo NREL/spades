@@ -92,6 +92,12 @@ public:
     // rollback
     void rollback(const int lev);
 
+    // update gvt
+    void update_gvt(const int lev);
+
+    // update lbts
+    void update_lbts(const int lev);
+
 private:
     // read parameters
     void read_parameters();
@@ -112,9 +118,6 @@ private:
 
     // perform work after a time step
     static void post_time_step();
-
-    // update gvt
-    void update_gvt(const int lev);
 
     // Check if a field exists
     bool check_field_existence(const std::string& name);
@@ -164,6 +167,9 @@ private:
     amrex::Vector<amrex::Real> m_ts_new;
     amrex::Vector<amrex::Real> m_ts_old;
     amrex::Vector<amrex::Real> m_dts;
+
+    // lower bound on incoming time stamp
+    amrex::Vector<amrex::Real> m_lbts;
 
     // maximum number of steps and stop time
     int m_max_step = std::numeric_limits<int>::max();
