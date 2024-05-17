@@ -403,6 +403,32 @@ void CellSortedParticleContainer::initialize_particles(
             });
     }
     Redistribute();
+
+    // Sanity check all initial particles
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
+        auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
+
+        auto& particle_tile = GetParticles(lev)[index];
+        const size_t np = particle_tile.numParticles();
+        auto& particles = particle_tile.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            auto& p = pstruct[pindex];
+            bool valid_type = false;
+            for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
+                valid_type = p.idata(IntData::type_id) == typ;
+                if (valid_type) {
+                    break;
+                }
+            }
+            AMREX_ALWAYS_ASSERT(valid_type);
+            AMREX_ALWAYS_ASSERT(p.id() > 0);
+        });
+    }
 }
 
 void CellSortedParticleContainer::sort_particles()
