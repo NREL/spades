@@ -112,12 +112,7 @@ jobs:
     - name: Test
       working-directory: ${{runner.workspace}}/build-ci-${{matrix.build_type}}
       run: |
-        set -eu -o pipefail
         ctest ${{matrix.ctest_args}} --output-on-failure
-    - name: Log
-      working-directory: ${{runner.workspace}}/build-ci-${{matrix.build_type}}
-      run: |
-        cat Tests/test_files/phold/phold.log
   GPU-Nvidia:
     name: GPU-CUDA
     needs: Formatting
