@@ -92,6 +92,9 @@ public:
     // rollback
     void rollback(const int lev);
 
+    // print rollback statistics
+    void rollback_statistics(const int lev);
+
     // update gvt
     void update_gvt(const int lev);
 
