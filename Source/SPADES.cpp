@@ -90,9 +90,15 @@ void SPADES::init_data()
         write_plot_file();
     }
 
+    amrex::Print() << "Grid summary: " << std::endl;
     if (amrex::ParallelDescriptor::IOProcessor()) {
-        amrex::Print() << "Grid summary: " << std::endl;
         printGridSummary(amrex::OutStream(), 0, finest_level);
+    }
+    amrex::Print() << "Particle summary: " << std::endl;
+    for (int lev = 0; lev <= finest_level; ++lev) {
+        const auto np = m_pc->NumberOfParticlesAtLevel(lev, true);
+        amrex::Print() << "  Level " << lev << "   " << np << " particles"
+                       << std::endl;
     }
 }
 

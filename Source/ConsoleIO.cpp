@@ -131,9 +131,9 @@ void print_banner(MPI_Comm comm, std::ostream& out)
 #endif
         << std::endl;
 
-    out << " This software is released under the Apache 2.0 license.           "
+    out << "  This software is released under the Apache 2.0 license.           "
         << std::endl
-        << " See https://github.com/NREL/spades/blob/main/LICENSE for details. "
+        << "  See https://github.com/NREL/spades/blob/main/LICENSE for details. "
         << DASH_LINE << std::endl;
     // clang-format on
 }
