@@ -328,8 +328,8 @@ void SPADES::process_messages(const int lev)
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
 
-#ifdef _OPENMP
-#pragma omp parallel
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
@@ -448,8 +448,8 @@ void SPADES::rollback(const int lev)
     m_state[lev].setVal(0.0, constants::RLB_IDX, 1);
     while ((require_rollback > 0) && (iter < max_iter)) {
 
-#ifdef _OPENMP
-#pragma omp parallel
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
             const amrex::Box& box = mfi.tilebox();
@@ -584,13 +584,7 @@ void SPADES::rollback(const int lev)
             "Maximum number of rollbacks reached (max_iter = " +
             std::to_string(max_iter) + ")");
     } else {
-        amrex::Print() << "Rollback statistics:" << std::endl;
-        amrex::Print() << "  minimum number of rollbacks performed: "
-                       << m_state[lev].min(constants::RLB_IDX) << std::endl;
-        amrex::Print() << "  maximum number of rollbacks performed: "
-                       << m_state[lev].max(constants::RLB_IDX) << std::endl;
-        amrex::Print() << "  total number of rollbacks performed: "
-                       << m_state[lev].sum(constants::RLB_IDX) << std::endl;
+        rollback_statistics(lev);
     }
 
     m_pc->resolve_pairs();
@@ -599,6 +593,46 @@ void SPADES::rollback(const int lev)
         m_pc->message_counts(lev).sum(particles::MessageTypes::ANTI_MESSAGE) ==
             0,
         "There should be no anti-messages left after rollback");
+}
+
+void SPADES::rollback_statistics(const int lev)
+{
+    BL_PROFILE("spades::SPADES::rollback_statistics()");
+
+    auto max_rlb = static_cast<int>(m_state[lev].max(constants::RLB_IDX));
+    amrex::ParallelAllReduce::Max<int>(
+        max_rlb, amrex::ParallelContext::CommunicatorSub());
+
+    amrex::Vector<amrex::Real> nrlbks(max_rlb + 1, 0);
+    for (int n = 0; n < nrlbks.size(); n++) {
+        nrlbks[n] = amrex::ReduceSum(
+            m_state[lev], 0,
+            [=] AMREX_GPU_HOST_DEVICE(
+                const amrex::Box bx,
+                const amrex::Array4<amrex::Real const>& sarr) -> amrex::Real {
+                amrex::Real nrlbk = 0;
+                amrex::Loop(
+                    bx, [=, &nrlbk](
+                            int i, int j, int AMREX_D_PICK(, , k)) noexcept {
+                        const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                        nrlbk += (sarr(iv, constants::RLB_IDX) == n) ? 1 : 0;
+                    });
+                return nrlbk;
+            });
+    }
+    amrex::ParallelDescriptor::ReduceRealSum(
+        nrlbks.data(), nrlbks.size(), amrex::ParallelDescriptor::IOProcessor());
+
+    if (amrex::ParallelDescriptor::IOProcessor()) {
+        amrex::Print() << "Rollback statistics at level " << lev << std::endl;
+        for (int n = 0; n < nrlbks.size(); n++) {
+            amrex::Print() << "  number of cells doing " << n
+                           << " rollbacks: " << nrlbks[n] << std::endl;
+        }
+        AMREX_ALWAYS_ASSERT(
+            std::accumulate(nrlbks.begin(), nrlbks.end(), 0) ==
+            boxArray(lev).numPts());
+    }
 }
 
 void SPADES::update_gvt(const int lev)
@@ -613,8 +647,8 @@ void SPADES::update_lbts(const int lev)
     amrex::MultiFab lbts(boxArray(lev), DistributionMap(lev), 1, 0);
     lbts.setVal(constants::LARGE_NUM);
 
-#ifdef _OPENMP
-#pragma omp parallel
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
