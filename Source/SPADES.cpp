@@ -630,9 +630,9 @@ void SPADES::rollback_statistics(const int lev)
             amrex::Print() << "  number of cells doing " << n
                            << " rollbacks: " << nrlbks[n] << std::endl;
         }
-        AMREX_ALWAYS_ASSERT(
-            static_cast<int>(std::accumulate(
-                nrlbks.begin(), nrlbks.end(), 0)) == boxArray(lev).numPts());
+        const amrex::Long nt = std::accumulate(
+            nrlbks.begin(), nrlbks.end(), 0); // NOLINT(bugprone-fold-init-type)
+        AMREX_ALWAYS_ASSERT(nt == boxArray(lev).numPts());
     }
 }
 
