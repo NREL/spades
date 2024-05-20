@@ -556,6 +556,9 @@ void CellSortedParticleContainer::update_undefined()
     const auto& dom = Geom(lev).Domain();
     const int lower_count = m_lower_undefined_count;
     const int upper_count = m_upper_undefined_count;
+    const int mid_count =
+        (m_upper_undefined_count - m_lower_undefined_count) / 2 +
+        m_lower_undefined_count;
 
     CellSortedParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
@@ -584,7 +587,7 @@ void CellSortedParticleContainer::update_undefined()
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (current_count > upper_count) {
-                p_removals[icell] = current_count - upper_count;
+                p_removals[icell] = current_count - mid_count;
             }
         });
         amrex::ParallelFor(
@@ -611,7 +614,7 @@ void CellSortedParticleContainer::update_undefined()
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (lower_count > current_count) {
-                p_additions[icell] = lower_count - current_count;
+                p_additions[icell] = mid_count - current_count;
             }
         });
 
