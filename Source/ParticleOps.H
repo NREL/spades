@@ -3,6 +3,7 @@
 
 #include <AMReX.H>
 #include <AMReX_Array4.H>
+#include <AMReX_Print.H>
 #include "ParticleData.H"
 
 namespace spades::particles {
@@ -85,6 +86,8 @@ struct MarkUndefined
     {
         p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
         p.idata(IntData::pair) = -1;
+        p.rdata(RealData::timestamp) = 0.0;
+        p.rdata(RealData::old_timestamp) = 0.0;
     }
 };
 
@@ -134,6 +137,23 @@ struct Get
     const amrex::Array4<const int>& m_counts;
     const amrex::Array4<const int>& m_offsets;
     P* m_pstruct;
+};
+
+struct Output
+{
+    template <class P>
+    void operator()(P& p) const
+    {
+        amrex::Print() << "Particle data: \n"
+                       << "  id: " << p.id() << "\n"
+                       << "  cpu: " << p.cpu() << "\n"
+                       << "  type: " << p.idata(IntData::type_id) << "\n"
+                       << "  sender: " << p.idata(IntData::sender) << "\n"
+                       << "  receiver: " << p.idata(IntData::receiver) << "\n"
+                       << "  pair: " << p.idata(IntData::pair) << "\n"
+                       << "  timestamp: " << p.rdata(RealData::timestamp)
+                       << std::endl;
+    }
 };
 
 } // namespace spades::particles

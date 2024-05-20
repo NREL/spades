@@ -375,8 +375,6 @@ void CellSortedParticleContainer::initialize_particles(
                     p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
                     p.idata(IntData::receiver) =
                         static_cast<int>(dom.index(iv));
-                    p.rdata(RealData::timestamp) = 0.0;
-                    p.rdata(RealData::old_timestamp) = 0.0;
 
                     AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
                                  , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
@@ -590,8 +588,6 @@ void CellSortedParticleContainer::update_undefined()
                 MarkUndefined()(p);
                 p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
-                p.rdata(RealData::timestamp) = 0.0;
-                p.rdata(RealData::old_timestamp) = 0.0;
 
                 AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
                              , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
@@ -667,8 +663,8 @@ void CellSortedParticleContainer::resolve_pairs()
                     bool found_pair = false;
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
                          m++) {
-                        // This is a message that was already treated, expect it
-                        // to be undefined
+                        // This is a message that was already treated,
+                        // expect it to be undefined
                         if (!getter.check(m, MessageTypes::MESSAGE)) {
                             getter.assert_different(
                                 m, MessageTypes::MESSAGE,
@@ -676,19 +672,18 @@ void CellSortedParticleContainer::resolve_pairs()
                             continue;
                         }
                         auto& pmsg = getter(m, MessageTypes::MESSAGE);
-                        if (pmsg.idata(IntData::pair) ==
-                            pant.idata(IntData::pair)) {
+                        if ((pmsg.idata(IntData::pair) ==
+                             pant.idata(IntData::pair)) &&
+                            (std::abs(
+                                 pmsg.rdata(RealData::timestamp) -
+                                 pant.rdata(RealData::timestamp)) <
+                             constants::EPS)) {
                             AMREX_ALWAYS_ASSERT(
                                 pmsg.idata(IntData::sender) ==
                                 pant.idata(IntData::sender));
                             AMREX_ALWAYS_ASSERT(
                                 pmsg.idata(IntData::receiver) ==
                                 pant.idata(IntData::receiver));
-                            AMREX_ALWAYS_ASSERT(
-                                std::abs(
-                                    pmsg.rdata(RealData::timestamp) -
-                                    pant.rdata(RealData::timestamp)) <
-                                constants::EPS);
                             MarkUndefined()(pant);
                             MarkUndefined()(pmsg);
                             found_pair = true;
@@ -722,9 +717,9 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
-            if (p.rdata(RealData::timestamp) < gvt) {
+            if ((p.rdata(RealData::timestamp) < gvt) &&
+                (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) {
                 MarkUndefined()(p);
-                p.rdata(RealData::timestamp) = gvt;
             }
         });
     }
