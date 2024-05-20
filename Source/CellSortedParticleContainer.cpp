@@ -21,14 +21,41 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     , m_info(identifier())
     , m_ngrow(ngrow)
 {
-    int nlevs_max = par_gdb->maxLevel() + 1;
+    const int nlevs_max = par_gdb->maxLevel() + 1;
 
-    if (par_gdb->maxLevel() > 0) {
+    if (nlevs_max > 1) {
         amrex::Abort(
             "spades::SPADES::CellSortedParticleContainer::"
             "CellSortedParticleContainer(): not supporting multilevel right "
             "now");
     }
+
+    initialize_vectors();
+}
+
+CellSortedParticleContainer::CellSortedParticleContainer(
+    const amrex::Vector<amrex::Geometry>& geom,
+    const amrex::Vector<amrex::DistributionMapping>& dmap,
+    const amrex::Vector<amrex::BoxArray>& ba,
+    int ngrow)
+    : amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>(
+          geom, dmap, ba, {2}, ngrow)
+    , m_info(identifier())
+    , m_ngrow(ngrow)
+{
+    if (geom.size() > 1) {
+        amrex::Abort(
+            "spades::SPADES::CellSortedParticleContainer::"
+            "CellSortedParticleContainer(): not supporting multilevel right "
+            "now");
+    }
+
+    initialize_vectors();
+}
+
+void CellSortedParticleContainer::initialize_vectors()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::initialize_vectors()");
 
     m_real_data_names.resize(RealData::ncomps, "");
     m_writeflags_real.resize(RealData::ncomps, 0);
@@ -49,13 +76,14 @@ CellSortedParticleContainer::CellSortedParticleContainer(
     m_int_data_names[IntData::receiver] = "pair";
     m_writeflags_int[IntData::receiver] = 0;
 
+    const int nlevs_max = m_gdb->maxLevel() + 1;
     m_message_counts.resize(nlevs_max);
     m_offsets.resize(nlevs_max);
 }
 
 void CellSortedParticleContainer::initialize_state()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::init_state()");
+    BL_PROFILE("spades::CellSortedParticleContainer::initialize_state()");
 
     const int lev = 0;
 
@@ -164,7 +192,7 @@ void CellSortedParticleContainer::count_offsets()
 void CellSortedParticleContainer::initialize_particles(
     const amrex::Real lookahead)
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::initialize()");
+    BL_PROFILE("spades::CellSortedParticleContainer::initialize_particles()");
 
     const int lev = 0;
 
@@ -529,6 +557,9 @@ void CellSortedParticleContainer::update_undefined()
     const int lower_count = m_lower_undefined_count;
     const int upper_count = m_upper_undefined_count;
 
+    CellSortedParticleContainer pc_adds(
+        m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
+
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -542,48 +573,73 @@ void CellSortedParticleContainer::update_undefined()
         auto& particles = particle_tile.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
-        const auto ncells = static_cast<int>(box.numPts());
-        amrex::Gpu::DeviceVector<int> new_counts(ncells, 0);
-        auto* p_new_counts = new_counts.data();
+        // remove particles
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::update_undefined::new_counts",
-        //     new_counts);
+        //     "spades::CellSortedParticleContainer::update_undefined::remove",
+        //     remove);
+        const auto ncells = static_cast<int>(box.numPts());
+        amrex::Gpu::DeviceVector<int> removals(ncells, 0);
+        auto* p_removals = removals.data();
+        amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
+            const auto iv = box.atOffset(icell);
+            const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
+            if (current_count > upper_count) {
+                p_removals[icell] = current_count - upper_count;
+            }
+        });
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto idx = box.index(iv);
+                const auto np = p_removals[idx];
+                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
+                for (int m = 0; m < np; m++) {
+                    auto& p = getter(m, MessageTypes::UNDEFINED);
+                    p.id() = -1;
+                }
+            });
+        // amrex::Gpu::Device::synchronize();
+        // BL_PROFILE_VAR_STOP(remove);
+
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::update_undefined::compute_add",
+        //     compute_add);
+        amrex::Gpu::DeviceVector<int> additions(ncells, 0);
+        auto* p_additions = additions.data();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (lower_count > current_count) {
-                p_new_counts[icell] = lower_count - current_count;
-            } else if (current_count > upper_count) {
-                p_new_counts[icell] = upper_count - current_count;
-            } else {
-                p_new_counts[icell] = 0;
+                p_additions[icell] = lower_count - current_count;
             }
         });
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(new_counts);
 
-        // host vector for the particle adds
-        // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::update_undefined::host_vec",
-        //     host_vec);
-        amrex::Vector<int> h_new_counts(ncells, 0);
-        amrex::Gpu::copy(
-            amrex::Gpu::deviceToHost, new_counts.begin(), new_counts.end(),
-            h_new_counts.begin());
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(host_vec);
+        amrex::Gpu::DeviceVector<int> offsets(ncells, 0);
+        auto* p_offsets = offsets.data();
+        const auto np = amrex::Scan::PrefixSum<int>(
+            ncells,
+            [=] AMREX_GPU_DEVICE(int i) -> int { return p_additions[i]; },
+            [=] AMREX_GPU_DEVICE(int i, int const& x) { p_offsets[i] = x; },
+            amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
-        // add particles
-        // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::update_undefined::add",
-        //     add);
-        for (int i = 0; i < h_new_counts.size(); i++) {
-            const auto iv = box.atOffset(i);
-            const auto np = h_new_counts[i];
-            for (int j = 0; j < np; j++) {
-                ParticleType p;
-                p.id() = ParticleType::NextID();
-                p.cpu() = amrex::ParallelDescriptor::MyProc();
+        const amrex::Long pid = ParticleType::NextID();
+        ParticleType::NextID(pid + np);
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            static_cast<amrex::Long>(pid + np) < amrex::LastParticleID,
+            "Error: overflow on particle id numbers!");
+
+        auto& ptile_adds = pc_adds.DefineAndReturnParticleTile(lev, mfi);
+        ptile_adds.resize(np);
+        const auto my_proc = amrex::ParallelDescriptor::MyProc();
+        auto* aos = ptile_adds.GetArrayOfStructs().data();
+        amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
+            const int start = p_offsets[icell];
+            const auto iv = box.atOffset(icell);
+            for (int n = start; n < start + additions[icell]; n++) {
+                auto& p = aos[n];
+                p.id() = pid + n;
+                p.cpu() = my_proc;
 
                 MarkUndefined()(p);
                 p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
@@ -596,34 +652,13 @@ void CellSortedParticleContainer::update_undefined()
                 AMREX_D_TERM(p.idata(IntData::i) = iv[0];
                              , p.idata(IntData::j) = iv[1];
                              , p.idata(IntData::k) = iv[2];)
-
-                particle_tile.push_back(p);
             }
-        }
+        });
         // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(add);
-
-        // remove particles
-        // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::update_undefined::remove",
-        //     remove);
-        amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
-                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto idx = box.index(iv);
-                const auto np = p_new_counts[idx];
-                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
-                for (int m = 0; m < -np; m++) {
-                    auto& p = getter(m, MessageTypes::UNDEFINED);
-                    p.id() = -1;
-                }
-            });
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(remove);
+        // BL_PROFILE_VAR_STOP(compute_add);
     }
 
-    Redistribute();
+    addParticles(pc_adds, true);
 }
 
 void CellSortedParticleContainer::resolve_pairs()

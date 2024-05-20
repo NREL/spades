@@ -43,6 +43,12 @@ public:
     explicit CellSortedParticleContainer(
         amrex::AmrParGDB* par_gdb, int ngrow = 0);
 
+    explicit CellSortedParticleContainer(
+        const amrex::Vector<amrex::Geometry>& geom,
+        const amrex::Vector<amrex::DistributionMapping>& dmap,
+        const amrex::Vector<amrex::BoxArray>& ba,
+        int ngrow = 0);
+
     void initialize_state();
 
     void clear_state();
@@ -95,6 +101,8 @@ public:
     int ngrow() const { return m_ngrow; }
 
 private:
+    void initialize_vectors();
+
     //! Data for particle container
     ParticleContainerInfo m_info;
 
