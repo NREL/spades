@@ -387,7 +387,7 @@ void CellSortedParticleContainer::initialize_particles(
         const auto& num_particles_arr = num_particles[mfi].const_array();
         auto& pti = DefineAndReturnParticleTile(lev, mfi);
         pti.resize(np);
-        auto* aos = pti.GetArrayOfStructs().data();
+        auto* aos = pti.GetArrayOfStructs().dataPtr();
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k),
@@ -632,11 +632,11 @@ void CellSortedParticleContainer::update_undefined()
         auto& ptile_adds = pc_adds.DefineAndReturnParticleTile(lev, mfi);
         ptile_adds.resize(np);
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
-        auto* aos = ptile_adds.GetArrayOfStructs().data();
+        auto* aos = ptile_adds.GetArrayOfStructs().dataPtr();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const int start = p_offsets[icell];
             const auto iv = box.atOffset(icell);
-            for (int n = start; n < start + additions[icell]; n++) {
+            for (int n = start; n < start + p_additions[icell]; n++) {
                 auto& p = aos[n];
                 p.id() = pid + n;
                 p.cpu() = my_proc;
