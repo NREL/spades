@@ -117,8 +117,8 @@ private:
     amrex::Vector<amrex::iMultiFab> m_message_counts;
     amrex::Vector<amrex::iMultiFab> m_offsets;
 
-    const int m_lower_undefined_count{85};
-    const int m_upper_undefined_count{85};
+    const int m_lower_undefined_count{40};
+    const int m_upper_undefined_count{50};
 };
 } // namespace spades::particles
 #endif
