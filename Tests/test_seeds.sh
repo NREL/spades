@@ -15,7 +15,7 @@ usage () {
 Usage:
 ------
    -e
-     exectuable path (required)
+     executable path (required)
    -f
      input file path (required)
    -n
