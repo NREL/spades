@@ -98,6 +98,20 @@ function(add_test_u TEST_NAME)
                          LABELS "unit")
 endfunction(add_test_u)
 
+# Seed test
+function(add_test_seed TEST_NAME)
+    setup_test()
+    add_test(${TEST_NAME} sh -c "cd ${CURRENT_TEST_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/test_seeds.sh -e ${CMAKE_BINARY_DIR}/${spades_exe_name} -f ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp")
+    # Set properties for test
+    set_tests_properties(${TEST_NAME} PROPERTIES
+                         TIMEOUT 5400
+                         PROCESSORS ${TEST_NP}
+                         WORKING_DIRECTORY "${CURRENT_TEST_BINARY_DIR}/"
+                         LABELS "seed;no_ci"
+                         ATTACHED_FILES_ON_FAIL "${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.log")
+endfunction(add_test_seed)
+
+
 #=============================================================================
 # Unit tests
 #=============================================================================
@@ -107,6 +121,11 @@ endfunction(add_test_u)
 # Regression tests
 #=============================================================================
 add_test_r(phold)
+
+#=============================================================================
+# Seed test
+#=============================================================================
+add_test_seed(phold-seed)
 
 #=============================================================================
 # Regression tests excluded from CI

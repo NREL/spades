@@ -1,0 +1,26 @@
+max_step = 1000
+
+# geometry parameters
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+geometry.prob_hi     =   1.0  1.0  1.0
+geometry.is_periodic = 1 1 1
+
+# timestepping
+amr.n_cell  = 128 128 128
+amr.max_level = 0
+amr.max_grid_size=128
+amr.blocking_factor = 2
+amr.plot_int = -1
+amr.chk_int = -1
+amr.v = 1
+
+spades.ic_type = "constant"
+spades.write_particles = f
+spades.seed = 10
+
+amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_zero = 1
+amrex.fpe_trap_overflow = 1
+amrex.the_arena_is_managed = 0
+amrex.abort_on_out_of_gpu_memory = 1
+amrex.abort_on_unused_inputs=1
