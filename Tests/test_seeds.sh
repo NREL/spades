@@ -96,7 +96,7 @@ RANDOM=$SEED
 
 for ((i = 0 ; i < NITERS ; i++ )); do
     SPADES_SEED=$RANDOM
-    LOGPATH="${LOGDIR}/log_${SPADES_SEED}.out"
+    LOGPATH="${LOGDIR}/out_${SPADES_SEED}.log"
     cmd "${EXECPATH} ${FPATH} spades.seed=${SPADES_SEED} > ${LOGPATH}"
 done
 
