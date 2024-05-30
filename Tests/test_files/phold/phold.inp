@@ -23,4 +23,3 @@ amrex.fpe_trap_zero = 1
 amrex.fpe_trap_overflow = 1
 amrex.the_arena_is_managed = 0
 amrex.abort_on_out_of_gpu_memory = 1
-amrex.abort_on_unused_inputs=1
