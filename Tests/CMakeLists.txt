@@ -101,7 +101,7 @@ endfunction(add_test_u)
 # Seed test
 function(add_test_seed TEST_NAME)
     setup_test()
-    add_test(${TEST_NAME} sh -c "cd ${CURRENT_TEST_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/test_seeds.sh -e ${CMAKE_BINARY_DIR}/${spades_exe_name} -f ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp")
+    add_test(${TEST_NAME} sh -c "cd ${CURRENT_TEST_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/test_seeds.sh -e ${CMAKE_BINARY_DIR}/${spades_exe_name} -f ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp -n 10")
     # Set properties for test
     set_tests_properties(${TEST_NAME} PROPERTIES
                          TIMEOUT 5400
@@ -125,9 +125,7 @@ add_test_r(phold)
 #=============================================================================
 # Seed test
 #=============================================================================
-if(SPADES_ENABLE_SEED_TESTS)
-  add_test_seed(phold-seed)
-endif()
+add_test_seed(phold-seed)
 
 #=============================================================================
 # Regression tests excluded from CI

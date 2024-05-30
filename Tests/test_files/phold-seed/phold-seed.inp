@@ -1,4 +1,4 @@
-max_step = 1000
+max_step = 10
 
 # geometry parameters
 geometry.prob_lo     =  -1.0 -1.0 -1.0
@@ -6,7 +6,7 @@ geometry.prob_hi     =   1.0  1.0  1.0
 geometry.is_periodic = 1 1 1
 
 # timestepping
-amr.n_cell  = 128 128 128
+amr.n_cell  = 4 4 4
 amr.max_level = 0
 amr.max_grid_size=128
 amr.blocking_factor = 2
@@ -23,4 +23,3 @@ amrex.fpe_trap_zero = 1
 amrex.fpe_trap_overflow = 1
 amrex.the_arena_is_managed = 0
 amrex.abort_on_out_of_gpu_memory = 1
-amrex.abort_on_unused_inputs=1

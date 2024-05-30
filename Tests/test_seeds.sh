@@ -1,15 +1,33 @@
 #!/usr/bin/env bash
 
+unset -v EXECPATH
+unset -v FPATH
+NITERS=1000
+
 set -e
 cmd() {
   echo "+ $@"
   eval "$@"
 }
 
-unset -v EXECPATH
-unset -v FPATH
+usage () {
+    cat <<-END
+Usage:
+------
+   -e
+     exectuable path (required)
+   -f
+     input file path (required)
+   -n
+     number of seeds to test (optional, default $NITERS)
+   -h
+     Print the usage information
 
-while getopts e:f: flag
+   test_seeds.sh -e <executable path> -f <input file> -n <number of seeds>
+END
+}
+
+while getopts e:f:n:h flag
 do
     case "${flag}" in
         e)
@@ -18,16 +36,26 @@ do
         f)
             FPATH=${OPTARG}
             ;;
+        n)
+            NITERS=${OPTARG}
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
         '?')
             echo "INVALID OPTION -- ${OPTARG}" >&2
+            usage
             exit 1
             ;;
         ':')
             echo "MISSING ARGUMENT for option -- ${OPTARG}" >&2
+            usage
             exit 1
             ;;
         *)
             echo "UNIMPLEMENTED OPTION -- ${flag}" >&2
+            usage
             exit 1
             ;;
     esac
@@ -35,21 +63,25 @@ done
 
 if [ -z "${EXECPATH}" ] ; then
     echo "Missing -e argument" >&2
+    usage
     exit 1
 fi
 
 if [ ! -f "${EXECPATH}" ]; then
     echo "Executable ${EXECPATH} not found!"
+    usage
     exit 1
 fi
 
 if [ -z "${FPATH}" ] ; then
     echo "Missing -f argument" >&2
+    usage
     exit 1
 fi
 
 if [ ! -f "${FPATH}" ]; then
     echo "Input file ${FPATH} not found!"
+    usage
     exit 1
 fi
 
@@ -62,7 +94,6 @@ cmd "mkdir -p ${LOGDIR}"
 SEED=42
 RANDOM=$SEED
 
-NITERS=2
 for ((i = 0 ; i < NITERS ; i++ )); do
     SPADES_SEED=$RANDOM
     LOGPATH="${LOGDIR}/log_${SPADES_SEED}.out"
