@@ -70,7 +70,6 @@ struct MakeConjugate
         Copy()(p1, p2);
         p2.idata(IntData::type_id) = MessageTypes::CONJUGATE;
     }
-
 };
 
 struct Create
