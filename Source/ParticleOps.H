@@ -156,6 +156,5 @@ struct Get
     P* m_pstruct;
 };
 
-
 } // namespace spades::particles
 #endif
