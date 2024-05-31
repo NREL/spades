@@ -8,6 +8,23 @@
 
 namespace spades::particles {
 
+struct Output
+{
+    template <class P>
+    void operator()(P& p) const
+    {
+        amrex::Print() << "Particle data: \n"
+                       << "  id: " << p.id() << "\n"
+                       << "  cpu: " << p.cpu() << "\n"
+                       << "  type: " << p.idata(IntData::type_id) << "\n"
+                       << "  sender: " << p.idata(IntData::sender) << "\n"
+                       << "  receiver: " << p.idata(IntData::receiver) << "\n"
+                       << "  pair: " << p.idata(IntData::pair) << "\n"
+                       << "  timestamp: " << p.rdata(RealData::timestamp)
+                       << std::endl;
+    }
+};
+
 struct Compare
 {
     template <class P>
@@ -53,6 +70,7 @@ struct MakeConjugate
         Copy()(p1, p2);
         p2.idata(IntData::type_id) = MessageTypes::CONJUGATE;
     }
+
 };
 
 struct Create
@@ -139,22 +157,6 @@ struct Get
     P* m_pstruct;
 };
 
-struct Output
-{
-    template <class P>
-    void operator()(P& p) const
-    {
-        amrex::Print() << "Particle data: \n"
-                       << "  id: " << p.id() << "\n"
-                       << "  cpu: " << p.cpu() << "\n"
-                       << "  type: " << p.idata(IntData::type_id) << "\n"
-                       << "  sender: " << p.idata(IntData::sender) << "\n"
-                       << "  receiver: " << p.idata(IntData::receiver) << "\n"
-                       << "  pair: " << p.idata(IntData::pair) << "\n"
-                       << "  timestamp: " << p.rdata(RealData::timestamp)
-                       << std::endl;
-    }
-};
 
 } // namespace spades::particles
 #endif
