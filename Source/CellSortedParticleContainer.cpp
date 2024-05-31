@@ -352,7 +352,7 @@ void CellSortedParticleContainer::initialize_particles(
     //     }
 
     const int np_per_cell = 100;
-    const int msg_per_cell = 10;
+    const int msg_per_cell = 1;
     AMREX_ALWAYS_ASSERT(np_per_cell > 2 * msg_per_cell);
 
     amrex::iMultiFab num_particles(
