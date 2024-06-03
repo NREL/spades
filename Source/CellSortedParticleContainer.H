@@ -82,7 +82,7 @@ public:
         return m_offsets[lev];
     };
 
-    int total_count(const int lev, const int typ) const
+    amrex::Long total_count(const int lev, const int typ) const
     {
         return m_message_counts[lev].sum(typ);
     }
