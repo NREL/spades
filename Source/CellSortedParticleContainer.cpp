@@ -455,7 +455,7 @@ void CellSortedParticleContainer::initialize_particles(
                 }
             }
             AMREX_ALWAYS_ASSERT(valid_type);
-            AMREX_ALWAYS_ASSERT(p.id() > 0);
+            AMREX_ALWAYS_ASSERT(p.id() >= 0);
         });
     }
 }
@@ -556,15 +556,16 @@ void CellSortedParticleContainer::update_undefined()
     const auto& dom = Geom(lev).Domain();
     const int lower_count = m_lower_undefined_count;
     const int upper_count = m_upper_undefined_count;
-    const int mid_count =
-        (m_upper_undefined_count - m_lower_undefined_count) / 2 +
-        m_lower_undefined_count;
+    const int reset_count = m_reset_undefined_count;
+    AMREX_ALWAYS_ASSERT(reset_count < upper_count);
+    AMREX_ALWAYS_ASSERT(lower_count < reset_count);
+    int n_removals = 0;
 
     CellSortedParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(+ : n_removals) if (Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
@@ -587,9 +588,16 @@ void CellSortedParticleContainer::update_undefined()
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (current_count > upper_count) {
-                p_removals[icell] = current_count - mid_count;
+                p_removals[icell] = current_count - reset_count;
             }
         });
+
+        n_removals += amrex::Scan::PrefixSum<int>(
+            ncells,
+            [=] AMREX_GPU_DEVICE(int i) -> int { return p_removals[i]; },
+            [=] AMREX_GPU_DEVICE(int /*i*/, int const& /*x*/) {},
+            amrex::Scan::Type::exclusive, amrex::Scan::retSum);
+
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
@@ -614,7 +622,7 @@ void CellSortedParticleContainer::update_undefined()
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (lower_count > current_count) {
-                p_additions[icell] = mid_count - current_count;
+                p_additions[icell] = reset_count - current_count;
             }
         });
 
@@ -662,6 +670,12 @@ void CellSortedParticleContainer::update_undefined()
     }
 
     addParticles(pc_adds, true);
+
+    amrex::ParallelAllReduce::Sum<int>(
+        n_removals, amrex::ParallelContext::CommunicatorSub());
+    if (n_removals > 0) {
+        Redistribute(); // kind of a bummer
+    }
 }
 
 void CellSortedParticleContainer::resolve_pairs()

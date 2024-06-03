@@ -128,6 +128,7 @@ struct Get
 
         P& p = m_pstruct[idx];
 
+        AMREX_ALWAYS_ASSERT(p.id() >= 0);
         AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == typ);
 
         return p;

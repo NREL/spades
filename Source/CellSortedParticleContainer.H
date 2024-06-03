@@ -82,6 +82,11 @@ public:
         return m_offsets[lev];
     };
 
+    int total_count(const int lev, const int typ) const
+    {
+        return m_message_counts[lev].sum(typ);
+    }
+
     void initialize_particles(const amrex::Real lookahead);
 
     void sort_particles();
@@ -118,7 +123,8 @@ private:
     amrex::Vector<amrex::iMultiFab> m_offsets;
 
     const int m_lower_undefined_count{40};
-    const int m_upper_undefined_count{50};
+    const int m_reset_undefined_count{50};
+    const int m_upper_undefined_count{100};
 };
 } // namespace spades::particles
 #endif
