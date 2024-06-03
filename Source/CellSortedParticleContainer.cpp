@@ -353,7 +353,7 @@ void CellSortedParticleContainer::initialize_particles(
 
     const int np_per_cell = 100;
     const int msg_per_cell = 1;
-    AMREX_ALWAYS_ASSERT(np_per_cell > 2 * msg_per_cell);
+    AMREX_ALWAYS_ASSERT(np_per_cell > msg_per_cell);
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
@@ -415,19 +415,12 @@ void CellSortedParticleContainer::initialize_particles(
 
                 for (int n = start; n < start + msg_per_cell; n++) {
                     auto& pmsg = aos[n];
-                    const auto pair = static_cast<int>(
-                        pairing_function(pmsg.cpu(), pmsg.id()));
                     const amrex::Real ts =
                         random_exponential(1.0, engine) + lookahead;
 
                     pmsg.rdata(RealData::timestamp) = ts;
                     pmsg.idata(IntData::type_id) = MessageTypes::MESSAGE;
-                    pmsg.idata(IntData::pair) = pair;
-
-                    auto& pcnj = aos[n + msg_per_cell];
-                    pcnj.rdata(RealData::timestamp) = ts;
-                    pcnj.idata(IntData::type_id) = MessageTypes::CONJUGATE;
-                    pcnj.idata(IntData::pair) = pair;
+                    pmsg.idata(IntData::pair) = -1;
                 }
             });
     }
