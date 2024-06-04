@@ -585,11 +585,7 @@ void CellSortedParticleContainer::update_undefined()
             }
         });
 
-        n_removals += amrex::Scan::PrefixSum<int>(
-            ncells,
-            [=] AMREX_GPU_DEVICE(int i) -> int { return p_removals[i]; },
-            [=] AMREX_GPU_DEVICE(int /*i*/, int const& /*x*/) {},
-            amrex::Scan::Type::exclusive, amrex::Scan::retSum);
+        n_removals += amrex::Reduce::Sum(removals.size(), p_removals);
 
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
