@@ -66,6 +66,8 @@ void CellSortedParticleContainer::initialize_vectors()
     m_writeflags_real[RealData::timestamp] = 1;
     m_real_data_names[RealData::old_timestamp] = "old_timestamp";
     m_writeflags_real[RealData::old_timestamp] = 1;
+    m_real_data_names[RealData::creation_time] = "creation_time";
+    m_writeflags_real[RealData::creation_time] = 1;
 
     m_int_data_names[IntData::type_id] = "type_id";
     m_writeflags_int[IntData::type_id] = 1;
@@ -419,6 +421,7 @@ void CellSortedParticleContainer::initialize_particles(
                         random_exponential(1.0, engine) + lookahead;
 
                     pmsg.rdata(RealData::timestamp) = ts;
+                    pmsg.rdata(RealData::creation_time) = 0;
                     pmsg.idata(IntData::type_id) = MessageTypes::MESSAGE;
                     pmsg.idata(IntData::pair) = -1;
                 }
@@ -725,6 +728,11 @@ void CellSortedParticleContainer::resolve_pairs()
                             AMREX_ALWAYS_ASSERT(
                                 pmsg.idata(IntData::receiver) ==
                                 pant.idata(IntData::receiver));
+                            AMREX_ALWAYS_ASSERT(
+                                std::abs(
+                                    pmsg.rdata(RealData::creation_time) -
+                                    pant.rdata(RealData::creation_time)) <
+                                constants::EPS);
                             MarkUndefined()(pant);
                             MarkUndefined()(pmsg);
                             found_pair = true;
@@ -758,8 +766,10 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
-            if ((p.rdata(RealData::timestamp) < gvt) &&
-                (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) {
+            if (((p.rdata(RealData::timestamp) < gvt) &&
+                 (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) ||
+                ((p.idata(IntData::type_id) == MessageTypes::CONJUGATE) &&
+                 (p.rdata(RealData::creation_time) < gvt))) {
                 MarkUndefined()(p);
             }
         });
