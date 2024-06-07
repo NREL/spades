@@ -84,6 +84,7 @@ public:
 
     amrex::Long total_count(const int lev, const int typ) const
     {
+        BL_PROFILE("spades::CellSortedParticleContainer::total_count()");
         return m_message_counts[lev].sum(typ);
     }
 

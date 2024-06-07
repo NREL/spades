@@ -272,10 +272,18 @@ void SPADES::time_step(
     ++m_isteps[lev];
 
     if (Verbose() != 0) {
-        amrex::Print() << "[Level " << lev << " step " << m_isteps[lev] << "] ";
-        amrex::Print() << "Advanced " << CountCells(lev) << " cells and "
+        amrex::Print() << "[Level " << lev << " step " << m_isteps[lev]
+                       << "] statistics:" << std::endl;
+        const auto n_cells = CountCells(lev);
+        amrex::Print() << "  Advanced " << n_cells << " nodes and "
                        << m_pc->TotalNumberOfParticles(lev != 0) << " particles"
                        << std::endl;
+        const int n_messages =
+            m_pc->total_count(lev, particles::MessageTypes::MESSAGE);
+        amrex::Print() << "  " << n_messages << " messages" << std::endl;
+        AMREX_ALWAYS_ASSERT(n_messages == n_cells);
+        amrex::Print() << "  Processed " << m_n_processed_messages[lev]
+                       << " messages " << std::endl;
     }
 }
 
@@ -637,7 +645,7 @@ void SPADES::rollback_statistics(const int lev)
     if (amrex::ParallelDescriptor::IOProcessor()) {
         amrex::Print() << "Rollback statistics at level " << lev << std::endl;
         for (int n = 0; n < nrlbks.size(); n++) {
-            amrex::Print() << "  number of cells doing " << n
+            amrex::Print() << "  number of nodes doing " << n
                            << " rollbacks: " << nrlbks[n] << std::endl;
         }
         const auto nt = static_cast<amrex::Long>(
