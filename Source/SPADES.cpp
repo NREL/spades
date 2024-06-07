@@ -282,8 +282,6 @@ void SPADES::time_step(
             m_pc->total_count(lev, particles::MessageTypes::MESSAGE);
         amrex::Print() << "  " << n_messages << " messages" << std::endl;
         AMREX_ALWAYS_ASSERT(n_messages == n_cells);
-        amrex::Print() << "  Processed " << m_n_processed_messages[lev]
-                       << " messages " << std::endl;
     }
 }
 
