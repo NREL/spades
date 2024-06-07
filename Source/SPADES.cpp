@@ -278,7 +278,7 @@ void SPADES::time_step(
         amrex::Print() << "  Advanced " << n_cells << " nodes and "
                        << m_pc->TotalNumberOfParticles(lev != 0) << " particles"
                        << std::endl;
-        const int n_messages =
+        const auto n_messages =
             m_pc->total_count(lev, particles::MessageTypes::MESSAGE);
         amrex::Print() << "  " << n_messages << " messages" << std::endl;
         AMREX_ALWAYS_ASSERT(n_messages == n_cells);
