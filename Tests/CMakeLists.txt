@@ -121,6 +121,7 @@ endfunction(add_test_seed)
 # Regression tests
 #=============================================================================
 add_test_r(phold)
+add_test_r(phold-conservative)
 
 #=============================================================================
 # Seed test

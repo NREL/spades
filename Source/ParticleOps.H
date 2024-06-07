@@ -21,7 +21,9 @@ struct Output
                        << "  receiver: " << p.idata(IntData::receiver) << "\n"
                        << "  pair: " << p.idata(IntData::pair) << "\n"
                        << "  timestamp: " << p.rdata(RealData::timestamp)
-                       << std::endl;
+                       << "\n"
+                       << "  creation_time: "
+                       << p.rdata(RealData::creation_time) << std::endl;
     }
 };
 
@@ -105,6 +107,7 @@ struct MarkUndefined
         p.idata(IntData::pair) = -1;
         p.rdata(RealData::timestamp) = 0.0;
         p.rdata(RealData::old_timestamp) = 0.0;
+        p.rdata(RealData::creation_time) = 0.0;
     }
 };
 
@@ -128,6 +131,7 @@ struct Get
 
         P& p = m_pstruct[idx];
 
+        AMREX_ALWAYS_ASSERT(p.id() >= 0);
         AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == typ);
 
         return p;

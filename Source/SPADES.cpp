@@ -272,10 +272,16 @@ void SPADES::time_step(
     ++m_isteps[lev];
 
     if (Verbose() != 0) {
-        amrex::Print() << "[Level " << lev << " step " << m_isteps[lev] << "] ";
-        amrex::Print() << "Advanced " << CountCells(lev) << " cells and "
+        amrex::Print() << "[Level " << lev << " step " << m_isteps[lev]
+                       << "] statistics:" << std::endl;
+        const auto n_cells = CountCells(lev);
+        amrex::Print() << "  Advanced " << n_cells << " nodes and "
                        << m_pc->TotalNumberOfParticles(lev != 0) << " particles"
                        << std::endl;
+        const auto n_messages =
+            m_pc->total_count(lev, particles::MessageTypes::MESSAGE);
+        amrex::Print() << "  " << n_messages << " messages" << std::endl;
+        AMREX_ALWAYS_ASSERT(n_messages == n_cells);
     }
 }
 
@@ -400,7 +406,8 @@ void SPADES::process_messages(const int lev)
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
                     psnd.idata(particles::IntData::pair) = pair;
-
+                    psnd.rdata(particles::RealData::creation_time) =
+                        sarr(iv, constants::LVT_IDX);
                     // Create the conjugate message
                     auto& pcnj =
                         getter(2 * n + 1, particles::MessageTypes::UNDEFINED);
@@ -420,6 +427,8 @@ void SPADES::process_messages(const int lev)
                         pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     pcnj.idata(particles::IntData::pair) = pair;
+                    pcnj.rdata(particles::RealData::creation_time) =
+                        sarr(iv, constants::LVT_IDX);
                     pcnj.idata(particles::IntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
@@ -529,6 +538,13 @@ void SPADES::rollback(const int lev)
 
                                     if (pair ==
                                         pcnj.idata(particles::IntData::pair)) {
+                                        AMREX_ALWAYS_ASSERT(
+                                            std::abs(
+                                                pprd.rdata(particles::RealData::
+                                                               timestamp) -
+                                                pcnj.rdata(particles::RealData::
+                                                               creation_time)) <
+                                            constants::EPS);
                                         pcnj.idata(
                                             particles::IntData::type_id) =
                                             particles::MessageTypes::
@@ -627,7 +643,7 @@ void SPADES::rollback_statistics(const int lev)
     if (amrex::ParallelDescriptor::IOProcessor()) {
         amrex::Print() << "Rollback statistics at level " << lev << std::endl;
         for (int n = 0; n < nrlbks.size(); n++) {
-            amrex::Print() << "  number of cells doing " << n
+            amrex::Print() << "  number of nodes doing " << n
                            << " rollbacks: " << nrlbks[n] << std::endl;
         }
         const auto nt = static_cast<amrex::Long>(

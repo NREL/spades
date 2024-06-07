@@ -66,6 +66,8 @@ void CellSortedParticleContainer::initialize_vectors()
     m_writeflags_real[RealData::timestamp] = 1;
     m_real_data_names[RealData::old_timestamp] = "old_timestamp";
     m_writeflags_real[RealData::old_timestamp] = 1;
+    m_real_data_names[RealData::creation_time] = "creation_time";
+    m_writeflags_real[RealData::creation_time] = 1;
 
     m_int_data_names[IntData::type_id] = "type_id";
     m_writeflags_int[IntData::type_id] = 1;
@@ -353,7 +355,7 @@ void CellSortedParticleContainer::initialize_particles(
 
     const int np_per_cell = 100;
     const int msg_per_cell = 1;
-    AMREX_ALWAYS_ASSERT(np_per_cell > 2 * msg_per_cell);
+    AMREX_ALWAYS_ASSERT(np_per_cell > msg_per_cell);
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
@@ -415,19 +417,13 @@ void CellSortedParticleContainer::initialize_particles(
 
                 for (int n = start; n < start + msg_per_cell; n++) {
                     auto& pmsg = aos[n];
-                    const auto pair = static_cast<int>(
-                        pairing_function(pmsg.cpu(), pmsg.id()));
                     const amrex::Real ts =
                         random_exponential(1.0, engine) + lookahead;
 
                     pmsg.rdata(RealData::timestamp) = ts;
+                    pmsg.rdata(RealData::creation_time) = 0;
                     pmsg.idata(IntData::type_id) = MessageTypes::MESSAGE;
-                    pmsg.idata(IntData::pair) = pair;
-
-                    auto& pcnj = aos[n + msg_per_cell];
-                    pcnj.rdata(RealData::timestamp) = ts;
-                    pcnj.idata(IntData::type_id) = MessageTypes::CONJUGATE;
-                    pcnj.idata(IntData::pair) = pair;
+                    pmsg.idata(IntData::pair) = -1;
                 }
             });
     }
@@ -455,7 +451,7 @@ void CellSortedParticleContainer::initialize_particles(
                 }
             }
             AMREX_ALWAYS_ASSERT(valid_type);
-            AMREX_ALWAYS_ASSERT(p.id() > 0);
+            AMREX_ALWAYS_ASSERT(p.id() >= 0);
         });
     }
 }
@@ -556,15 +552,16 @@ void CellSortedParticleContainer::update_undefined()
     const auto& dom = Geom(lev).Domain();
     const int lower_count = m_lower_undefined_count;
     const int upper_count = m_upper_undefined_count;
-    const int mid_count =
-        (m_upper_undefined_count - m_lower_undefined_count) / 2 +
-        m_lower_undefined_count;
+    const int reset_count = m_reset_undefined_count;
+    AMREX_ALWAYS_ASSERT(reset_count < upper_count);
+    AMREX_ALWAYS_ASSERT(lower_count < reset_count);
+    int n_removals = 0;
 
     CellSortedParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(+ : n_removals) if (Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
@@ -587,9 +584,12 @@ void CellSortedParticleContainer::update_undefined()
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (current_count > upper_count) {
-                p_removals[icell] = current_count - mid_count;
+                p_removals[icell] = current_count - reset_count;
             }
         });
+
+        n_removals += amrex::Reduce::Sum(removals.size(), p_removals);
+
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
@@ -614,7 +614,7 @@ void CellSortedParticleContainer::update_undefined()
             const auto iv = box.atOffset(icell);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (lower_count > current_count) {
-                p_additions[icell] = mid_count - current_count;
+                p_additions[icell] = reset_count - current_count;
             }
         });
 
@@ -662,6 +662,12 @@ void CellSortedParticleContainer::update_undefined()
     }
 
     addParticles(pc_adds, true);
+
+    amrex::ParallelAllReduce::Sum<int>(
+        n_removals, amrex::ParallelContext::CommunicatorSub());
+    if (n_removals > 0) {
+        Redistribute(); // kind of a bummer
+    }
 }
 
 void CellSortedParticleContainer::resolve_pairs()
@@ -722,6 +728,11 @@ void CellSortedParticleContainer::resolve_pairs()
                             AMREX_ALWAYS_ASSERT(
                                 pmsg.idata(IntData::receiver) ==
                                 pant.idata(IntData::receiver));
+                            AMREX_ALWAYS_ASSERT(
+                                std::abs(
+                                    pmsg.rdata(RealData::creation_time) -
+                                    pant.rdata(RealData::creation_time)) <
+                                constants::EPS);
                             MarkUndefined()(pant);
                             MarkUndefined()(pmsg);
                             found_pair = true;
@@ -755,8 +766,12 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
-            if ((p.rdata(RealData::timestamp) < gvt) &&
-                (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) {
+            if (((p.rdata(RealData::timestamp) < gvt) &&
+                 (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) ||
+                ((p.idata(IntData::type_id) == MessageTypes::CONJUGATE) &&
+                 (p.rdata(RealData::creation_time) < gvt))) {
+                AMREX_ALWAYS_ASSERT(
+                    p.idata(IntData::type_id) != MessageTypes::MESSAGE);
                 MarkUndefined()(p);
             }
         });
