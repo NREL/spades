@@ -294,12 +294,6 @@ void SPADES::advance(
 {
     BL_PROFILE("spades::SPADES::advance()");
 
-    rollback(lev);
-
-    process_messages(lev);
-
-    m_pc->Redistribute();
-    m_pc->sort_particles();
     m_pc->update_undefined();
 
     update_gvt(lev);
@@ -307,6 +301,12 @@ void SPADES::advance(
     m_pc->sort_particles();
 
     update_lbts(lev);
+
+    process_messages(lev);
+    m_pc->Redistribute();
+    m_pc->sort_particles();
+
+    rollback(lev);
 
     m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
     m_ts_new[lev] += dt_lev;       // new time is ahead
