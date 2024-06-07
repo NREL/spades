@@ -770,6 +770,8 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
                  (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) ||
                 ((p.idata(IntData::type_id) == MessageTypes::CONJUGATE) &&
                  (p.rdata(RealData::creation_time) < gvt))) {
+                AMREX_ALWAYS_ASSERT(
+                    p.idata(IntData::type_id) != MessageTypes::MESSAGE);
                 MarkUndefined()(p);
             }
         });
