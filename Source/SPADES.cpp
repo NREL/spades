@@ -204,10 +204,6 @@ void SPADES::evolve()
             write_checkpoint_file();
         }
 
-        if (cur_time >= m_stop_time - 1.e-6 * m_dts[0]) {
-            break;
-        }
-
         const amrex::Real delta_time =
             amrex::ParallelDescriptor::second() - start_time;
         const auto n_processed_messages = std::accumulate(
@@ -238,6 +234,7 @@ void SPADES::evolve()
                 tm /= amrex::ParallelDescriptor::NProcs();
             }
         }
+
         write_data_file(false);
         amrex::Print() << "Wallclock time for this step (min, avg, max) [s]: "
                        << m_min_timings[0] << " " << m_avg_timings[0] << " "
@@ -245,6 +242,10 @@ void SPADES::evolve()
         amrex::Print() << "Current rate (min, avg, max) [msg/s]: "
                        << m_min_timings[1] << " " << m_avg_timings[1] << " "
                        << m_max_timings[1] << std::endl;
+
+        if (cur_time >= m_stop_time - 1.e-6 * m_dts[0]) {
+            break;
+        }
     }
     if (m_plot_int > 0 && m_isteps[0] > last_plot_file_step) {
         write_plot_file();
