@@ -191,10 +191,10 @@ void CellSortedParticleContainer::count_offsets()
     }
 }
 
-void CellSortedParticleContainer::initialize_particles(
+void CellSortedParticleContainer::initialize_messages(
     const amrex::Real lookahead)
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::initialize_particles()");
+    BL_PROFILE("spades::CellSortedParticleContainer::initialize_messages()");
 
     const int lev = 0;
 
@@ -456,10 +456,10 @@ void CellSortedParticleContainer::initialize_particles(
     }
 }
 
-void CellSortedParticleContainer::sort_particles()
+void CellSortedParticleContainer::sort_messages()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::CellSortedParticleContainer::sort_particles()");
+    BL_PROFILE("spades::CellSortedParticleContainer::sort_messages()");
 
     const int lev = 0;
 
@@ -475,7 +475,7 @@ void CellSortedParticleContainer::sort_particles()
         }
 
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_particles::sort_prep",
+        //     "spades::CellSortedParticleContainer::sort_messages::sort_prep",
         //     prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
@@ -487,7 +487,7 @@ void CellSortedParticleContainer::sort_particles()
 
         // Sort particle indices based on the cell index
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_particles::sort",
+        //     "spades::CellSortedParticleContainer::sort_messages::sort",
         //     sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
@@ -532,7 +532,7 @@ void CellSortedParticleContainer::sort_particles()
 
         // Reorder the particles in memory
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_particles::"
+        //     "spades::CellSortedParticleContainer::sort_messages::"
         //     "ReorderParticles",
         //     reorder);
         ReorderParticles(lev, mfi, cell_list.data());
@@ -744,7 +744,7 @@ void CellSortedParticleContainer::resolve_pairs()
             });
     }
 
-    sort_particles();
+    sort_messages();
 }
 
 void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)

@@ -293,7 +293,7 @@ void SPADES::time_step(
                         << "Grid summary after regrid: " << std::endl;
                     printGridSummary(amrex::OutStream(), 0, finest_level);
                 }
-                m_pc->sort_particles();
+                m_pc->sort_messages();
             }
         }
     }
@@ -330,7 +330,7 @@ void SPADES::advance(
 
     update_gvt(lev);
     m_pc->garbage_collect(m_gvts[lev]);
-    m_pc->sort_particles();
+    m_pc->sort_messages();
 
     update_lbts(lev);
 
@@ -339,7 +339,7 @@ void SPADES::advance(
 
     process_messages(lev);
     m_pc->Redistribute();
-    m_pc->sort_particles();
+    m_pc->sort_messages();
 
     rollback(lev);
 
@@ -652,7 +652,7 @@ void SPADES::rollback(const int lev)
         }
 
         m_pc->Redistribute();
-        m_pc->sort_particles();
+        m_pc->sort_messages();
         require_rollback = rollback.sum(0);
         iter++;
     }
@@ -832,9 +832,9 @@ void SPADES::MakeNewLevelFromScratch(
 
     // Update particle container
     m_pc->Define(Geom(lev), dm, ba);
-    m_pc->initialize_particles(m_lookahead);
+    m_pc->initialize_messages(m_lookahead);
     m_pc->initialize_state();
-    m_pc->sort_particles();
+    m_pc->sort_messages();
 }
 
 void SPADES::initialize_state(const int lev)
@@ -1183,7 +1183,7 @@ void SPADES::read_checkpoint_file()
     init_particle_container();
     m_pc->Restart(m_restart_chkfile, m_pc->identifier());
     m_pc->initialize_state();
-    m_pc->sort_particles();
+    m_pc->sort_messages();
 }
 
 void SPADES::write_info_file(const std::string& path) const

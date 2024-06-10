@@ -88,9 +88,9 @@ public:
         return m_message_counts[lev].sum(typ);
     }
 
-    void initialize_particles(const amrex::Real lookahead);
+    void initialize_messages(const amrex::Real lookahead);
 
-    void sort_particles();
+    void sort_messages();
 
     // update the undefined messages
     void update_undefined();
