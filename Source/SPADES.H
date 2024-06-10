@@ -162,6 +162,12 @@ private:
     // initialize the rng
     void init_rng() const;
 
+    // write simulation information
+    void write_data_file(const bool is_init) const;
+
+    // compute summary data
+    void level_summary(const int lev);
+
     amrex::Vector<int> m_isteps;    // which step?
     amrex::Vector<int> m_nsubsteps; // how many substeps on each level?
 
@@ -173,6 +179,23 @@ private:
 
     // lower bound on incoming time stamp
     amrex::Vector<amrex::Real> m_lbts;
+
+    // cell count at each level
+    amrex::Vector<int> m_ncells;
+
+    // total message count at each level
+    amrex::Vector<int> m_ntotal_messages;
+
+    //  message count at each level
+    amrex::Vector<int> m_nmessages;
+
+    // count of processed messages
+    amrex::Vector<int> m_nprocessed_messages;
+
+    // timings for each step
+    amrex::Vector<amrex::Real> m_min_timings;
+    amrex::Vector<amrex::Real> m_max_timings;
+    amrex::Vector<amrex::Real> m_avg_timings;
 
     // maximum number of steps and stop time
     int m_max_step = std::numeric_limits<int>::max();
@@ -211,6 +234,12 @@ private:
 
     // output particles
     bool m_write_particles{false};
+
+    // filename for simulation data
+    const std::string m_data_fname{"data.csv"};
+
+    // data precision for data output
+    const int m_data_precision{6};
 
     amrex::Real m_lookahead{1.0};
     amrex::Real m_window_size{constants::LARGE_NUM};
