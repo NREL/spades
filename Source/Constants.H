@@ -23,6 +23,8 @@ static constexpr amrex::Real LARGE_NUM =
 static constexpr int DATWIDTH = 24;
 static constexpr int DATPRECISION = 16;
 
+static constexpr int MAX_ROLLBACK_ITERS = 10;
+
 } // namespace spades::constants
 
 #endif
