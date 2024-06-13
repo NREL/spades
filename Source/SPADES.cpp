@@ -219,15 +219,15 @@ void SPADES::evolve()
         }
 
         amrex::ParallelReduce::Min(
-            m_min_timings.data(), m_min_timings.size(),
+            m_min_timings.data(), static_cast<int>(m_min_timings.size()),
             amrex::ParallelDescriptor::IOProcessorNumber(),
             amrex::ParallelDescriptor::Communicator());
         amrex::ParallelReduce::Max(
-            m_max_timings.data(), m_max_timings.size(),
+            m_max_timings.data(), static_cast<int>(m_max_timings.size()),
             amrex::ParallelDescriptor::IOProcessorNumber(),
             amrex::ParallelDescriptor::Communicator());
         amrex::ParallelReduce::Sum(
-            m_avg_timings.data(), m_avg_timings.size(),
+            m_avg_timings.data(), static_cast<int>(m_avg_timings.size()),
             amrex::ParallelDescriptor::IOProcessorNumber(),
             amrex::ParallelDescriptor::Communicator());
 
@@ -362,7 +362,7 @@ void SPADES::level_summary(const int lev)
     m_ntotal_messages[lev] = m_pc->TotalNumberOfParticles(lev != 0);
     m_nmessages[lev] = m_pc->total_count(lev, particles::MessageTypes::MESSAGE);
     m_ncells[lev] = CountCells(lev);
-    if (Verbose()) {
+    if (Verbose() > 0) {
         amrex::Print() << "[Level " << lev << " step " << m_isteps[lev]
                        << "] Summary:" << std::endl;
         amrex::Print() << "  " << m_ntotal_messages[lev] << " total messages"

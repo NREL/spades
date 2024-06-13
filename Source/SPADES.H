@@ -181,13 +181,13 @@ private:
     amrex::Vector<amrex::Real> m_lbts;
 
     // cell count at each level
-    amrex::Vector<int> m_ncells;
+    amrex::Vector<amrex::Long> m_ncells;
 
     // total message count at each level
-    amrex::Vector<int> m_ntotal_messages;
+    amrex::Vector<amrex::Long> m_ntotal_messages;
 
     //  message count at each level
-    amrex::Vector<int> m_nmessages;
+    amrex::Vector<amrex::Long> m_nmessages;
 
     // count of processed messages
     amrex::Vector<int> m_nprocessed_messages;
