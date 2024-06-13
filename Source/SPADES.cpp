@@ -55,6 +55,8 @@ SPADES::SPADES()
     m_ntotal_messages.resize(nlevs_max, 0);
     m_nmessages.resize(nlevs_max, 0);
     m_nprocessed_messages.resize(nlevs_max, 0);
+    m_nrollbacks.resize(
+        nlevs_max, amrex::Vector<int>(constants::MAX_ROLLBACK_ITERS, 0));
     m_min_timings.resize(2, 0);
     m_max_timings.resize(2, 0);
     m_avg_timings.resize(2, 0);
@@ -362,13 +364,20 @@ void SPADES::level_summary(const int lev)
     m_ncells[lev] = CountCells(lev);
     if (Verbose()) {
         amrex::Print() << "[Level " << lev << " step " << m_isteps[lev]
-                       << "] summary:" << std::endl;
-        amrex::Print() << "  " << m_ncells[lev] << " nodes" << std::endl;
+                       << "] Summary:" << std::endl;
         amrex::Print() << "  " << m_ntotal_messages[lev] << " total messages"
                        << std::endl;
         amrex::Print() << "  " << m_nmessages[lev] << " messages" << std::endl;
         amrex::Print() << "  " << m_nprocessed_messages[lev]
                        << " processed messages" << std::endl;
+        amrex::Print() << "  " << m_ncells[lev] << " nodes" << std::endl;
+        for (int n = 0; n < m_nrollbacks[lev].size(); n++) {
+            const auto nrlbk = m_nrollbacks[lev][n];
+            if (nrlbk > 0) {
+                amrex::Print() << "  " << nrlbk << " nodes doing " << n
+                               << " rollbacks" << std::endl;
+            }
+        }
     }
     AMREX_ALWAYS_ASSERT(m_nmessages[lev] == m_ncells[lev]);
 }
@@ -513,10 +522,9 @@ void SPADES::rollback(const int lev)
     rollback.setVal(1.0);
     bool require_rollback = true;
 
-    const int max_iter = 100;
     int iter = 0;
     m_state[lev].setVal(0.0, constants::RLB_IDX, 1);
-    while (require_rollback && (iter < max_iter)) {
+    while (require_rollback && (iter < constants::MAX_ROLLBACK_ITERS)) {
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -656,10 +664,11 @@ void SPADES::rollback(const int lev)
         require_rollback = rollback.max(0) > 0;
         iter++;
     }
-    if (iter == max_iter) {
+    if (iter == constants::MAX_ROLLBACK_ITERS) {
         amrex::Abort(
-            "Maximum number of rollbacks reached (max_iter = " +
-            std::to_string(max_iter) + ")");
+            "Maximum number of rollbacks reached "
+            "(constants::MAX_ROLLBACK_ITERS = " +
+            std::to_string(constants::MAX_ROLLBACK_ITERS) + ")");
     } else {
         rollback_statistics(lev);
     }
@@ -681,6 +690,7 @@ void SPADES::rollback_statistics(const int lev)
         max_rlb, amrex::ParallelContext::CommunicatorSub());
 
     amrex::Vector<amrex::Real> nrlbks(max_rlb + 1, 0);
+    AMREX_ALWAYS_ASSERT(nrlbks.size() <= m_nrollbacks[lev].size());
     for (int n = 0; n < nrlbks.size(); n++) {
         nrlbks[n] = amrex::ReduceSum(
             m_state[lev], 0,
@@ -702,10 +712,8 @@ void SPADES::rollback_statistics(const int lev)
         amrex::ParallelDescriptor::IOProcessorNumber());
 
     if (amrex::ParallelDescriptor::IOProcessor()) {
-        amrex::Print() << "Rollback statistics at level " << lev << std::endl;
         for (int n = 0; n < nrlbks.size(); n++) {
-            amrex::Print() << "  number of nodes doing " << n
-                           << " rollbacks: " << nrlbks[n] << std::endl;
+            m_nrollbacks[lev][n] = static_cast<int>(nrlbks[n]);
         }
         const auto nt = static_cast<amrex::Long>(
             std::accumulate(nrlbks.begin(), nrlbks.end(), 0.0));

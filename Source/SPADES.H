@@ -192,6 +192,9 @@ private:
     // count of processed messages
     amrex::Vector<int> m_nprocessed_messages;
 
+    // number of rollbacks at each level
+    amrex::Vector<amrex::Vector<int>> m_nrollbacks;
+
     // timings for each step
     amrex::Vector<amrex::Real> m_min_timings;
     amrex::Vector<amrex::Real> m_max_timings;
