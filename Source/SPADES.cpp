@@ -1296,14 +1296,18 @@ void SPADES::write_data_file(const bool is_init) const
 
         amrex::Print() << "Writing simulation data to " << m_data_fname
                        << " at time " << m_ts_new[0] << std::endl;
+        const int lev = 0;
 
         if (is_init) {
             std::ofstream fh(m_data_fname.c_str(), std::ios::out);
             fh.precision(m_data_precision);
             fh << "step,gvt,lbts,nodes,total_messages,messages,processed_"
-                  "messages,min_time,avg_time,max_time,min_rate,avg_rate,max_"
-                  "rate"
-               << "\n";
+                  "messages,min_time,avg_time,max_time,min_rate,avg_rate,"
+                  "max_rate";
+            for (int i = 0; i < m_nrollbacks[lev].size(); i++) {
+                fh << ",rollback_" << i;
+            }
+            fh << "\n";
             fh.close();
         }
 
@@ -1316,14 +1320,17 @@ void SPADES::write_data_file(const bool is_init) const
         const auto n_processed_messages = std::accumulate(
             m_nprocessed_messages.begin(), m_nprocessed_messages.end(), 0);
 
-        const int lev = 0;
         fh << m_ts_new[lev] << "," << m_gvts[lev] << "," << m_lbts[lev] << ","
            << m_ncells[lev] << "," << m_ntotal_messages[lev] << ","
            << m_nmessages[lev] << "," << n_processed_messages << ","
            << m_min_timings[0] << "," << m_avg_timings[0] << ","
            << m_max_timings[0] << "," << m_min_timings[1] << ","
-           << m_avg_timings[1] << "," << m_max_timings[1] << "\n";
+           << m_avg_timings[1] << "," << m_max_timings[1];
 
+        for (const auto& rlbk : m_nrollbacks[lev]) {
+            fh << "," << rlbk;
+        }
+        fh << "\n";
         fh.close();
     }
 }
