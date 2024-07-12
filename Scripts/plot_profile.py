@@ -1,6 +1,7 @@
 """Plot tiny profile output in a log file."""
 
 import argparse
+import pathlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
@@ -8,33 +9,7 @@ import numpy as np
 from cycler import cycler
 from functools import reduce
 
-default_cycler = cycler(
-    color=[
-        "#EE2E2F",
-        "#008C48",
-        "#185AA9",
-        "#F47D23",
-        "#662C91",
-        "#A21D21",
-        "#B43894",
-        "#010202",
-    ]
-) + cycler(
-    linestyle=[
-        "-",
-        "--",
-        ":",
-        "-.",
-        (0, (1, 10)),
-        (0, (1, 1)),
-        (0, (5, 10)),
-        (0, (5, 1)),
-    ]
-)
-
-plt.rc("text", usetex=True)
-plt.rc("lines", linewidth=2)
-plt.rc("axes", prop_cycle=default_cycler)
+plt.style.use(pathlib.Path(__file__).parent.resolve() / "project.mplstyle")
 
 if __name__ == "__main__":
     # Parse arguments
@@ -91,7 +66,7 @@ if __name__ == "__main__":
     df = df.sort_values(by=f"average-{args.fnames[0]}", ascending=False).head(10)
     df.function = df.function.str.replace("_", "\_", regex=False)
 
-    pname = "plots.pdf"
+    pname = "profile_plots.pdf"
     plt.figure("timing", figsize=(14, 6))
     ax = plt.gca()
     ind = np.arange(len(df))
