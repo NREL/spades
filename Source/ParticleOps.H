@@ -22,6 +22,8 @@ struct Output
                        << "  pair: " << p.idata(IntData::pair) << "\n"
                        << "  timestamp: " << p.rdata(RealData::timestamp)
                        << "\n"
+                       << "  old_timestamp: "
+                       << p.rdata(RealData::old_timestamp) << "\n"
                        << "  creation_time: "
                        << p.rdata(RealData::creation_time) << std::endl;
     }

@@ -778,6 +778,42 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
     }
 }
 
+amrex::Real CellSortedParticleContainer::gvt()
+{
+    BL_PROFILE("spades::CellSortedParticleContainer::gvt()");
+    // If this becomes a performance bottleneck it could be sped up by
+    // making a vector of just the message time stamps before the min op
+
+    const int lev = 0;
+
+    amrex::Real gvt = constants::LARGE_NUM;
+
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
+        auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
+
+        const auto& particle_tile = GetParticles(lev)[index];
+        const size_t np = particle_tile.numParticles();
+        const auto& particles = particle_tile.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+
+        amrex::Gpu::DeviceVector<amrex::Real> ts(np, constants::LARGE_NUM);
+        auto* p_ts = ts.data();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            if (p.idata(IntData::type_id) == MessageTypes::MESSAGE) {
+                p_ts[pindex] = p.rdata(RealData::timestamp);
+            }
+        });
+        gvt = std::min(amrex::Reduce::Min(np, ts.data()), gvt);
+    }
+    amrex::ParallelDescriptor::ReduceRealMin(gvt);
+
+    return gvt;
+}
+
 void CellSortedParticleContainer::reposition_messages()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::reposition_messages()");

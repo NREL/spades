@@ -97,6 +97,8 @@ public:
 
     void resolve_pairs();
 
+    amrex::Real gvt();
+
     void garbage_collect(const amrex::Real gvt);
 
     // reposition the messages inside a cell
