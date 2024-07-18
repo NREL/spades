@@ -462,6 +462,7 @@ void CellSortedParticleContainer::sort_messages()
     BL_PROFILE("spades::CellSortedParticleContainer::sort_messages()");
 
     const int lev = 0;
+    const auto& dom = Geom(lev).Domain();
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -474,25 +475,90 @@ void CellSortedParticleContainer::sort_messages()
             continue;
         }
 
-        // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_messages::sort_prep",
-        //     prep);
+        BL_PROFILE_VAR(
+            "spades::CellSortedParticleContainer::sort_messages::sort_prep",
+            prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             p_cell_list[pindex] = pindex;
         });
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(prep);
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(prep);
 
+        BL_PROFILE_VAR(
+            "spades::CellSortedParticleContainer::sort_messages::sort_prep2",
+            prep2);
+        amrex::Gpu::DeviceVector<amrex::Long> cell_list2(np);
+        auto* p_cell_list2 = cell_list2.data();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            p_cell_list2[pindex] = pindex;
+        });
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(prep2);
+
+        BL_PROFILE_VAR(
+            "spades::CellSortedParticleContainer::sort_messages::flatten",
+            flatten);
+        const auto& particles_a = particle_tile.GetArrayOfStructs();
+        const auto* pstruct_a = particles_a().dataPtr();
+        amrex::Gpu::DeviceVector<int> type_id(np);
+        amrex::Gpu::DeviceVector<int> iv(np);
+        amrex::Gpu::DeviceVector<amrex::Real> ts(np);
+        auto* p_type_id = type_id.data();
+        auto* p_iv = iv.data();
+        auto* p_ts = ts.data();
+        const amrex::Box& box = mfi.tilebox();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+          const auto& p = pstruct_a[pindex];
+          const amrex::IntVect piv(AMREX_D_DECL(
+                                      p.idata(IntData::i), p.idata(IntData::j), p.idata(IntData::k)));
+          p_type_id[pindex] = p.idata(IntData::type_id);
+          p_iv[pindex] = dom.index(piv);
+          p_ts[pindex] = p.rdata(RealData::timestamp);
+        });
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(flatten);
+
+        BL_PROFILE_VAR(
+            "spades::CellSortedParticleContainer::sort_messages::sort2",
+            sort2);
+#ifdef AMREX_USE_GPU
+#if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+        thrust::sort_by_key(
+          thrust::device, ts.begin(), ts.end(), cell_list2.begin());
+        thrust::sort_by_key(
+          thrust::device, type_id.begin(), type_id.end(), cell_list2.begin());
+        thrust::sort_by_key(
+          thrust::device, iv.begin(), iv.end(), cell_list2.begin());
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(sort2);
+#else
+        amrex::Abort();
+#endif
+#else
+        amrex::Abort();
+#endif
+        
         // Sort particle indices based on the cell index
-        // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_messages::sort",
-        //     sort);
+        BL_PROFILE_VAR(
+            "spades::CellSortedParticleContainer::sort_messages::sort",
+            sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+        // {
+        // amrex::Vector<amrex::Long> h_cl(np, 0);
+        // amrex::Gpu::copy(
+        //     amrex::Gpu::deviceToHost, cell_list.begin(), cell_list.end(),
+        //     h_cl.begin());
+        // amrex::Print() << "cl before"<< std::endl;
+        // for(int i=0; i<np; i++){
+        //   amrex::Print() << "comp: " << i << " " << h_cl[i] << std::endl;
+        // }
+        // }
+
         thrust::sort(
             thrust::device, cell_list.begin(), cell_list.end(),
             [=] AMREX_GPU_DEVICE(
@@ -501,6 +567,17 @@ void CellSortedParticleContainer::sort_messages()
                 const auto& p2 = pstruct[y];
                 return Compare()(p1, p2);
             });
+
+        // {
+        // amrex::Vector<amrex::Long> h_cl(np, 0);
+        // amrex::Gpu::copy(
+        //     amrex::Gpu::deviceToHost, cell_list.begin(), cell_list.end(),
+        //     h_cl.begin());
+        // amrex::Print() << "cl after" << std::endl;
+        // for(int i=0; i<np; i++){
+        //   amrex::Print() << "comp: " << i << " " << h_cl[i] << std::endl;
+        // }
+        // }
 #else
         // Perform sort on CPU, then copy back to device (not good)
         amrex::Vector<amrex::Long> h_cell_list(np, 0);
@@ -527,17 +604,36 @@ void CellSortedParticleContainer::sort_messages()
                 return Compare()(p1, p2);
             });
 #endif
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(sort);
+
+        // BL_PROFILE_VAR(
+        //     "spades::CellSortedParticleContainer::sort_messages::compare",
+        //     compare);
+        // amrex::Vector<amrex::Long> h_cl(np, 0);
+        // amrex::Vector<amrex::Long> h_cl2(np, 0);
+        // amrex::Gpu::copy(
+        //     amrex::Gpu::deviceToHost, cell_list.begin(), cell_list.end(),
+        //     h_cl.begin());
+        // amrex::Gpu::copy(
+        //     amrex::Gpu::deviceToHost, cell_list2.begin(), cell_list2.end(),
+        //     h_cl2.begin());
+        // amrex::Print() << "comparison: " << std::endl;
+        // for(int i=0; i<np; i++){
+        //   amrex::Print() << "comp: " << i << " " << h_cl[i] << " " << h_cl2[i] << std::endl;
+        //   //AMREX_ALWAYS_ASSERT(h_cl[i] == h_cl2[i]);
+        // }
         // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(sort);
+        // BL_PROFILE_VAR_STOP(compare);
 
         // Reorder the particles in memory
-        // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_messages::"
-        //     "ReorderParticles",
-        //     reorder);
+        BL_PROFILE_VAR(
+            "spades::CellSortedParticleContainer::sort_messages::"
+            "ReorderParticles",
+            reorder);
         ReorderParticles(lev, mfi, cell_list.data());
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(reorder);
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(reorder);
     }
     update_counts();
 }
