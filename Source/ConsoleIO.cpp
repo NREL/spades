@@ -16,6 +16,7 @@ namespace spades::io {
 namespace {
 const std::string DBL_LINE = std::string(78, '=') + "\n";
 const std::string DASH_LINE = "\n" + std::string(78, '-') + "\n";
+constexpr int TIME_BUF_SIZE = 64;
 } // namespace
 
 void print_usage(MPI_Comm comm, std::ostream& out)
@@ -82,7 +83,7 @@ void print_banner(MPI_Comm comm, std::ostream& out)
 
     auto etime = std::chrono::system_clock::now();
     auto etimet = std::chrono::system_clock::to_time_t(etime);
-    amrex::Array<char, 64> time_buf;
+    amrex::Array<char, TIME_BUF_SIZE> time_buf;
     ctime_r(&etimet, time_buf.begin());
     const std::string tstamp(time_buf.begin());
 

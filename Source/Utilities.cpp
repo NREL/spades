@@ -30,7 +30,8 @@ void read_file(
 
     amrex::Vector<Setbuf_Char_Type> io_buffer(IO_Buffer_Size);
 
-    amrex::Long file_length(0), file_length_padded(0);
+    amrex::Long file_length(0);
+    amrex::Long file_length_padded(0);
 
     std::ifstream iss;
 

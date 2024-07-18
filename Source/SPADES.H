@@ -232,8 +232,8 @@ private:
     int m_chk_int = -1;
 
     // digits used in chk and plt file names
-    int m_file_name_digits{5};
-    int m_rng_file_name_digits{10};
+    int m_file_name_digits{constants::FILE_NAME_DIGITS};
+    int m_rng_file_name_digits{constants::RNG_FILE_NAME_DIGITS};
 
     // output particles
     bool m_write_particles{false};
