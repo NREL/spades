@@ -30,7 +30,7 @@ struct Constant
 
     static std::string identifier() { return "ic_constant"; }
 
-    DeviceType device_instance() const { return m_op; }
+    [[nodiscard]] DeviceType device_instance() const { return m_op; }
 
     DeviceOp m_op;
 };

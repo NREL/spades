@@ -133,13 +133,13 @@ private:
     void set_ics();
 
     // get plotfile name
-    std::string plot_file_name(const int step) const;
+    [[nodiscard]] std::string plot_file_name(const int step) const;
 
     // get chkfile name
-    std::string chk_file_name(const int step) const;
+    [[nodiscard]] std::string chk_file_name(const int step) const;
 
     // set plotfile variables names
-    amrex::Vector<std::string> plot_file_var_names() const;
+    [[nodiscard]] amrex::Vector<std::string> plot_file_var_names() const;
 
     // write plotfile to disk
     void write_plot_file();
