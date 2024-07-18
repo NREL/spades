@@ -968,7 +968,7 @@ std::string SPADES::chk_file_name(const int step) const
 // put together an array of multifabs for writing
 amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
 {
-    amrex::Vector<const amrex::MultiFab*> r;
+    amrex::Vector<const amrex::MultiFab*> rmf;
     for (int lev = 0; lev <= finest_level; ++lev) {
 
         m_plt_mf[lev].define(
@@ -988,9 +988,9 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
             });
         amrex::Gpu::synchronize();
 
-        r.push_back(&m_plt_mf[lev]);
+        rmf.push_back(&m_plt_mf[lev]);
     }
-    return r;
+    return rmf;
 }
 
 void SPADES::write_plot_file()

@@ -176,7 +176,7 @@ void CellSortedParticleContainer::count_offsets()
                 }
                 return total_messages;
             },
-            [=] AMREX_GPU_DEVICE(int i, const int& x) { p_offsets[i] = x; },
+            [=] AMREX_GPU_DEVICE(int i, const int& xi) { p_offsets[i] = xi; },
             amrex::Scan::Type::exclusive, amrex::Scan::noRetSum);
 
         amrex::ParallelFor(
@@ -381,7 +381,7 @@ void CellSortedParticleContainer::initialize_messages(
         int* out = offsets[mfi].dataPtr();
         const auto np = amrex::Scan::PrefixSum<int>(
             ncells, [=] AMREX_GPU_DEVICE(int i) -> int { return in[i]; },
-            [=] AMREX_GPU_DEVICE(int i, int const& x) { out[i] = x; },
+            [=] AMREX_GPU_DEVICE(int i, int const& xi) { out[i] = xi; },
             amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
         const amrex::Long pid = ParticleType::NextID();
@@ -504,9 +504,9 @@ void CellSortedParticleContainer::sort_messages()
         thrust::sort(
             thrust::device, cell_list.begin(), cell_list.end(),
             [=] AMREX_GPU_DEVICE(
-                const amrex::Long x, const amrex::Long y) noexcept {
-                const auto& p1 = pstruct[x];
-                const auto& p2 = pstruct[y];
+                const amrex::Long xi, const amrex::Long yi) noexcept {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
                 return Compare()(p1, p2);
             });
 #else
@@ -517,9 +517,9 @@ void CellSortedParticleContainer::sort_messages()
             h_cell_list.begin());
         std::sort(
             h_cell_list.begin(), h_cell_list.end(),
-            [=](const amrex::Long x, const amrex::Long y) {
-                const auto& p1 = pstruct[x];
-                const auto& p2 = pstruct[y];
+            [=](const amrex::Long xi, const amrex::Long yi) {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
                 return Compare()(p1, p2);
             });
         amrex::Gpu::copy(
@@ -529,9 +529,9 @@ void CellSortedParticleContainer::sort_messages()
 #else
         std::sort(
             cell_list.begin(), cell_list.end(),
-            [=](const amrex::Long x, const amrex::Long y) {
-                const auto& p1 = pstruct[x];
-                const auto& p2 = pstruct[y];
+            [=](const amrex::Long xi, const amrex::Long yi) {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
                 return Compare()(p1, p2);
             });
 #endif
@@ -631,7 +631,7 @@ void CellSortedParticleContainer::update_undefined()
         const auto np = amrex::Scan::PrefixSum<int>(
             ncells,
             [=] AMREX_GPU_DEVICE(int i) -> int { return p_additions[i]; },
-            [=] AMREX_GPU_DEVICE(int i, int const& x) { p_offsets[i] = x; },
+            [=] AMREX_GPU_DEVICE(int i, int const& xi) { p_offsets[i] = xi; },
             amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
         const amrex::Long pid = ParticleType::NextID();
