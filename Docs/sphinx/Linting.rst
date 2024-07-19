@@ -1,4 +1,4 @@
-#.. _Linting:
+.. _Linting:
 
 Linting
 -------

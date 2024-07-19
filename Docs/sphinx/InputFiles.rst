@@ -5,7 +5,7 @@ The input file specified on the command line is a free-format text file, one ent
 
 This file needs to specified along with the executable as an `argv` option, for example::
 
-  mpirun -np 64 ./spades inputs
+  $ mpirun -np 64 ./spades inputs
 
 
 Entries can be overwritten on the command line: ``./spades inputs amr.plot_int=10``.
