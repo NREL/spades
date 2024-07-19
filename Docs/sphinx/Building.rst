@@ -3,7 +3,7 @@
 Building
 --------
 
-`SPADES` is built using CMake. This is an example CMake configure command exectuted in the build directory::
+`SPADES` is built using CMake. This is an example CMake configure command executed in the build directory::
 
   $ cd Build
   $ cmake -DCMAKE_BUILD_TYPE:STRING=Release \
