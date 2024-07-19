@@ -6,17 +6,13 @@ Checks: 'bugprone-*,
          corecppguidelines-*,
          modernize-*,
          -modernize-use-trailing-return-type,
-         -modernize-use-nodiscard,
          mpi-*,
          performance-*,
          -performance-avoid-endl,
          -performance-inefficient-string-concatenation,
          portability-*,
          readability-*,
-         -readability-magic-numbers,
-         -readability-isolate-declaration,
          -readability-avoid-const-params-in-decls,
-         -readability-identifier-length,
          -readability-function-cognitive-complexity'
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
@@ -60,6 +56,12 @@ CheckOptions:
     value:           llvm
   - key:             modernize-use-nullptr.NullMacros
     value:           'NULL'
+  - { key: readability-identifier-length.MinimumVariableNameLength, value: 2 }
+  - { key: readability-identifier-length.IgnoredVariableNames, value: "^[ijkp]$" }
+  - { key: readability-identifier-length.MinimumParameterNameLength, value: 2 }
+  - { key: readability-identifier-length.IgnoredParameterNames, value: "^[ijknp]$" }
+  - { key: readability-identifier-length.MinimumExceptionNameLength, value: 2 }
+  - { key: readability-identifier-length.MinimumLoopCounterNameLength, value: 1 }
   - { key: readability-identifier-naming.NamespaceCase,       value: lower_case }
   - { key: readability-identifier-naming.ClassCase,           value: CamelCase  }
   - { key: readability-identifier-naming.PrivateMemberPrefix, value: m_         }

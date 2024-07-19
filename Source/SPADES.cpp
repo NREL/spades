@@ -245,7 +245,7 @@ void SPADES::evolve()
                        << m_min_timings[1] << " " << m_avg_timings[1] << " "
                        << m_max_timings[1] << std::endl;
 
-        if (cur_time >= m_stop_time - 1.e-6 * m_dts[0]) {
+        if (cur_time >= m_stop_time - constants::TOL * m_dts[0]) {
             break;
         }
     }
@@ -463,9 +463,9 @@ void SPADES::process_messages(const int lev)
                             dlo[2]));
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
                         AMREX_D_DECL(
-                            plo[0] + (iv_dest[0] + 0.5) * dx[0],
-                            plo[1] + (iv_dest[1] + 0.5) * dx[1],
-                            plo[2] + (iv_dest[2] + 0.5) * dx[2])};
+                            plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
+                            plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
+                            plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
                     const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
                                            random_exponential(1.0, engine) +
                                            lookahead;
@@ -489,9 +489,9 @@ void SPADES::process_messages(const int lev)
                     // send this to)
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> conj_pos = {
                         AMREX_D_DECL(
-                            plo[0] + (iv[0] + 0.5) * dx[0],
-                            plo[1] + (iv[1] + 0.5) * dx[1],
-                            plo[2] + (iv[2] + 0.5) * dx[2])};
+                            plo[0] + (iv[0] + constants::HALF) * dx[0],
+                            plo[1] + (iv[1] + constants::HALF) * dx[1],
+                            plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
                     particles::Create()(
                         pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
@@ -623,13 +623,17 @@ void SPADES::rollback(const int lev)
                                                 particles::IntData::receiver));
                                         AMREX_D_TERM(
                                             pcnj.pos(0) =
-                                                plo[0] + (piv[0] + 0.5) * dx[0];
-                                            ,
-                                            pcnj.pos(1) =
-                                                plo[1] + (piv[1] + 0.5) * dx[1];
+                                                plo[0] +
+                                                (piv[0] + constants::HALF) *
+                                                    dx[0];
+                                            , pcnj.pos(1) =
+                                                  plo[1] +
+                                                  (piv[1] + constants::HALF) *
+                                                      dx[1];
                                             , pcnj.pos(2) =
                                                   plo[2] +
-                                                  (piv[2] + 0.5) * dx[2];)
+                                                  (piv[2] + constants::HALF) *
+                                                      dx[2];)
                                         AMREX_D_TERM(
                                             pcnj.idata(particles::IntData::i) =
                                                 piv[0];
@@ -964,7 +968,7 @@ std::string SPADES::chk_file_name(const int step) const
 // put together an array of multifabs for writing
 amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
 {
-    amrex::Vector<const amrex::MultiFab*> r;
+    amrex::Vector<const amrex::MultiFab*> rmf;
     for (int lev = 0; lev <= finest_level; ++lev) {
 
         m_plt_mf[lev].define(
@@ -984,9 +988,9 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
             });
         amrex::Gpu::synchronize();
 
-        r.push_back(&m_plt_mf[lev]);
+        rmf.push_back(&m_plt_mf[lev]);
     }
-    return r;
+    return rmf;
 }
 
 void SPADES::write_plot_file()
@@ -1054,7 +1058,7 @@ void SPADES::write_checkpoint_file() const
             amrex::FileOpenFailed(header_file_name);
         }
 
-        header_file.precision(17);
+        header_file.precision(constants::HEADER_FILE_PRECISION);
 
         // write out title line
         header_file << "Checkpoint file for SPADES\n";
@@ -1120,7 +1124,8 @@ void SPADES::read_checkpoint_file()
     std::string file_char_ptr_string(file_char_ptr.dataPtr());
     std::istringstream is(file_char_ptr_string, std::istringstream::in);
 
-    std::string line, word;
+    std::string line;
+    std::string word;
 
     // read in title line
     std::getline(is, line);

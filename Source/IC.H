@@ -30,7 +30,7 @@ struct Constant
 
     static std::string identifier() { return "ic_constant"; }
 
-    DeviceType device_instance() const { return m_op; }
+    [[nodiscard]] DeviceType device_instance() const { return m_op; }
 
     DeviceOp m_op;
 };
@@ -63,12 +63,12 @@ public:
         ICDeviceOp ic(m_op.device_instance());
         amrex::ParallelFor(
             m_state[lev], m_state[lev].nGrowVect(), constants::N_STATES,
-            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int q) noexcept {
+            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 amrex::Real state = 0.0;
                 ic(iv, geom, state);
 
-                s_arrs[nbx](i, j, k, q) = state;
+                s_arrs[nbx](i, j, k, n) = state;
             });
         amrex::Gpu::synchronize();
     }

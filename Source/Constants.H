@@ -17,11 +17,17 @@ static constexpr amrex::Real SMALL_NUM = static_cast<amrex::Real>(
 static constexpr amrex::Real EPS =
     static_cast<amrex::Real>(std::numeric_limits<amrex::Real>::epsilon());
 
+static constexpr amrex::Real TOL = 1e-6;
+
 static constexpr amrex::Real LARGE_NUM =
     static_cast<amrex::Real>(std::numeric_limits<amrex::Real>::max() * 1e-10);
 
-static constexpr int DATWIDTH = 24;
-static constexpr int DATPRECISION = 16;
+static constexpr amrex::Real HALF = 0.5;
+
+static constexpr int FILE_NAME_DIGITS = 5;
+static constexpr int RNG_FILE_NAME_DIGITS = 10;
+
+static constexpr int HEADER_FILE_PRECISION = 17;
 
 static constexpr int MAX_ROLLBACK_ITERS = 10;
 

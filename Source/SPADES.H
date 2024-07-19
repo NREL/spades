@@ -133,13 +133,13 @@ private:
     void set_ics();
 
     // get plotfile name
-    std::string plot_file_name(const int step) const;
+    [[nodiscard]] std::string plot_file_name(const int step) const;
 
     // get chkfile name
-    std::string chk_file_name(const int step) const;
+    [[nodiscard]] std::string chk_file_name(const int step) const;
 
     // set plotfile variables names
-    amrex::Vector<std::string> plot_file_var_names() const;
+    [[nodiscard]] amrex::Vector<std::string> plot_file_var_names() const;
 
     // write plotfile to disk
     void write_plot_file();
@@ -232,8 +232,8 @@ private:
     int m_chk_int = -1;
 
     // digits used in chk and plt file names
-    int m_file_name_digits{5};
-    int m_rng_file_name_digits{10};
+    int m_file_name_digits{constants::FILE_NAME_DIGITS};
+    int m_rng_file_name_digits{constants::RNG_FILE_NAME_DIGITS};
 
     // output particles
     bool m_write_particles{false};

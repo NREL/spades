@@ -176,7 +176,7 @@ void CellSortedParticleContainer::count_offsets()
                 }
                 return total_messages;
             },
-            [=] AMREX_GPU_DEVICE(int i, const int& x) { p_offsets[i] = x; },
+            [=] AMREX_GPU_DEVICE(int i, const int& xi) { p_offsets[i] = xi; },
             amrex::Scan::Type::exclusive, amrex::Scan::noRetSum);
 
         amrex::ParallelFor(
@@ -243,10 +243,11 @@ void CellSortedParticleContainer::initialize_messages(
     //                         random_exponential(1.0, engine) + lookahead + 20;
 
     //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
-    //                         , p.pos(1) = plo[1] + (iv_dest[1] + 0.5) * dx[1];
-    //                         , p.pos(2) = plo[2] + (iv_dest[2] + 0.5) *
-    //                         dx[2];)
+    //                         p.pos(0) = plo[0] + (iv_dest[0] +
+    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
+    //                         (iv_dest[1] + constants::HALF) * dx[1]; ,
+    //                         p.pos(2) = plo[2] + (iv_dest[2] +
+    //                         constants::HALF) * dx[2];)
 
     //                     AMREX_D_TERM(p.idata(IntData::i) =
     //                     iv_dest[0];
@@ -273,9 +274,11 @@ void CellSortedParticleContainer::initialize_messages(
     //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest2[0] + 0.5) * dx[0];
-    //                         , p.pos(1) = plo[1] + (iv_dest2[1] + 0.5) *
-    //                         dx[1]; , p.pos(2) = plo[2] + (iv_dest2[2] + 0.5)
+    //                         p.pos(0) = plo[0] + (iv_dest2[0] +
+    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
+    //                         (iv_dest2[1] + constants::HALF) * dx[1]; ,
+    //                         p.pos(2) = plo[2] + (iv_dest2[2] +
+    //                         constants::HALF)
     //                         * dx[2];)
 
     //                     AMREX_D_TERM(p.idata(IntData::i) =
@@ -304,10 +307,11 @@ void CellSortedParticleContainer::initialize_messages(
     //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest[0] + 0.5) * dx[0];
-    //                         , p.pos(1) = plo[1] + (iv_dest[1] + 0.5) * dx[1];
-    //                         , p.pos(2) = plo[2] + (iv_dest[2] + 0.5) *
-    //                         dx[2];)
+    //                         p.pos(0) = plo[0] + (iv_dest[0] +
+    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
+    //                         (iv_dest[1] + constants::HALF) * dx[1]; ,
+    //                         p.pos(2) = plo[2] + (iv_dest[2] +
+    //                         constants::HALF) * dx[2];)
 
     //                     AMREX_D_TERM(p.idata(IntData::i) =
     //                     iv_dest[0];
@@ -334,9 +338,11 @@ void CellSortedParticleContainer::initialize_messages(
     //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest2[0] + 0.5) * dx[0];
-    //                         , p.pos(1) = plo[1] + (iv_dest2[1] + 0.5) *
-    //                         dx[1]; , p.pos(2) = plo[2] + (iv_dest2[2] + 0.5)
+    //                         p.pos(0) = plo[0] + (iv_dest2[0] +
+    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
+    //                         (iv_dest2[1] + constants::HALF) * dx[1]; ,
+    //                         p.pos(2) = plo[2] + (iv_dest2[2] +
+    //                         constants::HALF)
     //                         * dx[2];)
 
     //                     AMREX_D_TERM(p.idata(IntData::i) =
@@ -375,7 +381,7 @@ void CellSortedParticleContainer::initialize_messages(
         int* out = offsets[mfi].dataPtr();
         const auto np = amrex::Scan::PrefixSum<int>(
             ncells, [=] AMREX_GPU_DEVICE(int i) -> int { return in[i]; },
-            [=] AMREX_GPU_DEVICE(int i, int const& x) { out[i] = x; },
+            [=] AMREX_GPU_DEVICE(int i, int const& xi) { out[i] = xi; },
             amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
         const amrex::Long pid = ParticleType::NextID();
@@ -406,9 +412,11 @@ void CellSortedParticleContainer::initialize_messages(
                     p.idata(IntData::receiver) =
                         static_cast<int>(dom.index(iv));
 
-                    AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
-                                 , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
-                                 , p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
+                    AMREX_D_TERM(
+                        p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
+                        , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
+                        ,
+                        p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
                     AMREX_D_TERM(p.idata(IntData::i) = iv[0];
                                  , p.idata(IntData::j) = iv[1];
@@ -496,9 +504,9 @@ void CellSortedParticleContainer::sort_messages()
         thrust::sort(
             thrust::device, cell_list.begin(), cell_list.end(),
             [=] AMREX_GPU_DEVICE(
-                const amrex::Long x, const amrex::Long y) noexcept {
-                const auto& p1 = pstruct[x];
-                const auto& p2 = pstruct[y];
+                const amrex::Long xi, const amrex::Long yi) noexcept {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
                 return Compare()(p1, p2);
             });
 #else
@@ -509,9 +517,9 @@ void CellSortedParticleContainer::sort_messages()
             h_cell_list.begin());
         std::sort(
             h_cell_list.begin(), h_cell_list.end(),
-            [=](const amrex::Long x, const amrex::Long y) {
-                const auto& p1 = pstruct[x];
-                const auto& p2 = pstruct[y];
+            [=](const amrex::Long xi, const amrex::Long yi) {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
                 return Compare()(p1, p2);
             });
         amrex::Gpu::copy(
@@ -521,9 +529,9 @@ void CellSortedParticleContainer::sort_messages()
 #else
         std::sort(
             cell_list.begin(), cell_list.end(),
-            [=](const amrex::Long x, const amrex::Long y) {
-                const auto& p1 = pstruct[x];
-                const auto& p2 = pstruct[y];
+            [=](const amrex::Long xi, const amrex::Long yi) {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
                 return Compare()(p1, p2);
             });
 #endif
@@ -623,7 +631,7 @@ void CellSortedParticleContainer::update_undefined()
         const auto np = amrex::Scan::PrefixSum<int>(
             ncells,
             [=] AMREX_GPU_DEVICE(int i) -> int { return p_additions[i]; },
-            [=] AMREX_GPU_DEVICE(int i, int const& x) { p_offsets[i] = x; },
+            [=] AMREX_GPU_DEVICE(int i, int const& xi) { p_offsets[i] = xi; },
             amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
         const amrex::Long pid = ParticleType::NextID();
@@ -648,9 +656,10 @@ void CellSortedParticleContainer::update_undefined()
                 p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
                 p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
 
-                AMREX_D_TERM(p.pos(0) = plo[0] + (iv[0] + 0.5) * dx[0];
-                             , p.pos(1) = plo[1] + (iv[1] + 0.5) * dx[1];
-                             , p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
+                AMREX_D_TERM(
+                    p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
+                    , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
+                    , p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
                 AMREX_D_TERM(p.idata(IntData::i) = iv[0];
                              , p.idata(IntData::j) = iv[1];
@@ -857,13 +866,14 @@ void CellSortedParticleContainer::reposition_messages()
                             p.idata(IntData::k)));
                         AMREX_ALWAYS_ASSERT(piv == iv);
 
-                        AMREX_D_TERM(p.pos(0) = plo[0] + iv[0] * dx[0] +
-                                                (typ + 1) * dx[0] /
-                                                    (MessageTypes::NTYPES + 1);
-                                     , p.pos(1) = plo[1] + iv[1] * dx[1] +
-                                                  (n + 1) * dx[1] / nbins;
-                                     ,
-                                     p.pos(2) = plo[2] + (iv[2] + 0.5) * dx[2];)
+                        AMREX_D_TERM(
+                            p.pos(0) =
+                                plo[0] + iv[0] * dx[0] +
+                                (typ + 1) * dx[0] / (MessageTypes::NTYPES + 1);
+                            , p.pos(1) = plo[1] + iv[1] * dx[1] +
+                                         (n + 1) * dx[1] / nbins;
+                            , p.pos(2) =
+                                  plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
                         // ensure the particle didn't change cells
                         AMREX_ALWAYS_ASSERT(
