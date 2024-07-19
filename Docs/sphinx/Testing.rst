@@ -1,4 +1,4 @@
-#.. _Testing:
+.. _Testing: 
 
 Testing
 -------
@@ -11,11 +11,10 @@ Testing of `SPADES` can be performed using CTest, which is included in the CMake
           -DCMAKE_BUILD_TYPE:STRING=Release \
           -DSPADES_DIM:STRING=3 \
           -DSPADES_ENABLE_MPI:BOOL=OFF \
-          -DSPADES_ENABLE_CPPCHECK:BOOL=OFF \
-          -DSPADES_ENABLE_CLANG_TIDY:BOOL=OFF \
           ..
+  $ ctest 
 
-To perform the tests and compare to previously generated gold files, use the following additional options::
+To compare to previously generated gold files, use the following additional options::
 
   -DSPADES_TEST_WITH_FCOMPARE:BOOL=ON \
   -DSPADES_SAVED_GOLDS_DIRECTORY:STRING=$(pwd)/golds/tmp \

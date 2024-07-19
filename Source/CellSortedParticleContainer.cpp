@@ -365,10 +365,10 @@ void CellSortedParticleContainer::initialize_messages(
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
-    amrex::iMultiFab offsets(
+    amrex::iMultiFab init_offsets(
         ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
     num_particles.setVal(np_per_cell);
-    offsets.setVal(0);
+    init_offsets.setVal(0);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -378,7 +378,7 @@ void CellSortedParticleContainer::initialize_messages(
 
         const auto ncells = static_cast<int>(box.numPts());
         const int* in = num_particles[mfi].dataPtr();
-        int* out = offsets[mfi].dataPtr();
+        int* out = init_offsets[mfi].dataPtr();
         const auto np = amrex::Scan::PrefixSum<int>(
             ncells, [=] AMREX_GPU_DEVICE(int i) -> int { return in[i]; },
             [=] AMREX_GPU_DEVICE(int i, int const& xi) { out[i] = xi; },
@@ -391,7 +391,7 @@ void CellSortedParticleContainer::initialize_messages(
             "Error: overflow on particle id numbers!");
 
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
-        const auto& offset_arr = offsets[mfi].const_array();
+        const auto& offset_arr = init_offsets[mfi].const_array();
         const auto& num_particles_arr = num_particles[mfi].const_array();
         auto& pti = DefineAndReturnParticleTile(lev, mfi);
         pti.resize(np);
@@ -626,12 +626,14 @@ void CellSortedParticleContainer::update_undefined()
             }
         });
 
-        amrex::Gpu::DeviceVector<int> offsets(ncells, 0);
-        auto* p_offsets = offsets.data();
+        amrex::Gpu::DeviceVector<int> update_offsets(ncells, 0);
+        auto* p_update_offsets = update_offsets.data();
         const auto np = amrex::Scan::PrefixSum<int>(
             ncells,
             [=] AMREX_GPU_DEVICE(int i) -> int { return p_additions[i]; },
-            [=] AMREX_GPU_DEVICE(int i, int const& xi) { p_offsets[i] = xi; },
+            [=] AMREX_GPU_DEVICE(int i, int const& xi) {
+                p_update_offsets[i] = xi;
+            },
             amrex::Scan::Type::exclusive, amrex::Scan::retSum);
 
         const amrex::Long pid = ParticleType::NextID();
@@ -645,7 +647,7 @@ void CellSortedParticleContainer::update_undefined()
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
         auto* aos = ptile_adds.GetArrayOfStructs().dataPtr();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
-            const int start = p_offsets[icell];
+            const int start = p_update_offsets[icell];
             const auto iv = box.atOffset(icell);
             for (int n = start; n < start + p_additions[icell]; n++) {
                 auto& p = aos[n];

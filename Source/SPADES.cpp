@@ -699,7 +699,7 @@ void SPADES::rollback_statistics(const int lev)
         nrlbks[n] = amrex::ReduceSum(
             m_state[lev], 0,
             [=] AMREX_GPU_HOST_DEVICE(
-                const amrex::Box bx,
+                const amrex::Box& bx,
                 const amrex::Array4<amrex::Real const>& sarr) -> amrex::Real {
                 amrex::Real nrlbk = 0;
                 amrex::Loop(
