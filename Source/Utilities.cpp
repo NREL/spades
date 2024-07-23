@@ -7,14 +7,12 @@ amrex::Real random_exponential(const amrex::Real lambda)
     return std::log(1 - amrex::Random()) / (-lambda);
 }
 
-// skip to next line in Header
 void goto_next_line(std::istream& is)
 {
     constexpr std::streamsize bl_ignore_max{100000};
     is.ignore(bl_ignore_max, '\n');
 }
 
-// equivalent to amrex::ParallelDescriptor::ReadAndBcastFile but for all ranks
 void read_file(
     const std::string& filename,
     amrex::Vector<char>& charBuf,

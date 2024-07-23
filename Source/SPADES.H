@@ -16,6 +16,9 @@
 #include "Utilities.H"
 #include "CellSortedParticleContainer.H"
 
+/**
+   @brief Scalable PArallel Discrete Events Simulation
+ **/
 namespace spades {
 
 class SPADES : public amrex::AmrCore
