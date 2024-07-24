@@ -159,24 +159,40 @@ public:
     int ngrow() const { return m_ngrow; }
 
 private:
+    //! Initialize vectors (write flags, message counts, offsets, etc)
     void initialize_vectors();
 
     //! Data for particle container
     ParticleContainerInfo m_info;
 
+    //! Flags for real data to write to file
     amrex::Vector<int> m_writeflags_real;
+
+    //! Flags for int data to write to file
     amrex::Vector<int> m_writeflags_int;
 
+    //! Names for real data to write to file
     amrex::Vector<std::string> m_real_data_names;
+
+    //! Names for int data to write to file
     amrex::Vector<std::string> m_int_data_names;
 
+    //! Number of grow cells
     int m_ngrow;
 
+    //! Count of message types in each cell
     amrex::Vector<amrex::iMultiFab> m_message_counts;
+
+    //! Offsets of message types in each cell
     amrex::Vector<amrex::iMultiFab> m_offsets;
 
+    //! Lower bound for undefined message counts
     const int m_lower_undefined_count{40};
+
+    //! Reset value for undefined message counts
     const int m_reset_undefined_count{50};
+
+    //! Upper bound for undefined message counts
     const int m_upper_undefined_count{100};
 };
 } // namespace spades::particles
