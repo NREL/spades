@@ -26,7 +26,7 @@ pairing_function(const amrex::Long k1, const amrex::Long k2)
    @brief Exponential distribution
    @param lambda [in] rate parameter
    @param engine [in] random number generator
-   @return sample from an exponential distribution   
+   @return sample from an exponential distribution
  **/
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
 random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
@@ -37,7 +37,7 @@ random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
 /**
    @brief Exponential distribution
    @param lambda [in] rate parameter
-   @return sample from an exponential distribution   
+   @return sample from an exponential distribution
  **/
 amrex::Real random_exponential(const amrex::Real lambda);
 
@@ -56,7 +56,7 @@ void goto_next_line(std::istream& is);
    @param charBuf [out] character buffer
    @param bExitOnError [in] exit if error
  **/
-// 
+//
 void read_file(
     const std::string& filename,
     amrex::Vector<char>& charBuf,

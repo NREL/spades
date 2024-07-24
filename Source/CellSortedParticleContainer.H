@@ -9,6 +9,9 @@
 #include "ParticleOps.H"
 #include "Utilities.H"
 
+/**
+   @brief SPADES particles
+ **/
 namespace spades::particles {
 
 struct CheckPair
@@ -21,9 +24,7 @@ struct CheckPair
     }
 };
 
-/** Information for a particle container
- *  \ingroup particles
- */
+//! Information for a particle container
 struct ParticleContainerInfo
 {
     explicit ParticleContainerInfo(std::string basename);

@@ -2,8 +2,11 @@
 #define CONSTANTS_H
 
 #include <AMReX_REAL.H>
-
+/**
+   @brief SPADES constants
+ **/
 namespace spades::constants {
+
 static constexpr int N_STATES = 2;
 static constexpr int LVT_IDX = 0;
 static constexpr int RLB_IDX = 1;
