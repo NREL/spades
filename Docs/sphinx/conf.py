@@ -1,6 +1,6 @@
 import sys
 
-extensions = [ 'sphinx.ext.mathjax']
+extensions = [ 'sphinx.ext.mathjax', 'breathe']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
@@ -27,3 +27,7 @@ texinfo_documents = [
      author, 'SPADES', 'Scalable PArallel Discrete Event Simulation.',
      'Miscellaneous'),
 ]
+
+nitpick_ignore_regex = [(r'cpp:identifier', r'amrex.*')]
+
+breathe_default_project = 'spades'
