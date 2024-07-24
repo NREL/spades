@@ -25,78 +25,137 @@ struct ParticleContainerInfo
     std::string m_basename;
 };
 
+//! Main SPADES particle container
 class CellSortedParticleContainer
     : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
 {
 public:
+    /**
+       @brief Class identifier name
+       @return class identifier
+     **/
     static std::string identifier() { return "particles"; }
 
+    /**
+       @brief Constructor
+       @param par_gdb [in] particle database
+       @param ngrow [in] number of grow cells
+     **/
     explicit CellSortedParticleContainer(
         amrex::AmrParGDB* par_gdb, int ngrow = 0);
 
+    /**
+       @brief Constructor
+       @param geom [in] geometry
+       @param dmap [in] distribution map
+       @param ba [in] box array
+       @param ngrow [in] number of grow cells
+     **/
     explicit CellSortedParticleContainer(
         const amrex::Vector<amrex::Geometry>& geom,
         const amrex::Vector<amrex::DistributionMapping>& dmap,
         const amrex::Vector<amrex::BoxArray>& ba,
         int ngrow = 0);
 
+    //! Initialize particle states (counts and offsets)
     void initialize_state();
 
+    //! Delete particle states (counts and offsets)
     void clear_state();
 
-    // count messages and offsets
+    //! Update the message counts and offsets
     void update_counts();
 
-    // count messages
+    //! Update the message counts
     void count_messages();
 
-    // count offsets
+    //! Update the message offsets
     void count_offsets();
 
+    /**
+       @brief Get the message counts
+       @return message counts
+     **/
     const amrex::Vector<amrex::iMultiFab>& message_counts() const
     {
         return m_message_counts;
     };
 
+    /**
+       @brief Get the message offsets
+       @return message offsets
+     **/
     const amrex::Vector<amrex::iMultiFab>& offsets() const
     {
         return m_offsets;
     };
 
+    /**
+       @brief Get the message counts at a level
+       @param lev [in] level
+       @return message counts
+     **/
     const amrex::iMultiFab& message_counts(const int lev) const
     {
         return m_message_counts[lev];
     };
 
+    /**
+       @brief Get the message offsets at a level
+       @param lev [in] level
+       @return message offsets
+     **/
     const amrex::iMultiFab& offsets(const int lev) const
     {
         return m_offsets[lev];
     };
 
+    /**
+       @brief Get the total number of messages of \p typ at a level
+       @param lev [in] level
+       @param typ [in] message type
+       @return message counts
+     **/
     amrex::Long total_count(const int lev, const int typ) const
     {
         BL_PROFILE("spades::CellSortedParticleContainer::total_count()");
         return m_message_counts[lev].sum(typ);
     }
 
+    /**
+       @brief Initialize the messages
+       @param lookahead [in] lookahead
+     **/
     void initialize_messages(const amrex::Real lookahead);
 
+    //! Sort the messages
     void sort_messages();
 
-    // update the undefined messages
+    //! Update the undefined messages
     void update_undefined();
 
+    //! Resolve message pairs (remove message/anti-message pairs)
     void resolve_pairs();
 
+    //! Compute the minimum time stamp of the messages
     amrex::Real compute_gvt();
 
+    /**
+       @brief Perform garbage collection
+       @param gvt [in] global virtual time
+     **/
     void garbage_collect(const amrex::Real gvt);
 
-    // reposition the messages inside a cell
+    //! Reposition the messages inside a cell for visualization
     void reposition_messages();
 
+    /**
+       @brief Write the particles to file
+       @param plt_filename [in] file name for the plot file
+     **/
     void write_plot_file(const std::string& plt_filename);
 
+    //! Number of grow cells
     int ngrow() const { return m_ngrow; }
 
 private:

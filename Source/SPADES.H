@@ -17,7 +17,7 @@
 #include "CellSortedParticleContainer.H"
 
 /**
-   @brief Scalable PArallel Discrete Events Simulation
+   @brief Scalable PArallel Discrete Event Simulation
  **/
 namespace spades {
 

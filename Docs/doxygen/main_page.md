@@ -1,8 +1,8 @@
 # SPADES API documentation {#mainpage}
 
 [SPADES](https://github.com/NREL/spades) is an open-source parallel
-discrete events simulation (PDES) package built on the AMReX
-library. Targeted at solving discrete events systems in parallel, this
+discrete event simulation (PDES) package built on the AMReX
+library. Targeted at solving discrete event systems in parallel, this
 software package aims to be performance portable and scalable on
 heterogeneous computing architectures, e.g., graphic processing units
 (GPU).

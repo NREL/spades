@@ -24,6 +24,6 @@ latex_documents = [
 ]
 texinfo_documents = [
     (master_doc, 'spades', u'SPADES Documentation',
-     author, 'SPADES', 'Scalable PArallel Discrete Events Simulation.',
+     author, 'SPADES', 'Scalable PArallel Discrete Event Simulation.',
      'Miscellaneous'),
 ]
