@@ -4,6 +4,9 @@
 #include <iostream>
 #include <AMReX.H>
 
+/**
+   @brief IO functionality for SPADES
+ **/
 namespace spades::io {
 
 /**

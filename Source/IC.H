@@ -15,6 +15,7 @@ namespace spades::ic {
 //! Constant initial condition
 struct Constant
 {
+    //! Device functor for the Constant initial condition
     struct DeviceOp
     {
 

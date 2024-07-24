@@ -18,7 +18,21 @@ SPADES: Scalable PArallel Discrete Events Simulation
 .. |C++ Badge| image:: https://img.shields.io/badge/language-C%2B%2B17-blue
    :target: https://isocpp.org/
 
-
+SPADES (Scalable PArallel Discrete Events Simulation) is an
+open-source parallel discrete events simulation (PDES) package built
+on the AMReX library. Targeted at solving discrete events systems in
+parallel, this software package aims to be performance portable and
+scalable on heterogeneous computing architectures, e.g., graphic
+processing units (GPU). SPADES implements optimistic synchronization
+with rollback through an implementation of the Time Warp algorithm. An
+alternative conservative synchronization approach is also implemented
+using the Lower Bound on Incoming Time Stamp. In our implementation,
+logical processes are represented as cells in a grid and event
+messages are represented as particles. SPADES supports various
+parallel decomposition strategies, including the use of the Message
+Passing Interface (MPI) and OpenMP threading. All major GPU
+architectures (e.g., Intel, AMD, NVIDIA) are supported through the use
+of performance portability functionalities implemented in AMReX.
 
 Getting Started
 ~~~~~~~~~~~~~~~
@@ -39,10 +53,6 @@ Dependencies
 Documentation
 ~~~~~~~~~~~~~
 
-The full documentation for `SPADES` exists in the Docs directory; at present this is maintained inline using `Sphinx <http://www.sphinx-doc.org>`_. To build the documentation ::
-
-    $ cd Docs && mkdir build && cd build && sphinx-build -M html ../sphinx .
-
-Or, using cmake ::
+The full documentation for `SPADES` exists in the Docs directory; at present this is maintained inline using `Sphinx <https://www.sphinx-doc.org/>`_ and `Doxygen <https://www.doxygen.nl/index.html>`_. To build the documentation ::
 
     $ cd Build && cmake -B build-docs ../Docs && cmake --build build-docs

@@ -245,5 +245,22 @@ struct Get
     P* m_pstruct;
 };
 
+//! Functor for pairing particles
+struct CheckPair
+{
+    /**
+       @brief Compare particles for pairing
+       @param p1 [in] first particle
+       @param p2 [in] second particle
+       @return boolean of p1 and p2 are pairs
+     **/
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
+    operator()(const P& /*p1*/, const P& /*p2*/) const
+    {
+        return false;
+    }
+};
+
 } // namespace spades::particles
 #endif

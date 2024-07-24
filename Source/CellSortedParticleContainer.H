@@ -14,16 +14,6 @@
  **/
 namespace spades::particles {
 
-struct CheckPair
-{
-    template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
-    operator()(const P& /*p1*/, const P& /*p2*/) const
-    {
-        return false;
-    }
-};
-
 //! Information for a particle container
 struct ParticleContainerInfo
 {
