@@ -37,7 +37,9 @@ performance portability functionalities implemented in AMReX.
 Getting Started
 ~~~~~~~~~~~~~~~
 
-To compile and run `SPADES`, one needs a C++ compiler that supports the C++17 standard, and then execute ::
+To compile and run `SPADES`, one needs a C++ compiler that supports the C++17 standard, and then execute:
+
+.. code-block:: console
 
     $ git clone --recursive git@github.com:NREL/spades.git
     $ cd Build
@@ -53,6 +55,8 @@ Dependencies
 Documentation
 ~~~~~~~~~~~~~
 
-The full documentation for `SPADES` exists in the Docs directory; at present this is maintained inline using `Sphinx <https://www.sphinx-doc.org/>`_ and `Doxygen <https://www.doxygen.nl/index.html>`_. To build the documentation ::
+The full documentation for `SPADES` exists in the Docs directory; at present this is maintained inline using `Sphinx <https://www.sphinx-doc.org/>`_ and `Doxygen <https://www.doxygen.nl/index.html>`_. To build the documentation:
+
+.. code-block:: console
 
     $ cd Build && cmake -B build-docs ../Docs && cmake --build build-docs

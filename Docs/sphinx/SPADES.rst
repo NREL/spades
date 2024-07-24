@@ -1,8 +1,4 @@
- .. role:: cpp(code)
-    :language: c++
-
 .. _SPADES:
-
 
 
 SPADES

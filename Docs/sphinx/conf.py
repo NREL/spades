@@ -33,6 +33,9 @@ texinfo_documents = [
     ),
 ]
 
+primary_domain = 'cpp'
+highlight_language = 'cpp'
+
 nitpick_ignore_regex = [(r"cpp:identifier", r"amrex.*")]
 
 breathe_default_project = "spades"
