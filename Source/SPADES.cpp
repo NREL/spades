@@ -728,7 +728,7 @@ void SPADES::rollback_statistics(const int lev)
 void SPADES::update_gvt(const int lev)
 {
     BL_PROFILE("spades::SPADES::update_gvt()");
-    const amrex::Real gvt = m_pc->gvt();
+    const amrex::Real gvt = m_pc->compute_gvt();
     AMREX_ALWAYS_ASSERT(gvt >= m_gvts[lev]);
     AMREX_ALWAYS_ASSERT(gvt >= m_state[lev].min(constants::LVT_IDX, 0));
     m_gvts[lev] = gvt;

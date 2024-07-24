@@ -88,7 +88,7 @@ public:
 
     void resolve_pairs();
 
-    amrex::Real gvt();
+    amrex::Real compute_gvt();
 
     void garbage_collect(const amrex::Real gvt);
 

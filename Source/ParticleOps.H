@@ -250,8 +250,6 @@ struct CheckPair
 {
     /**
        @brief Compare particles for pairing
-       @param p1 [in] first particle
-       @param p2 [in] second particle
        @return boolean of p1 and p2 are pairs
      **/
     template <class P>

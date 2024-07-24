@@ -21,6 +21,7 @@
  **/
 namespace spades {
 
+//! Main SPADES class
 class SPADES : public amrex::AmrCore
 {
 public:

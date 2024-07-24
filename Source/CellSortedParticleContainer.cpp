@@ -789,9 +789,9 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
     }
 }
 
-amrex::Real CellSortedParticleContainer::gvt()
+amrex::Real CellSortedParticleContainer::compute_gvt()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::gvt()");
+    BL_PROFILE("spades::CellSortedParticleContainer::compute_gvt()");
     // Minimum time stamp of the messages
 
     // If this becomes a performance bottleneck it could be sped up by
