@@ -8,7 +8,7 @@ SPADES: Scalable PArallel Discrete Event Simulation
    Introduction
    GettingStarted
    SPADES
-
+   doxygen/html/index
 
 README
 ======

@@ -13,8 +13,12 @@ familiar with the installation, compilation, and execution steps.
 
 ## How to use this API guide?
 
-The API documentation is automatically generated from specially-formatted
-comments in the source code using [Doxygen](https://www.doxygen.nl/index.html).
+The API documentation is automatically generated from
+specially-formatted comments in the source code using
+[Doxygen](https://www.doxygen.nl/index.html). The resulting
+documentation is parsed with
+[doxysphinx](https://boschglobal.github.io/doxysphinx/index.html) and
+combined with the [Sphinx](https://www.sphinx-doc.org/) documentation.
 
 ### Source code organization
 
@@ -30,8 +34,9 @@ After cloning the SPADES repository, the project directory (`spades`) contains t
 ### Building API documentation locally
 
 To generate this documentation on a local machine, or to rebuild docs
-during code development, `doxygen` and `graphviz` are required. 
+during code development, `doxygen`, `graphviz`, `doxysphinx`, and
+`sphinx` are required.
 ```{shell}
 $ cd Build && cmake -B build-docs ../Docs && cmake --build build-docs
 ```
-The resulting documentation is in `build-docs/doxygen/html` directory.
+The resulting documentation is in `build-docs/spinx/html` directory.
