@@ -279,7 +279,7 @@ private:
 
     /**
        @brief Write simulation information
-       @param is_init [in] boolean indicating if this is the initalizing step
+       @param is_init [in] boolean indicating if this is the initializing step
      **/
     void write_data_file(const bool is_init) const;
 
