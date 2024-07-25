@@ -4,7 +4,7 @@ find_program(SPHINX_EXECUTABLE NAMES sphinx-build
 
 if(SPHINX_EXECUTABLE)
     execute_process(COMMAND ${SPHINX_EXECUTABLE} --version OUTPUT_VARIABLE SPHINX_VERSION_OUTPUT)
-    if("${SPHINX_VERSION_OUTPUT}" MATCHES "^Sphinx \\(sphinx-build\\) ([^\n]+)\n")
+    if("${SPHINX_VERSION_OUTPUT}" MATCHES ".* ([^\n]+)\n")
       set(SPHINX_VERSION "${CMAKE_MATCH_1}")
     endif()
 endif()

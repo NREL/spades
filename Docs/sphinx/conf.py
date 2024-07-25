@@ -1,6 +1,6 @@
 import sys
 
-extensions = ["sphinx.ext.mathjax", "breathe", "exhale"]
+extensions = ["sphinx.ext.mathjax", "sphinx.ext.graphviz"]
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
@@ -37,5 +37,3 @@ primary_domain = 'cpp'
 highlight_language = 'cpp'
 
 nitpick_ignore_regex = [(r"cpp:identifier", r"amrex.*")]
-
-breathe_default_project = "spades"

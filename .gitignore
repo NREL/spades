@@ -5,7 +5,7 @@ Backtrace*
 *.ex
 *.visit
 .DS_Store
-Docs/build/
+Docs/sphinx/doxygen
 html/
 doctrees/
 *.ipynb
@@ -27,4 +27,5 @@ Build/spades
 Build/spades_obj/
 Build/clang-tidy*.txt
 Build/data.csv
+Build/build-docs
 compile_commands.json
