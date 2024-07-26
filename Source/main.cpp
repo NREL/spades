@@ -8,6 +8,12 @@
 #include "SPADES.H"
 #include "ConsoleIO.H"
 
+/**
+   @brief Main function
+   @param argc [in] An integer argument count of the command line arguments
+   @param argv [in] An argument vector of the command line arguments
+   @return an integer 0 upon exit success
+ **/
 int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 {
 #ifdef AMREX_USE_MPI

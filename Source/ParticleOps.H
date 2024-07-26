@@ -8,8 +8,13 @@
 
 namespace spades::particles {
 
-struct Output
+//! Functor for printing particle data
+struct Print
 {
+    /**
+       @brief Print particle data to screen
+       @param p [in] particle whose data is printed
+     **/
     template <class P>
     void operator()(P& p) const
     {
@@ -29,8 +34,20 @@ struct Output
     }
 };
 
+/**
+   @brief Functor for comparing particles
+
+   This is used to sort particles based on cell index, message type,
+   and timestamp (in that order).
+ **/
 struct Compare
 {
+    /**
+       @brief Compare particles
+       @param p1 [in] first particle
+       @param p2 [in] second particle
+       @return boolean of p1 < p2 based on criteria
+     **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
     operator()(const P& p1, const P& p2) const
@@ -50,8 +67,14 @@ struct Compare
     }
 };
 
+//! Functor for copying a particle's data to another
 struct Copy
 {
+    /**
+       @brief Copy particle data
+       @param p1 [in] first particle
+       @param p2 [out] second particle
+     **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     operator()(const P& p1, P& p2) const
@@ -65,8 +88,14 @@ struct Copy
     }
 };
 
+//! Functor for making a conjugate particle out of another
 struct MakeConjugate
 {
+    /**
+       @brief Create a conjugate particle
+       @param p1 [in] first particle
+       @param p2 [out] second particle
+     **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     operator()(const P& p1, P& p2) const
@@ -76,8 +105,18 @@ struct MakeConjugate
     }
 };
 
+//! Functor for populating particle data
 struct Create
 {
+    /**
+       @brief Create a conjugate particle
+       @param p [in, out] particle
+       @param timestamp [in] time stamp
+       @param pos [in] position
+       @param iv [in] index
+       @param sender [in] sender id
+       @param receiver [in] receiver id
+     **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
         P& p,
@@ -100,8 +139,13 @@ struct Create
     }
 };
 
+//! Functor for making a particle undefined
 struct MarkUndefined
 {
+    /**
+       @brief Mark a particle as undefined
+       @param p [in, out] particle
+     **/
     template <class P>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
     {
@@ -113,9 +157,17 @@ struct MarkUndefined
     }
 };
 
+//! Functor for accessing a particle in a cell
 template <class P>
 struct Get
 {
+    /**
+       @brief Constructor
+       @param iv [in] cell index of the particle
+       @param counts [in] cell counts of particle types
+       @param offsets [in] cell offsets of particle types
+       @param pstruct [in] particle array
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE
     Get(const amrex::IntVect& iv,
         const amrex::Array4<const int>& counts,
@@ -124,6 +176,12 @@ struct Get
         : m_iv(iv), m_counts(counts), m_offsets(offsets), m_pstruct(pstruct)
     {}
 
+    /**
+       @brief Get a particle in a cell
+       @param n [in] nth particle to return
+       @param typ [in] particle type that is requested
+       @return particle of type \p typ and at position \p n
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE P&
     operator()(const int n, const int typ) const
     {
@@ -139,6 +197,12 @@ struct Get
         return p;
     }
 
+    /**
+       @brief Check validity of the particle type
+       @param n [in] nth particle to return
+       @param typ [in] particle type that is requested
+       @return boolean if the particle is of the requested type
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
     check(const int n, const int typ) const
     {
@@ -148,6 +212,18 @@ struct Get
         return p.idata(IntData::type_id) == typ;
     }
 
+    /**
+       @brief Assert that the particle is of a different but expected type
+
+       A particle sometimes changes type (e.g., marked as undefined)
+       but the counts and offsets haven't been updated yet. This
+       asserts that the requested particle of a certain type \p typ
+       changed to another type \p expected_type.
+
+       @param n [in] nth particle to return
+       @param typ [in] particle type that is requested
+       @param expected_type [in] expected particle type
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     assert_different(const int n, const int typ, const int expected_type) const
     {
@@ -156,10 +232,32 @@ struct Get
         AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == expected_type);
     }
 
+    //! Cell index
     const amrex::IntVect& m_iv;
+
+    //! Cell counts of particle types
     const amrex::Array4<const int>& m_counts;
+
+    //! Cell offsets of particle types
     const amrex::Array4<const int>& m_offsets;
+
+    //! Particle array
     P* m_pstruct;
+};
+
+//! Functor for pairing particles
+struct CheckPair
+{
+    /**
+       @brief Compare particles for pairing
+       @return boolean of p1 and p2 are pairs
+     **/
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
+    operator()(const P& /*p1*/, const P& /*p2*/) const
+    {
+        return false;
+    }
 };
 
 } // namespace spades::particles

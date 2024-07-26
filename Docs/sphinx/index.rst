@@ -1,14 +1,14 @@
-====================================================
-SPADES: Scalable PArallel Discrete Events Simulation
-====================================================
+===================================================
+SPADES: Scalable PArallel Discrete Event Simulation
+===================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
    Introduction
    GettingStarted
    SPADES
-
+   doxygen/html/index
 
 README
 ======

@@ -9,6 +9,12 @@
 #include "Constants.H"
 
 namespace spades {
+/**
+   @brief Cantor pairing function
+   @param k1 [in] first number
+   @param k2 [in] second number
+   @return value of the Cantor pairing function
+ **/
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Long
 pairing_function(const amrex::Long k1, const amrex::Long k2)
 {
@@ -16,18 +22,41 @@ pairing_function(const amrex::Long k1, const amrex::Long k2)
     return (k1 + k2) * (k1 + k2 + 1) / 2 + k2;
 }
 
+/**
+   @brief Exponential distribution
+   @param lambda [in] rate parameter
+   @param engine [in] random number generator
+   @return sample from an exponential distribution
+ **/
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
 random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
 {
     return std::log(1 - amrex::Random(engine)) / (-lambda);
 }
 
+/**
+   @brief Exponential distribution
+   @param lambda [in] rate parameter
+   @return sample from an exponential distribution
+ **/
 amrex::Real random_exponential(const amrex::Real lambda);
 
-// skip to next line in Header
+/**
+   @brief Skip to the next line in stream
+   @param is [in, out] stream
+ **/
 void goto_next_line(std::istream& is);
 
-// equivalent to amrex::ParallelDescriptor::ReadAndBcastFile but for all ranks
+/**
+   @brief Read and broadcast file to all ranks
+
+   Equivalent to amrex::ParallelDescriptor::ReadAndBcastFile but for all ranks.
+
+   @param filename [in] file to read
+   @param charBuf [out] character buffer
+   @param bExitOnError [in] exit if error
+ **/
+//
 void read_file(
     const std::string& filename,
     amrex::Vector<char>& charBuf,

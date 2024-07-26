@@ -257,8 +257,6 @@ void SPADES::evolve()
     }
 }
 
-// advance a level by dt
-// includes a recursive call for finer levels
 void SPADES::time_step(
     const int lev, const amrex::Real time, const int iteration)
 {
@@ -728,7 +726,7 @@ void SPADES::rollback_statistics(const int lev)
 void SPADES::update_gvt(const int lev)
 {
     BL_PROFILE("spades::SPADES::update_gvt()");
-    const amrex::Real gvt = m_pc->gvt();
+    const amrex::Real gvt = m_pc->compute_gvt();
     AMREX_ALWAYS_ASSERT(gvt >= m_gvts[lev]);
     AMREX_ALWAYS_ASSERT(gvt >= m_state[lev].min(constants::LVT_IDX, 0));
     m_gvts[lev] = gvt;
@@ -773,7 +771,6 @@ void SPADES::update_lbts(const int lev)
     AMREX_ALWAYS_ASSERT(m_lbts[lev] >= m_gvts[lev]);
 }
 
-// a wrapper for EstTimeStep
 void SPADES::compute_dt()
 {
     BL_PROFILE("spades::SPADES::compute_dt()");
@@ -806,15 +803,12 @@ void SPADES::compute_dt()
     }
 }
 
-// compute dt
 amrex::Real SPADES::est_time_step(const int /*lev*/)
 {
     BL_PROFILE("spades::SPADES::est_time_step()");
     return 1.0;
 }
 
-// Make a new level using provided BoxArray and DistributionMapping and
-// fill with interpolated coarse level data.
 void SPADES::MakeNewLevelFromCoarse(
     int /*lev*/,
     amrex::Real /*time*/,
@@ -825,9 +819,6 @@ void SPADES::MakeNewLevelFromCoarse(
     amrex::Abort("spades::SPADES::MakeNewLevelFromCoarse(): not implemented");
 }
 
-// Make a new level from scratch using provided BoxArray and
-// DistributionMapping. Only used during initialization. overrides the pure
-// virtual function in AmrCore
 void SPADES::MakeNewLevelFromScratch(
     int lev,
     amrex::Real time,
@@ -861,8 +852,6 @@ void SPADES::initialize_state(const int lev)
     m_state[lev].FillBoundary(Geom(lev).periodicity());
 }
 
-// Remake an existing level using provided BoxArray and DistributionMapping
-// and fill with existing fine and coarse data.
 void SPADES::RemakeLevel(
     int /*lev*/,
     amrex::Real /* time*/,
@@ -873,7 +862,6 @@ void SPADES::RemakeLevel(
     amrex::Abort("spades::SPADES::RemakeLevel(): not implemented");
 }
 
-// Delete level data
 void SPADES::ClearLevel(int lev)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
@@ -895,7 +883,6 @@ void SPADES::set_ics()
     }
 }
 
-// Check if a field exists
 bool SPADES::check_field_existence(const std::string& name)
 {
     BL_PROFILE("spades::SPADES::check_field_existence()");
@@ -905,7 +892,6 @@ bool SPADES::check_field_existence(const std::string& name)
     });
 }
 
-// Get field component
 int SPADES::get_field_component(
     const std::string& name, const amrex::Vector<std::string>& varnames)
 {
@@ -917,7 +903,6 @@ int SPADES::get_field_component(
     return -1;
 }
 
-// get a field based on a variable name
 std::unique_ptr<amrex::MultiFab>
 SPADES::get_field(const std::string& name, const int lev, const int ngrow)
 {
@@ -965,7 +950,6 @@ std::string SPADES::chk_file_name(const int step) const
     return amrex::Concatenate(m_chk_file, step, m_file_name_digits);
 }
 
-// put together an array of multifabs for writing
 amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
 {
     amrex::Vector<const amrex::MultiFab*> rmf;

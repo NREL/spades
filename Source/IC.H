@@ -7,10 +7,15 @@
 #include <AMReX_MultiFab.H>
 #include "Utilities.H"
 
+/**
+   @brief SPADES initial conditions
+ **/
 namespace spades::ic {
 
+//! Constant initial condition
 struct Constant
 {
+    //! Device functor for the Constant initial condition
     struct DeviceOp
     {
 
@@ -35,6 +40,7 @@ struct Constant
     DeviceOp m_op;
 };
 
+//! Base class for initial conditions
 class InitializerBase
 {
 public:
@@ -45,6 +51,7 @@ public:
     virtual void initialize(const int lev, amrex::GeometryData const& geom) = 0;
 };
 
+//! Initial condition class
 template <typename ICOp>
 class Initializer : public InitializerBase
 {
@@ -57,6 +64,11 @@ public:
 
     ~Initializer() override = default;
 
+    /**
+       @brief Initialize m_state using the initial condition operator
+       @param lev [in] level
+       @param geom [in] geometry information
+     **/
     void initialize(const int lev, amrex::GeometryData const& geom) override
     {
         auto const& s_arrs = m_state[lev].arrays();
@@ -72,7 +84,11 @@ public:
             });
         amrex::Gpu::synchronize();
     }
+
+    //! Initial condition operator
     const ICOp m_op;
+
+    //! State that will be filled with the initial condition operator
     amrex::Vector<amrex::MultiFab>& m_state;
 };
 

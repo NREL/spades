@@ -4,7 +4,7 @@
 Introduction
 ============
 
-`SPADES` is an open-source solver for Parallel Discrete Events (PDES). It is a high-performance and performance-portable C++ solver that leverages the AMReX library. It can run on GPUs for acceleration and is compatible with GPUs from major manufacturers, such as AMD, NVIDIA, and Intel.
+`SPADES` is an open-source solver for Parallel Discrete Event (PDES). It is a high-performance and performance-portable C++ solver that leverages the AMReX library. It can run on GPUs for acceleration and is compatible with GPUs from major manufacturers, such as AMD, NVIDIA, and Intel.
 
 A variety of examples are included to provide a model setup for the various options. These are discussed further in the :ref:`Getting Started<GettingStarted>` section.
 

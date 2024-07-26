@@ -22,8 +22,10 @@ jobs:
           python-version: '3.x'
       - name: Dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends doxygen graphviz
           python3 -m pip install --upgrade pip
-          pip3 install sphinx sphinx_rtd_theme
+          pip3 install sphinx sphinx_rtd_theme doxysphinx
       - name: Configure
         run: cmake -B${{runner.workspace}}/build-docs ${{github.workspace}}/Docs
       - name: Build
