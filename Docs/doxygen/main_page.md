@@ -35,8 +35,9 @@ After cloning the SPADES repository, the project directory (`spades`) contains t
 
 To generate this documentation on a local machine, or to rebuild docs
 during code development, `doxygen`, `graphviz`, `doxysphinx`, and
-`sphinx` are required.
+`sphinx` are required, as well as turning on the
+`SPADES_ENABLE_DOCUMENTATION` cmake option.
 ```{shell}
-$ cd Build && cmake -B build-docs ../Docs && cmake --build build-docs
+$ cd Build && cmake -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON .. && cmake --build . -t docs
 ```
-The resulting documentation is in `build-docs/spinx/html` directory.
+The resulting documentation is in `Docs/spinx/html` directory.

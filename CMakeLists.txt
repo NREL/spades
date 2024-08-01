@@ -21,6 +21,7 @@ option(SPADES_ENABLE_CUDA "Enable CUDA" OFF)
 option(SPADES_ENABLE_HIP "Enable HIP" OFF)
 option(SPADES_ENABLE_SYCL "Enable Intel OneAPI SyCL" OFF)
 option(SPADES_ENABLE_TINY_PROFILE "Enable AMReX TinyProfile support" ON)
+option(SPADES_ENABLE_DOCUMENTATION "Enable documentation target" OFF)
 set(SPADES_PRECISION "DOUBLE" CACHE STRING "Floating point precision SINGLE or DOUBLE")
 
 # Third party libraries
@@ -113,6 +114,10 @@ endif()
 enable_testing()
 include(CTest)
 add_subdirectory(Tests)
+
+if(SPADES_ENABLE_DOCUMENTATION)
+  add_subdirectory(Docs)
+endif()
 
 #Define what we want to be installed during a make install
 install(

@@ -12,10 +12,13 @@ doctrees/
 .ccls-cache
 
 Build/CMakeCache.txt
+Build/CMakeDoxyfile.in
+Build/CMakeDoxygenDefaults.cmake
 Build/CMakeFiles/
 Build/CTestCustom.cmake
 Build/CTestTestfile.cmake
 Build/DartConfiguration.tcl
+Build/Docs
 Build/Makefile
 Build/SpadesConfig.cmake
 Build/Source/
@@ -27,5 +30,4 @@ Build/spades
 Build/spades_obj/
 Build/clang-tidy*.txt
 Build/data.csv
-Build/build-docs
 compile_commands.json

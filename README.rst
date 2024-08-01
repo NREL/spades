@@ -59,4 +59,4 @@ The full documentation for `SPADES` exists in the Docs directory; at present thi
 
 .. code-block:: console
 
-    $ cd Build && cmake -B build-docs ../Docs && cmake --build build-docs
+    $ cd Build && cmake -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON .. && cmake --build . -t docs
