@@ -29,7 +29,7 @@ jobs:
       - name: Configure
         run: |
           cmake -B ${{runner.workspace}}/build-docs \
-            -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON
+            -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON \
             ${{github.workspace}}
       - name: Build
         working-directory: ${{runner.workspace}}/build-docs
