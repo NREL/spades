@@ -178,7 +178,7 @@ jobs:
           ls ~/.cache/ccache
           du -hs ~/.cache/ccache
   GPU-AMD:
-    name: GPU-HIP
+    name: GPU-ROCM
     needs: Formatting
     runs-on: ubuntu-20.04
     steps:
@@ -205,7 +205,7 @@ jobs:
           key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
           restore-keys: |
                ccache-${{github.workflow}}-${{github.job}}-git-
-      - name: Prepare HIP environment
+      - name: Prepare ROCM environment
         run: |
           ${{github.workspace}}/Submodules/AMReX/.github/workflows/dependencies/ubuntu_free_disk_space.sh
           wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
