@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Clone
         uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Python
         uses: actions/setup-python@v5
         with:
@@ -27,18 +29,21 @@ jobs:
           python3 -m pip install --upgrade pip
           pip3 install sphinx sphinx_rtd_theme doxysphinx
       - name: Configure
-        run: cmake -B${{runner.workspace}}/build-docs ${{github.workspace}}/Docs
+        run: |
+          cmake -B ${{runner.workspace}}/build-docs \
+            -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON \
+            ${{github.workspace}}
       - name: Build
         working-directory: ${{runner.workspace}}/build-docs
         run:  |
            echo "::add-matcher::.github/problem-matchers/sphinx.json"
-           cmake --build ${{runner.workspace}}/build-docs
-           touch ${{runner.workspace}}/build-docs/sphinx/html/.nojekyll
+           cmake --build ${{runner.workspace}}/build-docs -t docs
+           touch ${{runner.workspace}}/build-docs/Docs/sphinx/html/.nojekyll
       # - name: Deploy
       #   if: github.event_name == 'push'
       #   uses: JamesIves/github-pages-deploy-action@releases/v3
       #   with:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #     BRANCH: gh-pages
-      #     FOLDER: ${{runner.workspace}}/build-docs/sphinx/html
+      #     FOLDER: ${{runner.workspace}}/build-docs/Docs/sphinx/html
       #     SINGLE_COMMIT: true

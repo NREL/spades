@@ -18,14 +18,11 @@ option(SPADES_ENABLE_FPE_TRAP_FOR_TESTS "Enable FPE trapping in tests" ON)
 option(SPADES_ENABLE_MPI "Enable MPI" OFF)
 option(SPADES_ENABLE_OPENMP "Enable OpenMP" OFF)
 option(SPADES_ENABLE_CUDA "Enable CUDA" OFF)
-option(SPADES_ENABLE_HIP "Enable HIP" OFF)
+option(SPADES_ENABLE_ROCM "Enable ROCm/HIP" OFF)
 option(SPADES_ENABLE_SYCL "Enable Intel OneAPI SyCL" OFF)
 option(SPADES_ENABLE_TINY_PROFILE "Enable AMReX TinyProfile support" ON)
+option(SPADES_ENABLE_DOCUMENTATION "Enable documentation target" OFF)
 set(SPADES_PRECISION "DOUBLE" CACHE STRING "Floating point precision SINGLE or DOUBLE")
-
-# Third party libraries
-option(SPADES_ENABLE_HDF5 "Enable HDF5 library" OFF)
-option(SPADES_ENABLE_HDF5_ZFP "Enable ZFP compression in HDF5 library" OFF)
 
 # Options for C++
 set(CMAKE_CXX_STANDARD 17)
@@ -43,7 +40,7 @@ if(SPADES_ENABLE_CUDA)
   endif()
 endif()
 
-if(SPADES_ENABLE_HIP)
+if(SPADES_ENABLE_ROCM)
   find_package(HIP REQUIRED)
   if(NOT DEFINED AMD_ARCH)
     set(AMD_ARCH "gfx90a")
@@ -87,19 +84,6 @@ endif()
 
 include(set_compile_flags)
 
-if(SPADES_ENABLE_HDF5)
-  set(CMAKE_PREFIX_PATH ${HDF5_DIR} ${CMAKE_PREFIX_PATH})
-  target_compile_definitions(${spades_lib_name} PUBLIC SPADES_USE_HDF5)
-endif()
-
-if(SPADES_ENABLE_HDF5_ZFP)
-  if(NOT SPADES_ENABLE_HDF5)
-    message(FATAL_ERROR "HDF5 must be enabled to use ZFP compression in HDF5 plot files")
-  endif()
-  set(CMAKE_PREFIX_PATH ${H5Z_ZFP_DIR} ${CMAKE_PREFIX_PATH})
-  target_compile_definitions(${spades_lib_name} PUBLIC SPADES_USE_HDF5_ZFP)
-endif()
-
 generate_version_info()
 add_subdirectory(Source)
 
@@ -113,6 +97,11 @@ endif()
 enable_testing()
 include(CTest)
 add_subdirectory(Tests)
+
+if(SPADES_ENABLE_DOCUMENTATION)
+  add_subdirectory(Docs)
+  add_dependencies(amrex_${SPADES_DIM}d docs)
+endif()
 
 #Define what we want to be installed during a make install
 install(

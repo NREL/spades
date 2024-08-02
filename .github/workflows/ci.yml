@@ -53,7 +53,7 @@ jobs:
     steps:
     - name: Clone
       uses: actions/checkout@v4
-      with: 
+      with:
         submodules: true
     - name: Dependencies
       run: ${{matrix.install_deps}}
@@ -178,7 +178,7 @@ jobs:
           ls ~/.cache/ccache
           du -hs ~/.cache/ccache
   GPU-AMD:
-    name: GPU-HIP
+    name: GPU-ROCM
     needs: Formatting
     runs-on: ubuntu-20.04
     steps:
@@ -205,7 +205,7 @@ jobs:
           key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
           restore-keys: |
                ccache-${{github.workflow}}-${{github.job}}-git-
-      - name: Prepare HIP environment
+      - name: Prepare ROCM environment
         run: |
           ${{github.workspace}}/Submodules/AMReX/.github/workflows/dependencies/ubuntu_free_disk_space.sh
           wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
@@ -213,7 +213,7 @@ jobs:
           echo 'export PATH=/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/rocm/profiler/bin:/opt/rocm/opencl/bin:$PATH' | sudo tee -a /etc/profile.d/rocm.sh
           sudo apt-get update
           sudo apt-get install -y \
-              build-essential rocm-dev rocrand-dev rocprim-dev
+              build-essential rocm-dev rocrand-dev rocprim-dev rocthrust
       - name: Configure and build
         run: |
           source /etc/profile.d/rocm.sh

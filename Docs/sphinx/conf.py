@@ -33,7 +33,16 @@ texinfo_documents = [
     ),
 ]
 
-primary_domain = 'cpp'
-highlight_language = 'cpp'
+primary_domain = "cpp"
+highlight_language = "cpp"
 
 nitpick_ignore_regex = [(r"cpp:identifier", r"amrex.*")]
+
+
+def setup(app):
+    app.add_object_type(
+        "cmakeval",
+        "cmakeval",
+        objname="CMake configuration value",
+        indextemplate="pair: %s; CMake configuration",
+    )

@@ -20,7 +20,6 @@ function clean(){
     rm -rf clang-tidy-ci-report.txt
     rm -rf cppcheck-ci-report.txt
     rm -rf cppcheck
-    rm -rf build-docs
     rm -rf bin
 }
 
