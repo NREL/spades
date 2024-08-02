@@ -26,7 +26,6 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
 
 add_custom_target(doxygen DEPENDS ${DOXYGEN_INDEX_FILE}
                           COMMENT "Generating documentation with Doxygen")
-add_dependencies(doxygen ${spades_exe_name})
 
 # Doxysphinx target
 find_package(Doxysphinx REQUIRED)

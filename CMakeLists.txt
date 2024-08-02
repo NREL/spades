@@ -100,6 +100,7 @@ add_subdirectory(Tests)
 
 if(SPADES_ENABLE_DOCUMENTATION)
   add_subdirectory(Docs)
+  add_dependencies(amrex_${SPADES_DIM}d docs)
 endif()
 
 #Define what we want to be installed during a make install
