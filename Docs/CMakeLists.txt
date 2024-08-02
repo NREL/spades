@@ -48,5 +48,5 @@ add_custom_target(sphinx
 add_dependencies(sphinx doxysphinx)
 
 # All documentation
-add_custom_target(docs)
+add_custom_target(docs ALL)
 add_dependencies(docs sphinx)
