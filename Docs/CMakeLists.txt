@@ -22,10 +22,11 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
                    DEPENDS ${SPADES_PUBLIC_SOURCE}
                    DEPENDS ${DOXYGEN_SOURCE_DIR}/main_page.md
                    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
-                   MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
-                   COMMENT "Generating documentation with Doxygen")
+                   MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN})
 
-add_custom_target(doxygen DEPENDS ${DOXYGEN_INDEX_FILE})
+add_custom_target(doxygen DEPENDS ${DOXYGEN_INDEX_FILE}
+                          COMMENT "Generating documentation with Doxygen")
+add_dependencies(doxygen ${spades_exe_name})
 
 # Doxysphinx target
 find_package(Doxysphinx REQUIRED)
