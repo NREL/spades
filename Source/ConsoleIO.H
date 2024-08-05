@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <AMReX.H>
+#include <AMReX_OpenMP.H>
 
 /**
    @brief IO functionality for SPADES
