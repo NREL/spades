@@ -17,10 +17,27 @@ if(SPADES_ENABLE_ALL_WARNINGS)
   endif()
 endif()
 
+if (SPADES_ENABLE_SANITIZERS)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+    list(APPEND SPADES_CXX_ASAN_FLAGS "-fsanitize=address"
+                                      "-fno-omit-frame-pointer"
+                                      "-fsanitize=undefined")
+    if (SPADES_ENABLE_OPENMP)
+      list(APPEND SPADES_CXX_ASAN_FLAGS "-fsanitize=thread")
+    endif()
+
+    list(APPEND SPADES_CXX_FLAGS ${SPADES_CXX_ASAN_FLAGS})
+    target_link_options(${spades_lib_name} PUBLIC ${SPADES_CXX_ASAN_FLAGS})
+    message(STATUS "Enabled sanitizers (asan, ubsan, lsan, tsan)")
+  else()
+    message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} is not supported by SPADES_ENABLE_SANITIZERS")
+  endif()
+endif()
+
 # Add our extra flags according to language
 separate_arguments(SPADES_CXX_FLAGS)
 target_compile_options(
-  ${spades_lib_name} PRIVATE
+  ${spades_lib_name} PUBLIC
   $<$<COMPILE_LANGUAGE:CXX>:${SPADES_CXX_FLAGS}>)
 
 # Building on CUDA requires additional considerations

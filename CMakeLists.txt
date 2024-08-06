@@ -22,6 +22,7 @@ option(SPADES_ENABLE_ROCM "Enable ROCm/HIP" OFF)
 option(SPADES_ENABLE_SYCL "Enable Intel OneAPI SyCL" OFF)
 option(SPADES_ENABLE_TINY_PROFILE "Enable AMReX TinyProfile support" ON)
 option(SPADES_ENABLE_DOCUMENTATION "Enable documentation target" OFF)
+option(SPADES_ENABLE_SANITIZERS "Enable sanitizers (asan, ubsan, lsan, tsan)" OFF)
 set(SPADES_PRECISION "DOUBLE" CACHE STRING "Floating point precision SINGLE or DOUBLE")
 
 # Options for C++
