@@ -370,9 +370,6 @@ void CellSortedParticleContainer::initialize_messages(
     num_particles.setVal(np_per_cell);
     init_offsets.setVal(0);
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
-#endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
 
@@ -568,10 +565,6 @@ void CellSortedParticleContainer::update_undefined()
     CellSortedParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel reduction(                                                \
-        + : n_removals) if (amrex::Gpu::notInLaunchRegion())
-#endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
