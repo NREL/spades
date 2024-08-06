@@ -78,6 +78,10 @@ CMake configuration reference
 
    Enable documentation target. Default: OFF
 
+.. cmakeval:: SPADES_ENABLE_SANITIZERS
+
+   Enable sanitizers (asan, ubsan, lsan, tsan, msan). Default: OFF)
+
 .. cmakeval:: SPADES_PRECISION DOUBLE.
 
    Floating point precision SINGLE or DOUBLE. Default: "DOUBLE"
