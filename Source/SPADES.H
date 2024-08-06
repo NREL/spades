@@ -131,7 +131,7 @@ public:
        @return array of MultiFab
      **/
     //!
-    amrex::Vector<const amrex::MultiFab*> plot_file_mf();
+    void plot_file_mf();
 
     /**
        @brief Initialize state
