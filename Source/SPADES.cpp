@@ -950,14 +950,15 @@ std::string SPADES::chk_file_name(const int step) const
     return amrex::Concatenate(m_chk_file, step, m_file_name_digits);
 }
 
-amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
+void SPADES::plot_file_mf()
 {
-    amrex::Vector<const amrex::MultiFab*> rmf;
     for (int lev = 0; lev <= finest_level; ++lev) {
 
+        m_plt_mf[lev].clear();
         m_plt_mf[lev].define(
             boxArray(lev), DistributionMap(lev),
-            static_cast<int>(plot_file_var_names().size()), 0);
+            static_cast<int>(plot_file_var_names().size()), 0, amrex::MFInfo());
+        m_plt_mf[lev].setVal(0.0);
         int cnt = 0;
         amrex::MultiFab::Copy(
             m_plt_mf[lev], m_state[lev], 0, cnt, m_state[lev].nComp(), 0);
@@ -971,25 +972,22 @@ amrex::Vector<const amrex::MultiFab*> SPADES::plot_file_mf()
                 plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
             });
         amrex::Gpu::synchronize();
-
-        rmf.push_back(&m_plt_mf[lev]);
     }
-    return rmf;
 }
 
 void SPADES::write_plot_file()
 {
     BL_PROFILE("spades::SPADES::write_plot_file()");
     const std::string& plotfilename = plot_file_name(m_isteps[0]);
-    const auto& mf = plot_file_mf();
+    plot_file_mf();
     const auto& varnames = plot_file_var_names();
 
     amrex::Print() << "Writing plot file " << plotfilename << " at time "
                    << m_ts_new[0] << std::endl;
 
     amrex::WriteMultiLevelPlotfile(
-        plotfilename, finest_level + 1, mf, varnames, Geom(), m_ts_new[0],
-        m_isteps, refRatio());
+        plotfilename, finest_level + 1, amrex::GetVecOfConstPtrs(m_plt_mf),
+        varnames, Geom(), m_ts_new[0], m_isteps, refRatio());
     if (m_write_particles) {
         m_pc->write_plot_file(plotfilename);
     }

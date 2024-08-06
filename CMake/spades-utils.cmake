@@ -26,7 +26,27 @@ function(set_cuda_build_properties target)
   endif()
 endfunction(set_cuda_build_properties)
 
+macro(add_sanitizers)
+  if (SPADES_ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+      list(APPEND SPADES_CXX_ASAN_FLAGS "-fsanitize=address"
+                                        "-fno-omit-frame-pointer"
+                                        "-fsanitize=undefined")
+      if (SPADES_ENABLE_OPENMP)
+        list(APPEND SPADES_CXX_ASAN_FLAGS "-fsanitize=thread")
+      endif()
+
+      add_compile_options(${SPADES_CXX_ASAN_FLAGS})
+      add_link_options(${SPADES_CXX_ASAN_FLAGS})
+      message(STATUS "Enabled sanitizers (asan, ubsan, lsan, tsan)")
+    else()
+      message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} is not supported by SPADES_ENABLE_SANITIZERS")
+    endif()
+  endif()
+endmacro()
+
 macro(init_amrex)
+  add_sanitizers()
   set(AMREX_SUBMOD_LOCATION "${CMAKE_SOURCE_DIR}/Submodules/AMReX")
   include(${CMAKE_SOURCE_DIR}/CMake/set_amrex_options.cmake)
   list(APPEND CMAKE_MODULE_PATH "${AMREX_SUBMOD_LOCATION}/Tools/CMake")
