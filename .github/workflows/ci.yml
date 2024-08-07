@@ -415,7 +415,7 @@ jobs:
           clang++ --version
           which clang-${LLVM_VERSION}
           ls /usr/bin
-          which clang-${LLVM_VERSION}++
+          which clang++-${LLVM_VERSION}
       #   run: |
       #     wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
       #     tar xvf ccache-4.8-linux-x86_64.tar.xz
