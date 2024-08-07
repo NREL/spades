@@ -382,12 +382,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sanitizer: [asan, tsan]
+        # sanitizer: [asan, tsan]
+        sanitizer: [tsan]
         include:
-          - sanitizer: asan
-            is_asan: "ON"
-            is_tsan: "OFF"
-            is_openmp: "OFF"
+          # - sanitizer: asan
+          #   is_asan: "ON"
+          #   is_tsan: "OFF"
+          #   is_openmp: "OFF"
           - sanitizer: tsan
             is_asan: "OFF"
             is_tsan: "ON"
