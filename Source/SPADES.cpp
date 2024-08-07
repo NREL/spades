@@ -70,7 +70,8 @@ SPADES::~SPADES() = default;
 void SPADES::init_data()
 {
     BL_PROFILE("spades::SPADES::init_data()");
-
+    int x[100];
+    x[100] = 10.0;
     if (m_restart_chkfile.empty()) {
 
         init_rng();
