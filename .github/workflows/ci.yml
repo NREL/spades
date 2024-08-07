@@ -377,9 +377,21 @@ jobs:
           echo "::add-matcher::.github/problem-matchers/gcc.json"
           cat clang-tidy-ci-report.txt
           exit $(tail -n 1 clang-tidy-ci-report.txt | awk '{print $2}')
-  Lint-address-sanitizer:
+  Lint-sanitizers:
     needs: Formatting
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sanitizer: [asan, tsan]
+        include:
+          - sanitizer: asan
+            is_asan: "ON"
+            is_tsan: "OFF"
+            is_openmp: "OFF"
+          - sanitizer: tsan
+            is_asan: "OFF"
+            is_tsan: "ON"
+            is_openmp: "ON"
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -421,15 +433,17 @@ jobs:
       - name: Configure
         run: |
           cmake \
-          -B ${{runner.workspace}}/build-ci-asan \
-          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -B ${{runner.workspace}}/build-ci-${{matrix.sanitizer}} \
+          -DCMAKE_BUILD_TYPE:STRING=Debug \
           -DCMAKE_CXX_COMPILER:STRING=clang++-${LLVM_VERSION} \
           -DCMAKE_C_COMPILER:STRING=clang-${LLVM_VERSION} \
           -DSPADES_ENABLE_MPI:BOOL=OFF \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
           -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
-          -DSPADES_ENABLE_ASAN:BOOL=ON \
-          -DSPADES_ENABLE_UBSAN:BOOL=ON \
+          -DSPADES_ENABLE_ASAN:BOOL=${{matrix.is_asan}} \
+          -DSPADES_ENABLE_UBSAN:BOOL=${{matrix.is_asan}} \
+          -DSPADES_ENABLE_TSAN:BOOL=${{matrix.is_tsan}} \
+          -DSPADES_ENABLE_OPENMP:BOOL=${{matrix.is_openmp}} \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
           ${{github.workspace}}
       - name: Build
@@ -437,15 +451,15 @@ jobs:
           echo "::add-matcher::.github/problem-matchers/gcc.json"
           ccache -z
           set -eu -o pipefail
-          cmake --build ${{runner.workspace}}/build-ci-asan --parallel ${{env.NPROCS}} 2>&1 | \
-            tee -a ${{runner.workspace}}/build-ci-asan/build-output.txt
+          cmake --build ${{runner.workspace}}/build-ci-${{matrix.sanitizer}} --parallel ${{env.NPROCS}} 2>&1 | \
+            tee -a ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}/build-output.txt
       - name: Ccache Report
         run: |
           ccache -s
           ls ~/.cache/ccache
           du -hs ~/.cache/ccache
       - name: Report
-        working-directory: ${{runner.workspace}}/build-ci-asan
+        working-directory: ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}
         run: |
           echo "::add-matcher::.github/problem-matchers/gcc.json"
           grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
@@ -454,7 +468,7 @@ jobs:
           cat build-output-warnings.txt
           exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
       - name: Test
-        working-directory: ${{runner.workspace}}/build-ci-asan
+        working-directory: ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}
         run: |
           ctest --output-on-failure
   # Lint-codeql:
