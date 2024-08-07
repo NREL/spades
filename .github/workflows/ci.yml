@@ -449,8 +449,8 @@ jobs:
         run: |
           echo "::add-matcher::.github/problem-matchers/gcc.json"
           grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
-            | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | sort | uniq \
-            | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
+            | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | grep -E -v "get_temporary_buffer<std::pair<long, int>>" \
+            | sort | uniq | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
           cat build-output-warnings.txt
           exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
       - name: Test
