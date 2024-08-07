@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
         spades_obj.init_data();
 
         amrex::Real init_time =
-          amrex::ParallelDescriptor::second() - start_time;
+            amrex::ParallelDescriptor::second() - start_time;
         amrex::ParallelDescriptor::ReduceRealMax(
-          init_time, amrex::ParallelDescriptor::IOProcessorNumber());
+            init_time, amrex::ParallelDescriptor::IOProcessorNumber());
         amrex::Print() << "Initialization successful. Time elapsed = "
                        << init_time << std::endl;
 
@@ -72,11 +72,12 @@ int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 
         amrex::Real end_time = amrex::ParallelDescriptor::second() - start_time;
         amrex::ParallelDescriptor::ReduceRealMax(
-          end_time, amrex::ParallelDescriptor::IOProcessorNumber());
+            end_time, amrex::ParallelDescriptor::IOProcessorNumber());
 
         amrex::Print() << "\n==============================================="
                           "================================================="
-                       << std::endl << std::endl;
+                       << std::endl
+                       << std::endl;
         amrex::Print() << "Time spent in init_data():    " << init_time
                        << std::endl;
         amrex::Print() << "Time spent in evolve():       "
