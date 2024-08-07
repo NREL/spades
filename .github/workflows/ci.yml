@@ -476,6 +476,8 @@ jobs:
         run: |
           export TSAN_OPTIONS='ignore_noninstrumented_modules=1'
           export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer
+          export UBSAN_SYMBOLIZER_PATH="${ASAN_SYMBOLIZER_PATH}"
+          export TSAN_SYMBOLIZER_PATH="${ASAN_SYMBOLIZER_PATH}"
           ctest -LE no_ci --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
