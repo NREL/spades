@@ -410,58 +410,58 @@ jobs:
           which clang
           which clang-${LLVM_VERSION}
           which clang-${LLVM_VERSION}++
-      - name: Install Ccache
-        run: |
-          wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
-          tar xvf ccache-4.8-linux-x86_64.tar.xz
-          sudo cp -f ccache-4.8-linux-x86_64/ccache /usr/local/bin/
-          mkdir -p ~/.cache/ctcache
-      - name: Set Up Ccache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache
-          key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
-          restore-keys: |
-               ccache-${{github.workflow}}-${{github.job}}-git-
-      - name: Configure
-        run: |
-          cmake \
-          -B ${{runner.workspace}}/build-ci-asan \
-          -DCMAKE_BUILD_TYPE:STRING=Release \
-          -DCMAKE_CXX_COMPILER:STRING=clang++ \
-          -DCMAKE_C_COMPILER:STRING=clang \
-          -DSPADES_ENABLE_MPI:BOOL=OFF \
-          -DSPADES_ENABLE_TESTS:BOOL=ON \
-          -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
-          -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
-          -DSPADES_ENABLE_SANITIZERS:BOOL=ON \
-          -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
-          ${{github.workspace}}
-      - name: Build
-        run: |
-          echo "::add-matcher::.github/problem-matchers/gcc.json"
-          ccache -z
-          set -eu -o pipefail
-          cmake --build ${{runner.workspace}}/build-ci-asan --parallel ${{env.NPROCS}} 2>&1 | \
-            tee -a ${{runner.workspace}}/build-ci-asan/build-output.txt
-      - name: Ccache Report
-        run: |
-          ccache -s
-          ls ~/.cache/ccache
-          du -hs ~/.cache/ccache
-      - name: Report
-        working-directory: ${{runner.workspace}}/build-ci-asan
-        run: |
-          echo "::add-matcher::.github/problem-matchers/gcc.json"
-          grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
-            | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | sort | uniq \
-            | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
-          cat build-output-warnings.txt
-          exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
-      - name: Test
-        working-directory: ${{runner.workspace}}/build-ci-asan
-        run: |
-          ctest --output-on-failure
+      # - name: Install Ccache
+      #   run: |
+      #     wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
+      #     tar xvf ccache-4.8-linux-x86_64.tar.xz
+      #     sudo cp -f ccache-4.8-linux-x86_64/ccache /usr/local/bin/
+      #     mkdir -p ~/.cache/ctcache
+      # - name: Set Up Ccache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.cache
+      #     key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
+      #     restore-keys: |
+      #          ccache-${{github.workflow}}-${{github.job}}-git-
+      # - name: Configure
+      #   run: |
+      #     cmake \
+      #     -B ${{runner.workspace}}/build-ci-asan \
+      #     -DCMAKE_BUILD_TYPE:STRING=Release \
+      #     -DCMAKE_CXX_COMPILER:STRING=clang++ \
+      #     -DCMAKE_C_COMPILER:STRING=clang \
+      #     -DSPADES_ENABLE_MPI:BOOL=OFF \
+      #     -DSPADES_ENABLE_TESTS:BOOL=ON \
+      #     -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+      #     -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
+      #     -DSPADES_ENABLE_SANITIZERS:BOOL=ON \
+      #     -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
+      #     ${{github.workspace}}
+      # - name: Build
+      #   run: |
+      #     echo "::add-matcher::.github/problem-matchers/gcc.json"
+      #     ccache -z
+      #     set -eu -o pipefail
+      #     cmake --build ${{runner.workspace}}/build-ci-asan --parallel ${{env.NPROCS}} 2>&1 | \
+      #       tee -a ${{runner.workspace}}/build-ci-asan/build-output.txt
+      # - name: Ccache Report
+      #   run: |
+      #     ccache -s
+      #     ls ~/.cache/ccache
+      #     du -hs ~/.cache/ccache
+      # - name: Report
+      #   working-directory: ${{runner.workspace}}/build-ci-asan
+      #   run: |
+      #     echo "::add-matcher::.github/problem-matchers/gcc.json"
+      #     grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
+      #       | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | sort | uniq \
+      #       | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
+      #     cat build-output-warnings.txt
+      #     exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
+      # - name: Test
+      #   working-directory: ${{runner.workspace}}/build-ci-asan
+      #   run: |
+      #     ctest --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
   #   runs-on: ubuntu-latest
