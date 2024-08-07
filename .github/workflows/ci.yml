@@ -444,15 +444,15 @@ jobs:
           ccache -s
           ls ~/.cache/ccache
           du -hs ~/.cache/ccache
-      # - name: Report
-      #   working-directory: ${{runner.workspace}}/build-ci-asan
-      #   run: |
-      #     echo "::add-matcher::.github/problem-matchers/gcc.json"
-      #     grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
-      #       | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | sort | uniq \
-      #       | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
-      #     cat build-output-warnings.txt
-      #     exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
+      - name: Report
+        working-directory: ${{runner.workspace}}/build-ci-asan
+        run: |
+          echo "::add-matcher::.github/problem-matchers/gcc.json"
+          grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
+            | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | sort | uniq \
+            | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
+          cat build-output-warnings.txt
+          exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
       - name: Test
         working-directory: ${{runner.workspace}}/build-ci-asan
         run: |
