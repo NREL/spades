@@ -314,7 +314,7 @@ jobs:
   #         echo "CCACHE_EXTRAFILES=${{github.workspace}}/.clang-tidy" >> $GITHUB_ENV
   #         echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
   #         echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-  #         echo "CLANG_TIDY_VERSION=17" >> $GITHUB_ENV
+  #         echo "LLVM_VERSION=17" >> $GITHUB_ENV
   #     - name: Install clang-tidy
   #       run: |
   #         echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
@@ -323,9 +323,9 @@ jobs:
   #         fi
   #         source /etc/os-release # set UBUNTU_CODENAME
   #         sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME} main"
-  #         sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${CLANG_TIDY_VERSION} main"
+  #         sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main"
   #         sudo apt-get update
-  #         sudo apt-get install -y --no-install-recommends clang-tidy-${CLANG_TIDY_VERSION} libomp-${CLANG_TIDY_VERSION}-dev
+  #         sudo apt-get install -y --no-install-recommends clang-tidy-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev
   #     - name: Install Ccache
   #       run: |
   #         wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
@@ -354,7 +354,7 @@ jobs:
   #         -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
   #         -DSPADES_ENABLE_CLANG_TIDY:BOOL=ON \
   #         -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
-  #         -DCLANG_TIDY_EXEC_NAME:STRING=clang-tidy-${CLANG_TIDY_VERSION} \
+  #         -DCLANG_TIDY_EXEC_NAME:STRING=clang-tidy-${LLVM_VERSION} \
   #         ${{github.workspace}}
   #     - name: Check
   #       working-directory: ${{runner.workspace}}/build-clang-tidy
@@ -409,39 +409,33 @@ jobs:
           sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev clang-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev
           which clang
           clang --version
-      - name: Check
+      - name: Install Ccache
         run: |
-          clang --version
-          clang++ --version
-          which clang-${LLVM_VERSION}
-          ls /usr/bin
-          which clang++-${LLVM_VERSION}
-      #   run: |
-      #     wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
-      #     tar xvf ccache-4.8-linux-x86_64.tar.xz
-      #     sudo cp -f ccache-4.8-linux-x86_64/ccache /usr/local/bin/
-      #     mkdir -p ~/.cache/ctcache
-      # - name: Set Up Ccache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.cache
-      #     key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
-      #     restore-keys: |
-      #          ccache-${{github.workflow}}-${{github.job}}-git-
-      # - name: Configure
-      #   run: |
-      #     cmake \
-      #     -B ${{runner.workspace}}/build-ci-asan \
-      #     -DCMAKE_BUILD_TYPE:STRING=Release \
-      #     -DCMAKE_CXX_COMPILER:STRING=clang++ \
-      #     -DCMAKE_C_COMPILER:STRING=clang \
-      #     -DSPADES_ENABLE_MPI:BOOL=OFF \
-      #     -DSPADES_ENABLE_TESTS:BOOL=ON \
-      #     -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
-      #     -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
-      #     -DSPADES_ENABLE_SANITIZERS:BOOL=ON \
-      #     -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
-      #     ${{github.workspace}}
+          wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
+          tar xvf ccache-4.8-linux-x86_64.tar.xz
+          sudo cp -f ccache-4.8-linux-x86_64/ccache /usr/local/bin/
+          mkdir -p ~/.cache/ctcache
+      - name: Set Up Ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache
+          key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
+          restore-keys: |
+               ccache-${{github.workflow}}-${{github.job}}-git-
+      - name: Configure
+        run: |
+          cmake \
+          -B ${{runner.workspace}}/build-ci-asan \
+          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_CXX_COMPILER:STRING=clang++-${LLVM_VERSION} \
+          -DCMAKE_C_COMPILER:STRING=clang-${LLVM_VERSION} \
+          -DSPADES_ENABLE_MPI:BOOL=OFF \
+          -DSPADES_ENABLE_TESTS:BOOL=ON \
+          -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+          -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
+          -DSPADES_ENABLE_SANITIZERS:BOOL=ON \
+          -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
+          ${{github.workspace}}
       # - name: Build
       #   run: |
       #     echo "::add-matcher::.github/problem-matchers/gcc.json"
