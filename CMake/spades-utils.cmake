@@ -58,7 +58,6 @@ macro(add_sanitizers)
         $<$<BOOL:${SPADES_ENABLE_LSAN}>:-fsanitize=leak>
         $<$<BOOL:${SPADES_ENABLE_TSAN}>:-fsanitize=thread>
         $<$<BOOL:${SPADES_ENABLE_UBSAN}>:-fsanitize=undefined${UBSAN_OPTIONS}>
-        $<$<AND:$<BOOL:${SPADES_ENABLE_UBSAN}>,$<CXX_COMPILER_ID:Clang>>:-fsanitize-blacklist=${CMAKE_CURRENT_SOURCE_DIR}/scripts/test/clang_sanitizer_blacklist.txt>
       )
       add_link_options(
         $<$<BOOL:${SPADES_ENABLE_ASAN}>:-fsanitize=address>
@@ -66,7 +65,6 @@ macro(add_sanitizers)
         $<$<BOOL:${SPADES_ENABLE_LSAN}>:-fsanitize=leak>
         $<$<BOOL:${SPADES_ENABLE_TSAN}>:-fsanitize=thread>
         $<$<BOOL:${SPADES_ENABLE_UBSAN}>:-fsanitize=undefined${UBSAN_OPTIONS}>
-        $<$<AND:$<BOOL:${SPADES_ENABLE_UBSAN}>,$<CXX_COMPILER_ID:Clang>>:-fsanitize-blacklist=${CMAKE_CURRENT_SOURCE_DIR}/scripts/test/clang_sanitizer_blacklist.txt>
       )
       message(
           STATUS
