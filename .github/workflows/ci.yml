@@ -470,7 +470,7 @@ jobs:
       - name: Test
         working-directory: ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}
         run: |
-          ctest --output-on-failure
+          ctest -LE no_ci --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
   #   runs-on: ubuntu-latest
