@@ -313,7 +313,7 @@ jobs:
           echo "CCACHE_EXTRAFILES=${{github.workspace}}/.clang-tidy" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-          echo "LLVM_VERSION=17" >> $GITHUB_ENV
+          echo "LLVM_VERSION=18" >> $GITHUB_ENV
       - name: Install clang-tidy
         run: |
           echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
@@ -393,7 +393,7 @@ jobs:
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-          echo "LLVM_VERSION=17" >> $GITHUB_ENV
+          echo "LLVM_VERSION=18" >> $GITHUB_ENV
       - name: Update LLVM
         run: |
           echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
@@ -428,7 +428,8 @@ jobs:
           -DSPADES_ENABLE_MPI:BOOL=OFF \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
           -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
-          -DSPADES_ENABLE_SANITIZERS:BOOL=ON \
+          -DSPADES_ENABLE_ASAN:BOOL=ON \
+          -DSPADES_ENABLE_UBSAN:BOOL=ON \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
           ${{github.workspace}}
       - name: Build

@@ -78,9 +78,21 @@ CMake configuration reference
 
    Enable documentation target. Default: OFF
 
-.. cmakeval:: SPADES_ENABLE_SANITIZERS
+.. cmakeval:: SPADES_ENABLE_ASAN
 
-   Enable sanitizers (asan, ubsan, lsan, tsan, msan). Default: OFF)
+   Enable AddressSanitizer. Default: OFF
+
+.. cmakeval:: SPADES_ENABLE_LSAN
+
+   Enable LeakSanitizer. Default: OFF
+
+.. cmakeval:: SPADES_ENABLE_UBSAN
+
+   Enable UndefinedBehaviorSanitizer. Default: OFF
+
+.. cmakeval:: SPADES_ENABLE_TSAN
+
+   Enable ThreadSanitizer. Default: OFF
 
 .. cmakeval:: SPADES_PRECISION DOUBLE.
 
