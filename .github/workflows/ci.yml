@@ -393,7 +393,7 @@ jobs:
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-          echo "LLVM_VERSION=20" >> $GITHUB_ENV
+          echo "LLVM_VERSION=19" >> $GITHUB_ENV
       - name: Update LLVM
         run: |
           echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
