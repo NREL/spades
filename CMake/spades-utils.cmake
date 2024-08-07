@@ -1,4 +1,3 @@
-
 # target_link_libraries_system
 #
 # This function is similar to target_link_libraries but allows the includes
@@ -27,20 +26,56 @@ function(set_cuda_build_properties target)
 endfunction(set_cuda_build_properties)
 
 macro(add_sanitizers)
-  if (SPADES_ENABLE_SANITIZERS)
+  # Inspired by https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/scripts/cmake/Sanitizers.cmake
+  if ((SPADES_ENABLE_ASAN)
+      OR (SPADES_ENABLE_LSAN)
+      OR (SPADES_ENABLE_UBSAN)
+      OR (SPADES_ENABLE_TSAN))
     if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
-      list(APPEND SPADES_CXX_ASAN_FLAGS "-fsanitize=address"
-                                        "-fno-omit-frame-pointer"
-                                        "-fsanitize=undefined")
-      if (SPADES_ENABLE_OPENMP)
-        list(APPEND SPADES_CXX_ASAN_FLAGS "-fsanitize=thread")
+      # Consistency check
+      if((SPADES_ENABLE_ASAN AND SPADES_ENABLE_TSAN)
+          OR (SPADES_ENABLE_LSAN AND SPADES_ENABLE_TSAN))
+        message(
+          FATAL_ERROR
+          "Invalid sanitizer combination:\n"
+          "--    SPADES_ENABLE_ASAN:  ${SPADES_ENABLE_ASAN}\n"
+          "--    SPADES_ENABLE_LSAN:  ${SPADES_ENABLE_LSAN}\n"
+          "--    SPADES_ENABLE_TSAN:  ${SPADES_ENABLE_TSAN}"
+        )
       endif()
 
-      add_compile_options(${SPADES_CXX_ASAN_FLAGS})
-      add_link_options(${SPADES_CXX_ASAN_FLAGS})
-      message(STATUS "Enabled sanitizers (asan, ubsan, lsan, tsan)")
+      if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set(UBSAN_OPTIONS
+          "$<COMMA>unreachable$<COMMA>integer-divide-by-zero$<COMMA>vla-bound$<COMMA>bounds$<COMMA>null"
+        )
+      endif()
+      if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(UBSAN_OPTIONS "$<COMMA>integer")
+      endif()
+      add_compile_options(
+        $<$<BOOL:${SPADES_ENABLE_ASAN}>:-fsanitize=address>
+        $<$<BOOL:${SPADES_ENABLE_ASAN}>:-fno-omit-frame-pointer>
+        $<$<BOOL:${SPADES_ENABLE_LSAN}>:-fsanitize=leak>
+        $<$<BOOL:${SPADES_ENABLE_TSAN}>:-fsanitize=thread>
+        $<$<BOOL:${SPADES_ENABLE_UBSAN}>:-fsanitize=undefined${UBSAN_OPTIONS}>
+      )
+      add_link_options(
+        $<$<BOOL:${SPADES_ENABLE_ASAN}>:-fsanitize=address>
+        $<$<BOOL:${SPADES_ENABLE_ASAN}>:-fno-omit-frame-pointer>
+        $<$<BOOL:${SPADES_ENABLE_LSAN}>:-fsanitize=leak>
+        $<$<BOOL:${SPADES_ENABLE_TSAN}>:-fsanitize=thread>
+        $<$<BOOL:${SPADES_ENABLE_UBSAN}>:-fsanitize=undefined${UBSAN_OPTIONS}>
+      )
+      message(
+          STATUS
+          "Enabled sanitizers:\n"
+          "--    SPADES_ENABLE_ASAN:  ${SPADES_ENABLE_ASAN}\n"
+          "--    SPADES_ENABLE_LSAN:  ${SPADES_ENABLE_LSAN}\n"
+          "--    SPADES_ENABLE_UBSAN: ${SPADES_ENABLE_UBSAN}\n"
+          "--    SPADES_ENABLE_TSAN:  ${SPADES_ENABLE_TSAN}"
+        )
     else()
-      message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} is not supported by SPADES_ENABLE_SANITIZERS")
+      message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} is not supported by the SPADES sanitizers")
     endif()
   endif()
 endmacro()

@@ -84,7 +84,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX:PATH=${{runner.workspace}}/install-${{matrix.build_type}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}} \
           -DSPADES_ENABLE_MPI:BOOL=ON \
-          -DSPADES_ENABLE_TESTS:BOOL=ON \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
           ${{github.workspace}}
@@ -314,7 +313,7 @@ jobs:
           echo "CCACHE_EXTRAFILES=${{github.workspace}}/.clang-tidy" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-          echo "CLANG_TIDY_VERSION=17" >> $GITHUB_ENV
+          echo "LLVM_VERSION=18" >> $GITHUB_ENV
       - name: Install clang-tidy
         run: |
           echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
@@ -323,9 +322,9 @@ jobs:
           fi
           source /etc/os-release # set UBUNTU_CODENAME
           sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME} main"
-          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${CLANG_TIDY_VERSION} main"
+          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main"
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang-tidy-${CLANG_TIDY_VERSION} libomp-${CLANG_TIDY_VERSION}-dev
+          sudo apt-get install -y --no-install-recommends clang-tidy-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev
       - name: Install Ccache
         run: |
           wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
@@ -349,12 +348,11 @@ jobs:
           -DCMAKE_CXX_COMPILER:STRING=clang++ \
           -DCMAKE_C_COMPILER:STRING=clang \
           -DSPADES_ENABLE_MPI:BOOL=OFF \
-          -DSPADES_ENABLE_TESTS:BOOL=ON \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
           -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
           -DSPADES_ENABLE_CLANG_TIDY:BOOL=ON \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
-          -DCLANG_TIDY_EXEC_NAME:STRING=clang-tidy-${CLANG_TIDY_VERSION} \
+          -DCLANG_TIDY_EXEC_NAME:STRING=clang-tidy-${LLVM_VERSION} \
           ${{github.workspace}}
       - name: Check
         working-directory: ${{runner.workspace}}/build-clang-tidy
@@ -379,6 +377,86 @@ jobs:
           echo "::add-matcher::.github/problem-matchers/gcc.json"
           cat clang-tidy-ci-report.txt
           exit $(tail -n 1 clang-tidy-ci-report.txt | awk '{print $2}')
+  Lint-address-sanitizer:
+    needs: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Setup
+        run: |
+          echo "NPROCS=$(nproc)" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+          echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
+          echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
+          echo "LLVM_VERSION=19" >> $GITHUB_ENV
+      - name: Update LLVM
+        run: |
+          echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
+          if [[ ! -f /etc/apt/trusted.gpg.d/apt.llvm.org.asc ]]; then
+              wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          fi
+          source /etc/os-release # set UBUNTU_CODENAME
+          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME} main"
+          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION} clang-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev libclang-rt-${LLVM_VERSION}-dev
+      - name: Install Ccache
+        run: |
+          wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
+          tar xvf ccache-4.8-linux-x86_64.tar.xz
+          sudo cp -f ccache-4.8-linux-x86_64/ccache /usr/local/bin/
+          mkdir -p ~/.cache/ctcache
+      - name: Set Up Ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache
+          key: ccache-${{github.workflow}}-${{github.job}}-git-${{github.sha}}
+          restore-keys: |
+               ccache-${{github.workflow}}-${{github.job}}-git-
+      - name: Configure
+        run: |
+          cmake \
+          -B ${{runner.workspace}}/build-ci-asan \
+          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_CXX_COMPILER:STRING=clang++-${LLVM_VERSION} \
+          -DCMAKE_C_COMPILER:STRING=clang-${LLVM_VERSION} \
+          -DSPADES_ENABLE_MPI:BOOL=OFF \
+          -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+          -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
+          -DSPADES_ENABLE_ASAN:BOOL=ON \
+          -DSPADES_ENABLE_UBSAN:BOOL=ON \
+          -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
+          ${{github.workspace}}
+      - name: Build
+        run: |
+          echo "::add-matcher::.github/problem-matchers/gcc.json"
+          ccache -z
+          set -eu -o pipefail
+          cmake --build ${{runner.workspace}}/build-ci-asan --parallel ${{env.NPROCS}} 2>&1 | \
+            tee -a ${{runner.workspace}}/build-ci-asan/build-output.txt
+      - name: Ccache Report
+        run: |
+          ccache -s
+          ls ~/.cache/ccache
+          du -hs ~/.cache/ccache
+      - name: Report
+        working-directory: ${{runner.workspace}}/build-ci-asan
+        run: |
+          echo "::add-matcher::.github/problem-matchers/gcc.json"
+          grep -E "warning:|error:" build-output.txt | grep -E -v "Submodules" \
+            | grep -E -v "ld: warning:" | grep -E -v "lto-wrapper: warning:" | grep -E -v "get_temporary_buffer<std::pair<long, int>>" \
+            | sort | uniq | awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
+          cat build-output-warnings.txt
+          exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
+      - name: Test
+        working-directory: ${{runner.workspace}}/build-ci-asan
+        run: |
+          ctest --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
   #   runs-on: ubuntu-latest
@@ -403,7 +481,6 @@ jobs:
   #           -DCMAKE_CXX_COMPILER:STRING=clang++ \
   #           -DCMAKE_C_COMPILER:STRING=clang \
   #           -DSPADES_ENABLE_MPI:BOOL=OFF \
-  #           -DSPADES_ENABLE_TESTS:BOOL=ON \
   #           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
   #           ${{github.workspace}}
   #     - name: Build
