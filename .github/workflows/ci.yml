@@ -409,6 +409,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev libomp-${LLVM_VERSION}-dev
           which clang
           clang --version
+          ls /usr/lib/llvm-${LLVM_VERSION}/bin/
           which clang-${LLVM_VERSION}
           which clang-${LLVM_VERSION}++
       # - name: Install Ccache
