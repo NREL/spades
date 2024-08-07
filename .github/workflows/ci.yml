@@ -475,6 +475,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}
         run: |
           export TSAN_OPTIONS='ignore_noninstrumented_modules=1'
+          export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer
           ctest -LE no_ci --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
