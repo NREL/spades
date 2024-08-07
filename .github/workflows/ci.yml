@@ -475,8 +475,9 @@ jobs:
         working-directory: ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}
         run: |
           export TSAN_OPTIONS='ignore_noninstrumented_modules=1'
-          #export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer
-          export ASAN_SYMBOLIZER_PATH=blahblah
+          /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer -v
+          /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer -h
+          export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer
           export UBSAN_SYMBOLIZER_PATH="${ASAN_SYMBOLIZER_PATH}"
           export TSAN_SYMBOLIZER_PATH="${ASAN_SYMBOLIZER_PATH}"
           ctest -LE no_ci --output-on-failure
