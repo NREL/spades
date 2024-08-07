@@ -406,8 +406,9 @@ jobs:
           sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME} main"
           sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main"
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION}-dev libomp-${LLVM_VERSION}-dev
+          sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev libomp-${LLVM_VERSION}-dev
           which clang
+          clang --version
           which clang-${LLVM_VERSION}
           which clang-${LLVM_VERSION}++
       # - name: Install Ccache
