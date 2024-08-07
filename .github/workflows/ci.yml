@@ -420,6 +420,7 @@ jobs:
                ccache-${{github.workflow}}-${{github.job}}-git-
       - name: Configure
         run: |
+          export VERBOSE=1
           cmake \
           -B ${{runner.workspace}}/build-ci-asan \
           -DCMAKE_BUILD_TYPE:STRING=Release \
