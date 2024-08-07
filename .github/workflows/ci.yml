@@ -419,8 +419,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev clang-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev libclang-rt-${LLVM_VERSION}-dev
           sudo apt-get install -y apt-file
-          apt-file update
-          apt-file search /usr/bin/llvm-symbolizer-19
+          sudo apt-file update
+          sudo apt-file search /usr/bin/llvm-symbolizer-19
           dpkg -S /usr/bin/llvm-symbolizer-19
       - name: Install Ccache
         run: |
