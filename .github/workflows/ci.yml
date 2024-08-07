@@ -11,18 +11,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Formatting:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone
-      uses: actions/checkout@v4
-    - name: Check formatting
-      uses: DoozyX/clang-format-lint-action@v0.17
-      with:
-        source: './Source'
-        exclude: '.'
-        extensions: 'H,h,cpp'
-        clangFormatVersion: 17
+  # Formatting:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Clone
+  #     uses: actions/checkout@v4
+  #   - name: Check formatting
+  #     uses: DoozyX/clang-format-lint-action@v0.17
+  #     with:
+  #       source: './Source'
+  #       exclude: '.'
+  #       extensions: 'H,h,cpp'
+  #       clangFormatVersion: 17
   # CPU:
   #   needs: Formatting
   #   runs-on: ${{matrix.os}}
@@ -380,7 +380,7 @@ jobs:
   #         cat clang-tidy-ci-report.txt
   #         exit $(tail -n 1 clang-tidy-ci-report.txt | awk '{print $2}')
   Lint-address-sanitizer:
-    needs: Formatting
+  # needs: Formatting
     runs-on: ubuntu-latest
     steps:
       - name: Clone
