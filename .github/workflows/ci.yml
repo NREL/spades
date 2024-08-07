@@ -470,6 +470,7 @@ jobs:
       - name: Test
         working-directory: ${{runner.workspace}}/build-ci-${{matrix.sanitizer}}
         run: |
+          export TSAN_OPTIONS='ignore_noninstrumented_modules=1'
           ctest -LE no_ci --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
