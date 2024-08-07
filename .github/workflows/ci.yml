@@ -406,7 +406,7 @@ jobs:
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-          echo "LLVM_VERSION=19" >> $GITHUB_ENV
+          echo "LLVM_VERSION=18" >> $GITHUB_ENV
       - name: Update LLVM
         run: |
           echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
@@ -418,10 +418,6 @@ jobs:
           sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main"
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev clang-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev libclang-rt-${LLVM_VERSION}-dev
-          sudo apt-get install -y apt-file
-          sudo apt-file update
-          sudo apt-file search /usr/bin/llvm-symbolizer-19
-          dpkg -S /usr/bin/llvm-symbolizer-19
       - name: Install Ccache
         run: |
           wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
