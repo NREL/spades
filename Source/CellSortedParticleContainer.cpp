@@ -364,9 +364,11 @@ void CellSortedParticleContainer::initialize_messages(
     AMREX_ALWAYS_ASSERT(np_per_cell > msg_per_cell);
 
     amrex::iMultiFab num_particles(
-                                   ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, amrex::MFInfo());
+        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0,
+        amrex::MFInfo());
     amrex::iMultiFab init_offsets(
-                                  ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, amrex::MFInfo());
+        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0,
+        amrex::MFInfo());
     num_particles.setVal(np_per_cell);
     init_offsets.setVal(0);
 
