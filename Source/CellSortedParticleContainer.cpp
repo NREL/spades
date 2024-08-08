@@ -796,7 +796,7 @@ amrex::Real CellSortedParticleContainer::compute_gvt()
     amrex::Real gvt = constants::LARGE_NUM;
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion()) reduction(min : gvt)
 #endif
     for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
