@@ -124,7 +124,7 @@ void CellSortedParticleContainer::count_messages()
     m_message_counts[lev].setVal(0);
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
 
@@ -158,7 +158,7 @@ void CellSortedParticleContainer::count_offsets()
     m_offsets[lev].setVal(0);
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
@@ -206,7 +206,7 @@ void CellSortedParticleContainer::initialize_messages(
 
     // // Some test particles
     // #ifdef AMREX_USE_OMP
-    // #pragma omp parallel if (Gpu::notInLaunchRegion())
+    // #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     // #endif
     //     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
     //         const amrex::Box& box = mfi.tilebox();
@@ -364,15 +364,14 @@ void CellSortedParticleContainer::initialize_messages(
     AMREX_ALWAYS_ASSERT(np_per_cell > msg_per_cell);
 
     amrex::iMultiFab num_particles(
-        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
+        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0,
+        amrex::MFInfo());
     amrex::iMultiFab init_offsets(
-        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
+        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0,
+        amrex::MFInfo());
     num_particles.setVal(np_per_cell);
     init_offsets.setVal(0);
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
 
@@ -439,7 +438,7 @@ void CellSortedParticleContainer::initialize_messages(
 
     // Sanity check all initial particles
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
@@ -472,7 +471,7 @@ void CellSortedParticleContainer::sort_messages()
     const int lev = 0;
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         auto& particle_tile = ParticlesAt(lev, mfi);
@@ -568,9 +567,6 @@ void CellSortedParticleContainer::update_undefined()
     CellSortedParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel reduction(+ : n_removals) if (Gpu::notInLaunchRegion())
-#endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
@@ -689,7 +685,7 @@ void CellSortedParticleContainer::resolve_pairs()
     const auto& dom = Geom(lev).Domain();
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
@@ -765,7 +761,7 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
     const int lev = 0;
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
@@ -800,7 +796,7 @@ amrex::Real CellSortedParticleContainer::compute_gvt()
     amrex::Real gvt = constants::LARGE_NUM;
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion()) reduction(min : gvt)
 #endif
     for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
@@ -837,7 +833,7 @@ void CellSortedParticleContainer::reposition_messages()
     const int nbins = 500;
 
 #ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
