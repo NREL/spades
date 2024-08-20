@@ -152,6 +152,7 @@ void SPADES::read_parameters()
         pp.query("lookahead", m_lookahead);
         pp.query("window_size", m_window_size);
         pp.query("messages_per_step", m_messages_per_step);
+        pp.query("data_fname", m_data_fname);
     }
 
     // force periodic bcs

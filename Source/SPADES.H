@@ -386,7 +386,7 @@ private:
     bool m_write_particles{false};
 
     //! Filename for simulation data
-    const std::string m_data_fname{"data.csv"};
+    std::string m_data_fname{"data.csv"};
 
     //! Data precision for data output
     const int m_data_precision{6};
