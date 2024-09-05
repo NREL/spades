@@ -383,7 +383,6 @@ jobs:
     strategy:
       matrix:
         sanitizer: [asan, tsan]
-        sanitizer: [tsan]
         include:
           - sanitizer: asan
             is_asan: "ON"
