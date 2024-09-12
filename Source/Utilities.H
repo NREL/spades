@@ -18,7 +18,6 @@ namespace spades {
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Long
 pairing_function(const amrex::Long k1, const amrex::Long k2)
 {
-    // Cantor pairing function
     return (k1 + k2) * (k1 + k2 + 1) / 2 + k2;
 }
 
@@ -56,7 +55,6 @@ void goto_next_line(std::istream& is);
    @param charBuf [out] character buffer
    @param bExitOnError [in] exit if error
  **/
-//
 void read_file(
     const std::string& filename,
     amrex::Vector<char>& charBuf,
