@@ -40,29 +40,10 @@ SPADES::SPADES()
         m_spades_varnames.size() ==
         (constants::N_STATES + particles::MessageTypes::NTYPES));
 
-    m_isteps.resize(nlevs_max, 0);
-    m_nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= max_level; ++lev) {
-        m_nsubsteps[lev] = MaxRefRatio(lev - 1);
-    }
-
-    m_gvts.resize(nlevs_max, constants::LOW_NUM);
-    m_ts_new.resize(nlevs_max, 0.0);
-    m_ts_old.resize(nlevs_max, constants::LOW_NUM);
-    m_dts.resize(nlevs_max, constants::LARGE_NUM);
-    m_lbts.resize(nlevs_max, constants::LOW_NUM);
-    m_ncells.resize(nlevs_max, 0);
-    m_ntotal_messages.resize(nlevs_max, 0);
-    m_nmessages.resize(nlevs_max, 0);
-    m_nprocessed_messages.resize(nlevs_max, 0);
-    m_nrollbacks.resize(
-        nlevs_max, amrex::Vector<int>(constants::MAX_ROLLBACK_ITERS, 0));
+    m_nrollbacks.resize(constants::MAX_ROLLBACK_ITERS, 0);
     m_min_timings.resize(2, 0);
     m_max_timings.resize(2, 0);
     m_avg_timings.resize(2, 0);
-
-    m_state.resize(nlevs_max);
-    m_plt_mf.resize(nlevs_max);
 }
 
 SPADES::~SPADES() = default;
@@ -83,9 +64,8 @@ void SPADES::init_data()
 
         InitFromScratch(time);
 
-        const int lev = 0;
-        update_gvt(lev);
-        update_lbts(lev);
+        update_gvt();
+        update_lbts();
 
         compute_dt();
 
@@ -105,9 +85,8 @@ void SPADES::init_data()
     if (amrex::ParallelDescriptor::IOProcessor()) {
         printGridSummary(amrex::OutStream(), 0, finest_level);
     }
-    for (int lev = 0; lev <= finest_level; ++lev) {
-        level_summary(lev);
-    }
+
+    summary();
 
     write_data_file(true);
 }
@@ -132,7 +111,6 @@ void SPADES::read_parameters()
     {
         amrex::ParmParse pp("amr");
 
-        pp.query("regrid_int", m_regrid_int);
         pp.query("plot_file", m_plot_file);
         pp.query("plot_int", m_plot_int);
         pp.query("chk_file", m_chk_file);
@@ -169,11 +147,11 @@ void SPADES::evolve()
 {
     BL_PROFILE("spades::SPADES::evolve()");
 
-    amrex::Real cur_time = m_ts_new[0];
+    amrex::Real cur_time = m_t_new;
     int last_plot_file_step = 0;
     int last_chk_file_step = 0;
 
-    for (int step = m_isteps[0]; step < m_max_step && cur_time < m_stop_time;
+    for (int step = m_istep; step < m_max_step && cur_time < m_stop_time;
          ++step) {
         compute_dt();
         const amrex::Real start_time = amrex::ParallelDescriptor::second();
@@ -181,21 +159,19 @@ void SPADES::evolve()
         amrex::Print() << "\n==============================================="
                           "================================================="
                        << std::endl;
-        amrex::Print() << "Step: " << step << " dt : " << m_dts[0]
-                       << " time: " << cur_time << " to " << cur_time + m_dts[0]
+        amrex::Print() << "Step: " << step << " dt : " << m_dt
+                       << " time: " << cur_time << " to " << cur_time + m_dt
                        << std::endl;
 
         // m_fillpatch_op->fillpatch(0, cur_time, m_f[0]);
-        time_step(0, cur_time, 1);
+        time_step(cur_time);
 
         post_time_step();
 
-        cur_time += m_dts[0];
+        cur_time += m_dt;
 
         // sync up time
-        for (int lev = 0; lev <= finest_level; ++lev) {
-            m_ts_new[lev] = cur_time;
-        }
+        m_t_new = cur_time;
 
         if (m_plot_int > 0 && (step + 1) % m_plot_int == 0) {
             last_plot_file_step = step + 1;
@@ -209,8 +185,7 @@ void SPADES::evolve()
 
         const amrex::Real delta_time =
             amrex::ParallelDescriptor::second() - start_time;
-        const auto n_processed_messages = std::accumulate(
-            m_nprocessed_messages.begin(), m_nprocessed_messages.end(), 0);
+        const auto n_processed_messages = m_nprocessed_messages;
         const amrex::Vector<amrex::Real> timings{
             delta_time, n_processed_messages / delta_time};
         for (int i = 0; i < timings.size(); i++) {
@@ -246,139 +221,89 @@ void SPADES::evolve()
                        << m_min_timings[1] << " " << m_avg_timings[1] << " "
                        << m_max_timings[1] << std::endl;
 
-        if (cur_time >= m_stop_time - constants::TOL * m_dts[0]) {
+        if (cur_time >= m_stop_time - constants::TOL * m_dt) {
             break;
         }
     }
-    if (m_plot_int > 0 && m_isteps[0] > last_plot_file_step) {
+    if (m_plot_int > 0 && m_istep > last_plot_file_step) {
         write_plot_file();
     }
-    if (m_chk_int > 0 && m_isteps[0] > last_chk_file_step) {
+    if (m_chk_int > 0 && m_istep > last_chk_file_step) {
         write_checkpoint_file();
     }
 }
 
-void SPADES::time_step(
-    const int lev, const amrex::Real time, const int iteration)
+void SPADES::time_step(const amrex::Real time)
 {
     BL_PROFILE("spades::SPADES::time_step()");
-    if (m_regrid_int > 0) // We may need to regrid
-    {
 
-        // help keep track of whether a level was already regridded
-        // from a coarser level call to regrid
-        static amrex::Vector<int> last_regrid_step(max_level + 1, 0);
+    amrex::Print() << "[Step " << m_istep + 1 << "] ";
+    amrex::Print() << "Advance with time = " << m_t_new << " dt = " << m_dt
+                   << " gvt = " << m_gvt << " lbts = " << m_lbts << std::endl;
 
-        // regrid changes level "lev+1" so we don't regrid on max_level
-        // also make sure we don't regrid fine levels again if
-        // it was taken care of during a coarser regrid
-        if (lev < max_level && m_isteps[lev] > last_regrid_step[lev]) {
-            if (m_isteps[lev] % m_regrid_int == 0) {
-                // regrid could add newly refine levels (if finest_level <
-                // max_level) so we save the previous finest level index
-                int old_finest = finest_level;
-                regrid(lev, time);
+    advance(time, m_dt);
 
-                // mark that we have regridded this level already
-                for (int k = lev; k <= finest_level; ++k) {
-                    last_regrid_step[k] = m_isteps[k];
-                }
+    ++m_istep;
 
-                // if there are newly created levels, set the time step
-                // dt gets halved here
-                for (int k = old_finest + 1; k <= finest_level; ++k) {
-                    m_dts[k] = m_dts[k - 1] / MaxRefRatio(k - 1);
-                }
-                if (amrex::ParallelDescriptor::IOProcessor()) {
-                    amrex::Print()
-                        << "Grid summary after regrid: " << std::endl;
-                    printGridSummary(amrex::OutStream(), 0, finest_level);
-                }
-                m_pc->sort_messages();
-            }
-        }
-    }
-
-    amrex::Print() << "[Level " << lev << " step " << m_isteps[lev] + 1 << "] ";
-    amrex::Print() << "Advance with time = " << m_ts_new[lev]
-                   << " dt = " << m_dts[lev] << " gvt = " << m_gvts[lev]
-                   << " lbts = " << m_lbts[lev] << std::endl;
-
-    if (lev < finest_level) {
-        // m_fillpatch_op->fillpatch(lev + 1, m_ts_new[lev + 1], m_f[lev + 1]);
-        for (int i = 1; i <= m_nsubsteps[lev + 1]; ++i) {
-            time_step(lev + 1, time + (i - 1) * m_dts[lev + 1], i);
-        }
-    }
-
-    advance(lev, time, m_dts[lev], iteration, m_nsubsteps[lev]);
-
-    ++m_isteps[lev];
-
-    level_summary(lev);
+    summary();
 }
 
-void SPADES::advance(
-    const int lev,
-    const amrex::Real /*time*/,
-    const amrex::Real dt_lev,
-    const int /*iteration*/,
-    const int /*ncycle*/)
+void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
 {
     BL_PROFILE("spades::SPADES::advance()");
 
     m_pc->update_undefined();
 
-    update_gvt(lev);
-    m_pc->garbage_collect(m_gvts[lev]);
+    update_gvt();
+    m_pc->garbage_collect(m_gvt);
     m_pc->sort_messages();
 
-    update_lbts(lev);
+    update_lbts();
 
     const auto n_processed_messages_pre =
         m_pc->total_count(particles::MessageTypes::PROCESSED);
 
-    process_messages(lev);
+    process_messages();
     m_pc->Redistribute();
     m_pc->sort_messages();
 
-    rollback(lev);
+    rollback();
 
     const auto n_processed_messages_post =
         m_pc->total_count(particles::MessageTypes::PROCESSED);
 
-    m_nprocessed_messages[lev] =
+    m_nprocessed_messages =
         static_cast<int>(n_processed_messages_post - n_processed_messages_pre);
-    AMREX_ALWAYS_ASSERT(m_nprocessed_messages[lev] >= 0);
+    AMREX_ALWAYS_ASSERT(m_nprocessed_messages >= 0);
 
-    m_ts_old[lev] = m_ts_new[lev]; // old time is now current time (time)
-    m_ts_new[lev] += dt_lev;       // new time is ahead
+    m_t_old = m_t_new; // old time is now current time (time)
+    m_t_new += dt;     // new time is ahead
 }
 
-void SPADES::level_summary(const int lev)
+void SPADES::summary()
 {
-    BL_PROFILE("spades::SPADES::level_summary()");
-    m_ntotal_messages[lev] = m_pc->TotalNumberOfParticles(lev != 0);
-    m_nmessages[lev] = m_pc->total_count(particles::MessageTypes::MESSAGE);
-    m_ncells[lev] = CountCells(lev);
+    BL_PROFILE("spades::SPADES::summary()");
+
+    m_ntotal_messages = m_pc->TotalNumberOfParticles(m_lev != 0);
+    m_nmessages = m_pc->total_count(particles::MessageTypes::MESSAGE);
+    m_ncells = CountCells(m_lev);
     if (Verbose() > 0) {
-        amrex::Print() << "[Level " << lev << " step " << m_isteps[lev]
-                       << "] Summary:" << std::endl;
-        amrex::Print() << "  " << m_ntotal_messages[lev] << " total messages"
+        amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
+        amrex::Print() << "  " << m_ntotal_messages << " total messages"
                        << std::endl;
-        amrex::Print() << "  " << m_nmessages[lev] << " messages" << std::endl;
-        amrex::Print() << "  " << m_nprocessed_messages[lev]
-                       << " processed messages" << std::endl;
-        amrex::Print() << "  " << m_ncells[lev] << " nodes" << std::endl;
-        for (int n = 0; n < m_nrollbacks[lev].size(); n++) {
-            const auto nrlbk = m_nrollbacks[lev][n];
+        amrex::Print() << "  " << m_nmessages << " messages" << std::endl;
+        amrex::Print() << "  " << m_nprocessed_messages << " processed messages"
+                       << std::endl;
+        amrex::Print() << "  " << m_ncells << " nodes" << std::endl;
+        for (int n = 0; n < m_nrollbacks.size(); n++) {
+            const auto nrlbk = m_nrollbacks[n];
             if (nrlbk > 0) {
                 amrex::Print() << "  " << nrlbk << " nodes doing " << n
                                << " rollbacks" << std::endl;
             }
         }
     }
-    AMREX_ALWAYS_ASSERT(m_nmessages[lev] == m_ncells[lev]);
+    AMREX_ALWAYS_ASSERT(m_nmessages == m_ncells);
 }
 
 void SPADES::post_time_step()
@@ -386,19 +311,19 @@ void SPADES::post_time_step()
     BL_PROFILE("spades::SPADES::post_time_step()");
 }
 
-void SPADES::process_messages(const int lev)
+void SPADES::process_messages()
 {
     BL_PROFILE("spades::SPADES::process_messages()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
         m_state_ngrow == m_pc->ngrow(),
         "Particle and state cells must be equal for now");
 
-    const auto& plo = Geom(lev).ProbLoArray();
-    const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dom = Geom(lev).Domain();
+    const auto& plo = Geom(m_lev).ProbLoArray();
+    const auto& dx = Geom(m_lev).CellSizeArray();
+    const auto& dom = Geom(m_lev).Domain();
     const auto& dlo = dom.smallEnd();
     const auto& dhi = dom.bigEnd();
-    const auto lbts = m_lbts[lev];
+    const auto lbts = m_lbts;
     const auto lookahead = m_lookahead;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
@@ -406,15 +331,15 @@ void SPADES::process_messages(const int lev)
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& sarr = m_state[lev].array(mfi);
+        const auto& sarr = m_state.array(mfi);
         const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
         const auto& offsets_arr = m_pc->offsets().const_array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_pc->GetParticles(lev)[index];
+        auto& pti = m_pc->GetParticles(m_lev)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -506,7 +431,7 @@ void SPADES::process_messages(const int lev)
     }
 }
 
-void SPADES::rollback(const int lev)
+void SPADES::rollback()
 {
     BL_PROFILE("spades::SPADES::rollback()");
 
@@ -514,31 +439,32 @@ void SPADES::rollback(const int lev)
         return;
     }
 
-    const auto& plo = Geom(lev).ProbLoArray();
-    const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dom = Geom(lev).Domain();
+    const auto& plo = Geom(m_lev).ProbLoArray();
+    const auto& dx = Geom(m_lev).CellSizeArray();
+    const auto& dom = Geom(m_lev).Domain();
 
-    amrex::iMultiFab rollback(boxArray(lev), DistributionMap(lev), 1, 0);
+    amrex::iMultiFab rollback(boxArray(m_lev), DistributionMap(m_lev), 1, 0);
     rollback.setVal(1.0);
     bool require_rollback = true;
 
     int iter = 0;
-    m_state[lev].setVal(0.0, constants::RLB_IDX, 1);
+    m_state.setVal(0.0, constants::RLB_IDX, 1);
     while (require_rollback && (iter < constants::MAX_ROLLBACK_ITERS)) {
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-        for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        for (amrex::MFIter mfi = m_pc->MakeMFIter(m_lev); mfi.isValid();
+             ++mfi) {
             const amrex::Box& box = mfi.tilebox();
             const int gid = mfi.index();
             const int tid = mfi.LocalTileIndex();
-            const auto& sarr = m_state[lev].array(mfi);
+            const auto& sarr = m_state.array(mfi);
             const auto& rarr = rollback.array(mfi);
             const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
             const auto& offsets_arr = m_pc->offsets().const_array(mfi);
             const auto index = std::make_pair(gid, tid);
-            auto& pti = m_pc->GetParticles(lev)[index];
+            auto& pti = m_pc->GetParticles(m_lev)[index];
             auto& particles = pti.GetArrayOfStructs();
             auto* pstruct = particles().dataPtr();
 
@@ -674,7 +600,7 @@ void SPADES::rollback(const int lev)
             "(constants::MAX_ROLLBACK_ITERS = " +
             std::to_string(constants::MAX_ROLLBACK_ITERS) + ")");
     } else {
-        rollback_statistics(lev);
+        rollback_statistics();
     }
 
     m_pc->resolve_pairs();
@@ -684,19 +610,19 @@ void SPADES::rollback(const int lev)
         "There should be no anti-messages left after rollback");
 }
 
-void SPADES::rollback_statistics(const int lev)
+void SPADES::rollback_statistics()
 {
     BL_PROFILE("spades::SPADES::rollback_statistics()");
 
-    auto max_rlb = static_cast<int>(m_state[lev].max(constants::RLB_IDX));
+    auto max_rlb = static_cast<int>(m_state.max(constants::RLB_IDX));
     amrex::ParallelAllReduce::Max<int>(
         max_rlb, amrex::ParallelContext::CommunicatorSub());
 
     amrex::Vector<amrex::Real> nrlbks(max_rlb + 1, 0);
-    AMREX_ALWAYS_ASSERT(nrlbks.size() <= m_nrollbacks[lev].size());
+    AMREX_ALWAYS_ASSERT(nrlbks.size() <= m_nrollbacks.size());
     for (int n = 0; n < nrlbks.size(); n++) {
         nrlbks[n] = amrex::ReduceSum(
-            m_state[lev], 0,
+            m_state, 0,
             [=] AMREX_GPU_HOST_DEVICE(
                 const amrex::Box& bx,
                 const amrex::Array4<amrex::Real const>& sarr) -> amrex::Real {
@@ -716,33 +642,34 @@ void SPADES::rollback_statistics(const int lev)
 
     if (amrex::ParallelDescriptor::IOProcessor()) {
         for (int n = 0; n < nrlbks.size(); n++) {
-            m_nrollbacks[lev][n] = static_cast<int>(nrlbks[n]);
+            m_nrollbacks[n] = static_cast<int>(nrlbks[n]);
         }
         const auto nt = static_cast<amrex::Long>(
             std::accumulate(nrlbks.begin(), nrlbks.end(), 0.0));
-        AMREX_ALWAYS_ASSERT(nt == boxArray(lev).numPts());
+        AMREX_ALWAYS_ASSERT(nt == boxArray(m_lev).numPts());
     }
 }
 
-void SPADES::update_gvt(const int lev)
+void SPADES::update_gvt()
 {
     BL_PROFILE("spades::SPADES::update_gvt()");
     const amrex::Real gvt = m_pc->compute_gvt();
-    AMREX_ALWAYS_ASSERT(gvt >= m_gvts[lev]);
-    AMREX_ALWAYS_ASSERT(gvt >= m_state[lev].min(constants::LVT_IDX, 0));
-    m_gvts[lev] = gvt;
+    AMREX_ALWAYS_ASSERT(gvt >= m_gvt);
+    AMREX_ALWAYS_ASSERT(gvt >= m_state.min(constants::LVT_IDX, 0));
+    m_gvt = gvt;
 }
 
-void SPADES::update_lbts(const int lev)
+void SPADES::update_lbts()
 {
     BL_PROFILE("spades::SPADES::update_lbts()");
-    amrex::MultiFab lbts(boxArray(lev), DistributionMap(lev), 1, 0);
+
+    amrex::MultiFab lbts(boxArray(m_lev), DistributionMap(m_lev), 1, 0);
     lbts.setVal(constants::LARGE_NUM);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
@@ -750,7 +677,7 @@ void SPADES::update_lbts(const int lev)
         const auto& offsets_arr = m_pc->offsets().const_array(mfi);
         const auto& lbts_arr = lbts.array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_pc->GetParticles(lev)[index];
+        auto& pti = m_pc->GetParticles(m_lev)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -768,43 +695,30 @@ void SPADES::update_lbts(const int lev)
             });
     }
 
-    m_lbts[lev] = lbts.min(0, 0);
-    AMREX_ALWAYS_ASSERT(m_lbts[lev] >= m_gvts[lev]);
+    m_lbts = lbts.min(0, 0);
+    AMREX_ALWAYS_ASSERT(m_lbts >= m_gvt);
 }
 
 void SPADES::compute_dt()
 {
     BL_PROFILE("spades::SPADES::compute_dt()");
-    amrex::Vector<amrex::Real> dt_tmp(finest_level + 1);
+    amrex::Real dt_tmp = est_time_step();
 
-    for (int lev = 0; lev <= finest_level; ++lev) {
-        dt_tmp[lev] = est_time_step(lev);
-    }
-    amrex::ParallelDescriptor::ReduceRealMin(
-        dt_tmp.data(), static_cast<int>(dt_tmp.size()));
+    amrex::ParallelDescriptor::ReduceRealMin(dt_tmp);
 
     constexpr amrex::Real change_max = 1.1;
-    amrex::Real dt_0 = dt_tmp[0];
-    int n_factor = 1;
-    for (int lev = 0; lev <= finest_level; ++lev) {
-        dt_tmp[lev] = std::min(dt_tmp[lev], change_max * m_dts[lev]);
-        n_factor *= m_nsubsteps[lev];
-        dt_0 = std::min(dt_0, n_factor * dt_tmp[lev]);
-    }
+    amrex::Real dt_0 = std::min(dt_tmp, change_max * m_dt);
 
     // Limit dt's by the value of stop_time.
     const amrex::Real eps = 1.e-3 * dt_0;
-    if (m_ts_new[0] + dt_0 > m_stop_time - eps) {
-        dt_0 = m_stop_time - m_ts_new[0];
+    if (m_t_new + dt_0 > m_stop_time - eps) {
+        dt_0 = m_stop_time - m_t_new;
     }
 
-    m_dts[0] = dt_0;
-    for (int lev = 1; lev <= finest_level; ++lev) {
-        m_dts[lev] = m_dts[lev - 1] / m_nsubsteps[lev];
-    }
+    m_dt = dt_0;
 }
 
-amrex::Real SPADES::est_time_step(const int /*lev*/)
+amrex::Real SPADES::est_time_step()
 {
     BL_PROFILE("spades::SPADES::est_time_step()");
     return 1.0;
@@ -828,29 +742,28 @@ void SPADES::MakeNewLevelFromScratch(
 {
     BL_PROFILE("spades::SPADES::MakeNewLevelFromScratch()");
 
-    m_state[lev].define(
-        ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
+    m_state.define(ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
 
-    m_ts_new[lev] = time;
-    m_ts_old[lev] = constants::LOW_NUM;
+    m_t_new = time;
+    m_t_old = constants::LOW_NUM;
 
     // Initialize the data
-    initialize_state(lev);
+    initialize_state();
 
     // Update particle container
-    m_pc->Define(Geom(lev), dm, ba);
+    m_pc->Define(Geom(m_lev), dm, ba);
     m_pc->initialize_messages(m_lookahead);
     m_pc->initialize_state();
     m_pc->sort_messages();
 }
 
-void SPADES::initialize_state(const int lev)
+void SPADES::initialize_state()
 {
     BL_PROFILE("spades::SPADES::initialize_state()");
 
-    m_ic_op->initialize(lev, geom[lev].data());
+    m_ic_op->initialize(Geom(m_lev).data());
 
-    m_state[lev].FillBoundary(Geom(lev).periodicity());
+    m_state.FillBoundary(Geom(m_lev).periodicity());
 }
 
 void SPADES::RemakeLevel(
@@ -867,8 +780,8 @@ void SPADES::ClearLevel(int lev)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
     m_pc->clear_state();
-    m_state[lev].clear();
-    m_plt_mf[lev].clear();
+    m_state.clear();
+    m_plt_mf.clear();
 }
 
 void SPADES::set_ics()
@@ -905,7 +818,7 @@ int SPADES::get_field_component(
 }
 
 std::unique_ptr<amrex::MultiFab>
-SPADES::get_field(const std::string& name, const int lev, const int ngrow)
+SPADES::get_field(const std::string& name, const int ngrow)
 {
     BL_PROFILE("spades::SPADES::get_field()");
 
@@ -916,11 +829,11 @@ SPADES::get_field(const std::string& name, const int lev, const int ngrow)
 
     const int nc = 1;
     std::unique_ptr<amrex::MultiFab> mf = std::make_unique<amrex::MultiFab>(
-        boxArray(lev), DistributionMap(lev), nc, ngrow);
+        boxArray(m_lev), DistributionMap(m_lev), nc, ngrow);
 
     const int srccomp_sd = get_field_component(name, m_state_varnames);
     if (srccomp_sd != -1) {
-        amrex::MultiFab::Copy(*mf, m_state[lev], srccomp_sd, 0, nc, ngrow);
+        amrex::MultiFab::Copy(*mf, m_state, srccomp_sd, 0, nc, ngrow);
     }
     const int srccomp_id = get_field_component(name, m_message_counts_varnames);
     if (srccomp_id != -1) {
@@ -953,42 +866,37 @@ std::string SPADES::chk_file_name(const int step) const
 
 void SPADES::plot_file_mf()
 {
-    for (int lev = 0; lev <= finest_level; ++lev) {
 
-        m_plt_mf[lev].clear();
-        m_plt_mf[lev].define(
-            boxArray(lev), DistributionMap(lev),
-            static_cast<int>(plot_file_var_names().size()), 0, amrex::MFInfo());
-        m_plt_mf[lev].setVal(0.0);
-        int cnt = 0;
-        amrex::MultiFab::Copy(
-            m_plt_mf[lev], m_state[lev], 0, cnt, m_state[lev].nComp(), 0);
-        cnt += m_state[lev].nComp();
-        auto const& cnt_arrs = m_pc->message_counts().const_arrays();
-        auto const& plt_mf_arrs = m_plt_mf[lev].arrays();
-        amrex::ParallelFor(
-            m_plt_mf[lev], m_plt_mf[lev].nGrowVect(),
-            m_pc->message_counts().nComp(),
-            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-                plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
-            });
-        amrex::Gpu::synchronize();
-    }
+    m_plt_mf.clear();
+    m_plt_mf.define(
+        boxArray(m_lev), DistributionMap(m_lev),
+        static_cast<int>(plot_file_var_names().size()), 0, amrex::MFInfo());
+    m_plt_mf.setVal(0.0);
+    int cnt = 0;
+    amrex::MultiFab::Copy(m_plt_mf, m_state, 0, cnt, m_state.nComp(), 0);
+    cnt += m_state.nComp();
+    auto const& cnt_arrs = m_pc->message_counts().const_arrays();
+    auto const& plt_mf_arrs = m_plt_mf.arrays();
+    amrex::ParallelFor(
+        m_plt_mf, m_plt_mf.nGrowVect(), m_pc->message_counts().nComp(),
+        [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+            plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
+        });
+    amrex::Gpu::synchronize();
 }
 
 void SPADES::write_plot_file()
 {
     BL_PROFILE("spades::SPADES::write_plot_file()");
-    const std::string& plotfilename = plot_file_name(m_isteps[0]);
+    const std::string& plotfilename = plot_file_name(m_istep);
     plot_file_mf();
     const auto& varnames = plot_file_var_names();
 
     amrex::Print() << "Writing plot file " << plotfilename << " at time "
-                   << m_ts_new[0] << std::endl;
+                   << m_t_new << std::endl;
 
-    amrex::WriteMultiLevelPlotfile(
-        plotfilename, finest_level + 1, amrex::GetVecOfConstPtrs(m_plt_mf),
-        varnames, Geom(), m_ts_new[0], m_isteps, refRatio());
+    amrex::WriteSingleLevelPlotfile(
+        plotfilename, m_plt_mf, varnames, Geom(m_lev), m_t_new, m_istep);
     if (m_write_particles) {
         m_pc->write_plot_file(plotfilename);
     }
@@ -1010,10 +918,10 @@ void SPADES::write_checkpoint_file() const
     // etc.                these subdirectories will hold the MultiFab data
     // at each level of refinement
 
-    const std::string& checkpointname = chk_file_name(m_isteps[0]);
+    const std::string& checkpointname = chk_file_name(m_istep);
 
     amrex::Print() << "Writing checkpoint file " << checkpointname
-                   << " at time " << m_ts_new[0] << std::endl;
+                   << " at time " << m_t_new << std::endl;
 
     const int nlevels = finest_level + 1;
 
@@ -1049,38 +957,30 @@ void SPADES::write_checkpoint_file() const
         // write out finest_level
         header_file << finest_level << "\n";
 
-        // write out array of istep
-        for (int m_istep : m_isteps) {
-            header_file << m_istep << " ";
-        }
+        // write out istep
+        header_file << m_istep << " ";
         header_file << "\n";
 
-        // write out array of dt
-        for (double m_dt : m_dts) {
-            header_file << m_dt << " ";
-        }
+        // write out dt
+        header_file << m_dt << " ";
         header_file << "\n";
 
-        // write out array of t_new
-        for (double i : m_ts_new) {
-            header_file << i << " ";
-        }
+        // write out t_new
+        header_file << m_t_new << " ";
         header_file << "\n";
 
         // write the BoxArray at each level
-        for (int lev = 0; lev <= finest_level; ++lev) {
-            boxArray(lev).writeOn(header_file);
-            header_file << '\n';
-        }
+
+        boxArray(m_lev).writeOn(header_file);
+        header_file << '\n';
         header_file.close();
     }
 
     // write the MultiFab data to, e.g., chk00010/Level_0/
-    for (int lev = 0; lev <= finest_level; ++lev) {
-        amrex::VisMF::Write(
-            m_state[lev], amrex::MultiFabFileFullPrefix(
-                              lev, checkpointname, "Level_", varnames[0]));
-    }
+
+    amrex::VisMF::Write(
+        m_state, amrex::MultiFabFileFullPrefix(
+                     m_lev, checkpointname, "Level_", varnames[0]));
 
     m_pc->Checkpoint(checkpointname, m_pc->identifier());
 
@@ -1123,7 +1023,7 @@ void SPADES::read_checkpoint_file()
         std::istringstream lis(line);
         int i = 0;
         while (lis >> word) {
-            m_isteps[i++] = std::stoi(word);
+            m_istep = std::stoi(word);
         }
     }
 
@@ -1133,7 +1033,7 @@ void SPADES::read_checkpoint_file()
         std::istringstream lis(line);
         int i = 0;
         while (lis >> word) {
-            m_dts[i++] = std::stod(word);
+            m_dt = std::stod(word);
         }
     }
 
@@ -1143,39 +1043,33 @@ void SPADES::read_checkpoint_file()
         std::istringstream lis(line);
         int i = 0;
         while (lis >> word) {
-            m_ts_new[i++] = std::stod(word);
+            m_t_new = std::stod(word);
         }
     }
 
-    for (int lev = 0; lev <= finest_level; ++lev) {
+    // read in level 'lev' BoxArray from Header
+    amrex::BoxArray ba;
+    ba.readFrom(is);
+    goto_next_line(is);
 
-        // read in level 'lev' BoxArray from Header
-        amrex::BoxArray ba;
-        ba.readFrom(is);
-        goto_next_line(is);
+    // create a distribution mapping
+    amrex::DistributionMapping dm{ba, amrex::ParallelDescriptor::NProcs()};
 
-        // create a distribution mapping
-        amrex::DistributionMapping dm{ba, amrex::ParallelDescriptor::NProcs()};
+    // set BoxArray grids and DistributionMapping dmap in
+    // AMReX_AmrMesh.H class
+    SetBoxArray(m_lev, ba);
+    SetDistributionMap(m_lev, dm);
 
-        // set BoxArray grids and DistributionMapping dmap in
-        // AMReX_AmrMesh.H class
-        SetBoxArray(lev, ba);
-        SetDistributionMap(lev, dm);
-
-        // build MultiFabs
-        const int ncomp = static_cast<int>(varnames.size());
-        AMREX_ALWAYS_ASSERT(ncomp == constants::N_STATES);
-        m_state[lev].define(
-            ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
-    }
+    // build MultiFabs
+    const int ncomp = static_cast<int>(varnames.size());
+    AMREX_ALWAYS_ASSERT(ncomp == constants::N_STATES);
+    m_state.define(ba, dm, constants::N_STATES, m_state_ngrow, amrex::MFInfo());
 
     // read in the MultiFab data
-    for (int lev = 0; lev <= finest_level; ++lev) {
-        amrex::VisMF::Read(
-            m_state[lev], amrex::MultiFabFileFullPrefix(
-                              lev, m_restart_chkfile, "Level_", varnames[0]));
-        update_gvt(lev);
-    }
+    amrex::VisMF::Read(
+        m_state, amrex::MultiFabFileFullPrefix(
+                     m_lev, m_restart_chkfile, "Level_", varnames[0]));
+    update_gvt();
 
     read_rng_file(m_restart_chkfile);
 
@@ -1200,16 +1094,15 @@ void SPADES::write_info_file(const std::string& path) const
     }
 
     fh << dash_line << "Grid information: " << std::endl;
-    for (int lev = 0; lev < finestLevel() + 1; ++lev) {
-        fh << "  Level: " << lev << "\n"
-           << "    num. boxes = " << boxArray().size() << "\n"
-           << "    maximum zones = ";
 
-        for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
-            fh << Geom(lev).Domain().length(dir) << " ";
-        }
-        fh << "\n";
+    fh << "  Level: " << m_lev << "\n"
+       << "    num. boxes = " << boxArray().size() << "\n"
+       << "    maximum zones = ";
+
+    for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+        fh << Geom(m_lev).Domain().length(dir) << " ";
     }
+    fh << "\n";
 
     fh << dash_line << "Input file parameters: " << std::endl;
     amrex::ParmParse::dumpTable(fh, true);
@@ -1286,8 +1179,7 @@ void SPADES::write_data_file(const bool is_init) const
     if (amrex::ParallelDescriptor::IOProcessor()) {
 
         amrex::Print() << "Writing simulation data to " << m_data_fname
-                       << " at time " << m_ts_new[0] << std::endl;
-        const int lev = 0;
+                       << " at time " << m_t_new << std::endl;
 
         if (is_init) {
             std::ofstream fh(m_data_fname.c_str(), std::ios::out);
@@ -1295,7 +1187,7 @@ void SPADES::write_data_file(const bool is_init) const
             fh << "step,gvt,lbts,nodes,total_messages,messages,processed_"
                   "messages,min_time,avg_time,max_time,min_rate,avg_rate,"
                   "max_rate";
-            for (int i = 0; i < m_nrollbacks[lev].size(); i++) {
+            for (int i = 0; i < m_nrollbacks.size(); i++) {
                 fh << ",rollback_" << i;
             }
             fh << "\n";
@@ -1308,17 +1200,15 @@ void SPADES::write_data_file(const bool is_init) const
             amrex::FileOpenFailed(m_data_fname);
         }
 
-        const auto n_processed_messages = std::accumulate(
-            m_nprocessed_messages.begin(), m_nprocessed_messages.end(), 0);
+        const auto n_processed_messages = m_nprocessed_messages;
+        fh << m_t_new << "," << m_gvt << "," << m_lbts << "," << m_ncells << ","
+           << m_ntotal_messages << "," << m_nmessages << ","
+           << n_processed_messages << "," << m_min_timings[0] << ","
+           << m_avg_timings[0] << "," << m_max_timings[0] << ","
+           << m_min_timings[1] << "," << m_avg_timings[1] << ","
+           << m_max_timings[1];
 
-        fh << m_ts_new[lev] << "," << m_gvts[lev] << "," << m_lbts[lev] << ","
-           << m_ncells[lev] << "," << m_ntotal_messages[lev] << ","
-           << m_nmessages[lev] << "," << n_processed_messages << ","
-           << m_min_timings[0] << "," << m_avg_timings[0] << ","
-           << m_max_timings[0] << "," << m_min_timings[1] << ","
-           << m_avg_timings[1] << "," << m_max_timings[1];
-
-        for (const auto& rlbk : m_nrollbacks[lev]) {
+        for (const auto& rlbk : m_nrollbacks) {
             fh << "," << rlbk;
         }
         fh << "\n";

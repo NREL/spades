@@ -168,6 +168,7 @@ private:
     //! Upper bound for undefined message counts
     const int m_upper_undefined_count{100};
 
+    //! Level
     static constexpr int m_lev{0};
 };
 } // namespace spades::particles

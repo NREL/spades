@@ -111,20 +111,18 @@ public:
 
     /**
        @brief Compute the time step
-       @param lev [in] level
        @return the time step
      **/
-    static amrex::Real est_time_step(const int lev);
+    static amrex::Real est_time_step();
 
     /**
        @brief Get a field based on a variable name
        @param name [in] field name
-       @param lev [in] level
        @param ngrow [in] number of grow cells
        @return the requested field
      **/
     std::unique_ptr<amrex::MultiFab>
-    get_field(const std::string& name, const int lev, const int ngrow);
+    get_field(const std::string& name, const int ngrow);
 
     /**
        @brief Put together an array of MultiFab for writing
@@ -135,42 +133,36 @@ public:
 
     /**
        @brief Initialize state
-       @param lev [in] level
      **/
-    void initialize_state(const int lev);
+    void initialize_state();
 
     //! Initialize the particle container
     void init_particle_container();
 
     /**
        @brief Process messages
-       @param lev [in] level
      **/
-    void process_messages(const int lev);
+    void process_messages();
 
     /**
        @brief Perform rollback
-       @param lev [in] level
      **/
-    void rollback(const int lev);
+    void rollback();
 
     /**
        @brief Print rollback statistics
-       @param lev [in] level
      **/
-    void rollback_statistics(const int lev);
+    void rollback_statistics();
 
     /**
        @brief Update the global virtual time
-       @param lev [in] level
      **/
-    void update_gvt(const int lev);
+    void update_gvt();
 
     /**
        @brief Update the Lower Bound on Incoming Time Stamp
-       @param lev [in] level
      **/
-    void update_lbts(const int lev);
+    void update_lbts();
 
 private:
     //! Read parameters
@@ -180,30 +172,19 @@ private:
     void compute_dt();
 
     /**
-       @brief Advance a level by the time step
+       @brief Advance by the time step
 
-       Includes a recursive call for finer levels
-
-       @param lev [in] level
        @param time [in] time
        @param iteration [in] iteration
      **/
-    void time_step(const int lev, const amrex::Real time, const int iteration);
+    void time_step(const amrex::Real time);
 
     /**
-       @brief Advance a single level for a single time step
-       @param lev [in] level
+       @brief Advance for a single time step
        @param time [in] time
        @param dt_lev [in] time step for this level
-       @param iteration [in] iteration
-       @param ncycle [in] number of cycles for this level
      **/
-    void advance(
-        const int lev,
-        const amrex::Real time,
-        const amrex::Real dt_lev,
-        const int iteration,
-        const int ncycle);
+    void advance(const amrex::Real time, const amrex::Real dt);
 
     //! Perform work after a time step
     static void post_time_step();
@@ -285,53 +266,49 @@ private:
 
     /**
        @brief Compute summary data for this level
-       @param lev [in] level
      **/
-    void level_summary(const int lev);
+    void summary();
 
-    //! Current steps at each level
-    amrex::Vector<int> m_isteps;
+    //! Current step
+    int m_istep{0};
 
-    //! Number of substeps at each level
-    amrex::Vector<int> m_nsubsteps;
+    //! Global virtual time
+    amrex::Real m_gvt{constants::LOW_NUM};
 
-    //! Global virtual time at each level
-    amrex::Vector<amrex::Real> m_gvts;
-
-    //! New time at each level
-    amrex::Vector<amrex::Real> m_ts_new;
+    //! New time
+    amrex::Real m_t_new{0.0};
 
     //! Old time at each level
-    amrex::Vector<amrex::Real> m_ts_old;
+    amrex::Real m_t_old{constants::LOW_NUM};
 
-    //! Time step at each level
-    amrex::Vector<amrex::Real> m_dts;
+    //! Time step
+    amrex::Real m_dt{constants::LARGE_NUM};
 
-    //! Lower bound on incoming time stamp at each level
-    amrex::Vector<amrex::Real> m_lbts;
+    //! Lower bound on incoming time stamp
+    amrex::Real m_lbts{constants::LOW_NUM};
 
-    //! Cell count at each level
-    amrex::Vector<amrex::Long> m_ncells;
+    //! Cell count
+    amrex::Long m_ncells{0};
 
-    //! Total message count at each level
-    amrex::Vector<amrex::Long> m_ntotal_messages;
+    //! Total message count
+    amrex::Long m_ntotal_messages{0};
 
-    //! Message count at each level
-    amrex::Vector<amrex::Long> m_nmessages;
+    //! Message count
+    amrex::Long m_nmessages{0};
 
-    //! Count of processed messages at each level
-    amrex::Vector<int> m_nprocessed_messages;
+    //! Count of processed messages
+    amrex::Long m_nprocessed_messages{0};
 
-    //! Number of rollbacks at each level
-    amrex::Vector<amrex::Vector<int>> m_nrollbacks;
+    //! Number of rollbacks
+    amrex::Vector<int> m_nrollbacks;
 
-    //! Min timings for each step at each level
+    //! Min timings for each step
     amrex::Vector<amrex::Real> m_min_timings;
 
-    //! Max timings for each step at each level
+    //! Max timings for each step
     amrex::Vector<amrex::Real> m_max_timings;
 
-    //! Average timings for each step at each level
+    //! Average timings for each step
     amrex::Vector<amrex::Real> m_avg_timings;
 
     //! Maximum number of steps
@@ -349,17 +326,14 @@ private:
     //! Message count names for output
     amrex::Vector<std::string> m_message_counts_varnames;
 
-    //! Multifabs to store the solution at each level of refinement
-    amrex::Vector<amrex::MultiFab> m_state;
+    //! Multifabs to store the solution
+    amrex::MultiFab m_state;
 
-    //! Multifabs for output at each level of refinement
-    amrex::Vector<amrex::MultiFab> m_plt_mf;
+    //! Multifabs for output
+    amrex::MultiFab m_plt_mf;
 
     //! Number of ghost cells
     const int m_state_ngrow = 0;
-
-    //! Regrid interval (optional user input)
-    int m_regrid_int = 2;
 
     //! Restart file name, restart from this checkpoint if it is not empty
     std::string m_restart_chkfile;
@@ -411,6 +385,9 @@ private:
 
     //! Particle container
     std::unique_ptr<particles::CellSortedParticleContainer> m_pc;
+
+    //! Level
+    static constexpr int m_lev{0};
 };
 } // namespace spades
 #endif
