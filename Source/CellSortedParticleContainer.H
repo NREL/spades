@@ -131,6 +131,9 @@ public:
     //! Number of grow cells
     int ngrow() const { return m_ngrow; }
 
+    //! Level index
+    static constexpr int LEV{0};
+
 private:
     //! Initialize vectors (write flags, message counts, offsets, etc)
     void initialize_vectors();
@@ -167,9 +170,6 @@ private:
 
     //! Upper bound for undefined message counts
     const int m_upper_undefined_count{100};
-
-    //! Level
-    static constexpr int m_lev{0};
 };
 } // namespace spades::particles
 #endif

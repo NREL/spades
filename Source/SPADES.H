@@ -164,6 +164,9 @@ public:
      **/
     void update_lbts();
 
+    //! Level index
+    static constexpr int LEV{0};
+
 private:
     //! Read parameters
     void read_parameters();
@@ -385,9 +388,6 @@ private:
 
     //! Particle container
     std::unique_ptr<particles::CellSortedParticleContainer> m_pc;
-
-    //! Level
-    static constexpr int m_lev{0};
 };
 } // namespace spades
 #endif

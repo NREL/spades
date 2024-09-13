@@ -7,7 +7,6 @@ SPADES::SPADES()
 {
     BL_PROFILE("spades::SPADES::SPADES()");
     read_parameters();
-    int nlevs_max = max_level + 1;
 
     if (max_level > 0) {
         amrex::Abort(
@@ -284,9 +283,9 @@ void SPADES::summary()
 {
     BL_PROFILE("spades::SPADES::summary()");
 
-    m_ntotal_messages = m_pc->TotalNumberOfParticles(m_lev != 0);
+    m_ntotal_messages = m_pc->TotalNumberOfParticles(LEV != 0);
     m_nmessages = m_pc->total_count(particles::MessageTypes::MESSAGE);
-    m_ncells = CountCells(m_lev);
+    m_ncells = CountCells(LEV);
     if (Verbose() > 0) {
         amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
         amrex::Print() << "  " << m_ntotal_messages << " total messages"
@@ -318,9 +317,9 @@ void SPADES::process_messages()
         m_state_ngrow == m_pc->ngrow(),
         "Particle and state cells must be equal for now");
 
-    const auto& plo = Geom(m_lev).ProbLoArray();
-    const auto& dx = Geom(m_lev).CellSizeArray();
-    const auto& dom = Geom(m_lev).Domain();
+    const auto& plo = Geom(LEV).ProbLoArray();
+    const auto& dx = Geom(LEV).CellSizeArray();
+    const auto& dom = Geom(LEV).Domain();
     const auto& dlo = dom.smallEnd();
     const auto& dhi = dom.bigEnd();
     const auto lbts = m_lbts;
@@ -331,7 +330,7 @@ void SPADES::process_messages()
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
@@ -339,7 +338,7 @@ void SPADES::process_messages()
         const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
         const auto& offsets_arr = m_pc->offsets().const_array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_pc->GetParticles(m_lev)[index];
+        auto& pti = m_pc->GetParticles(LEV)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -439,11 +438,11 @@ void SPADES::rollback()
         return;
     }
 
-    const auto& plo = Geom(m_lev).ProbLoArray();
-    const auto& dx = Geom(m_lev).CellSizeArray();
-    const auto& dom = Geom(m_lev).Domain();
+    const auto& plo = Geom(LEV).ProbLoArray();
+    const auto& dx = Geom(LEV).CellSizeArray();
+    const auto& dom = Geom(LEV).Domain();
 
-    amrex::iMultiFab rollback(boxArray(m_lev), DistributionMap(m_lev), 1, 0);
+    amrex::iMultiFab rollback(boxArray(LEV), DistributionMap(LEV), 1, 0);
     rollback.setVal(1.0);
     bool require_rollback = true;
 
@@ -454,7 +453,7 @@ void SPADES::rollback()
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-        for (amrex::MFIter mfi = m_pc->MakeMFIter(m_lev); mfi.isValid();
+        for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid();
              ++mfi) {
             const amrex::Box& box = mfi.tilebox();
             const int gid = mfi.index();
@@ -464,7 +463,7 @@ void SPADES::rollback()
             const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
             const auto& offsets_arr = m_pc->offsets().const_array(mfi);
             const auto index = std::make_pair(gid, tid);
-            auto& pti = m_pc->GetParticles(m_lev)[index];
+            auto& pti = m_pc->GetParticles(LEV)[index];
             auto& particles = pti.GetArrayOfStructs();
             auto* pstruct = particles().dataPtr();
 
@@ -646,7 +645,7 @@ void SPADES::rollback_statistics()
         }
         const auto nt = static_cast<amrex::Long>(
             std::accumulate(nrlbks.begin(), nrlbks.end(), 0.0));
-        AMREX_ALWAYS_ASSERT(nt == boxArray(m_lev).numPts());
+        AMREX_ALWAYS_ASSERT(nt == boxArray(LEV).numPts());
     }
 }
 
@@ -663,13 +662,13 @@ void SPADES::update_lbts()
 {
     BL_PROFILE("spades::SPADES::update_lbts()");
 
-    amrex::MultiFab lbts(boxArray(m_lev), DistributionMap(m_lev), 1, 0);
+    amrex::MultiFab lbts(boxArray(LEV), DistributionMap(LEV), 1, 0);
     lbts.setVal(constants::LARGE_NUM);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
@@ -677,7 +676,7 @@ void SPADES::update_lbts()
         const auto& offsets_arr = m_pc->offsets().const_array(mfi);
         const auto& lbts_arr = lbts.array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_pc->GetParticles(m_lev)[index];
+        auto& pti = m_pc->GetParticles(LEV)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -735,7 +734,7 @@ void SPADES::MakeNewLevelFromCoarse(
 }
 
 void SPADES::MakeNewLevelFromScratch(
-    int lev,
+    int /*lev*/,
     amrex::Real time,
     const amrex::BoxArray& ba,
     const amrex::DistributionMapping& dm)
@@ -751,7 +750,7 @@ void SPADES::MakeNewLevelFromScratch(
     initialize_state();
 
     // Update particle container
-    m_pc->Define(Geom(m_lev), dm, ba);
+    m_pc->Define(Geom(LEV), dm, ba);
     m_pc->initialize_messages(m_lookahead);
     m_pc->initialize_state();
     m_pc->sort_messages();
@@ -761,9 +760,9 @@ void SPADES::initialize_state()
 {
     BL_PROFILE("spades::SPADES::initialize_state()");
 
-    m_ic_op->initialize(Geom(m_lev).data());
+    m_ic_op->initialize(Geom(LEV).data());
 
-    m_state.FillBoundary(Geom(m_lev).periodicity());
+    m_state.FillBoundary(Geom(LEV).periodicity());
 }
 
 void SPADES::RemakeLevel(
@@ -776,7 +775,7 @@ void SPADES::RemakeLevel(
     amrex::Abort("spades::SPADES::RemakeLevel(): not implemented");
 }
 
-void SPADES::ClearLevel(int lev)
+void SPADES::ClearLevel(int /*lev*/)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
     m_pc->clear_state();
@@ -829,7 +828,7 @@ SPADES::get_field(const std::string& name, const int ngrow)
 
     const int nc = 1;
     std::unique_ptr<amrex::MultiFab> mf = std::make_unique<amrex::MultiFab>(
-        boxArray(m_lev), DistributionMap(m_lev), nc, ngrow);
+        boxArray(LEV), DistributionMap(LEV), nc, ngrow);
 
     const int srccomp_sd = get_field_component(name, m_state_varnames);
     if (srccomp_sd != -1) {
@@ -869,7 +868,7 @@ void SPADES::plot_file_mf()
 
     m_plt_mf.clear();
     m_plt_mf.define(
-        boxArray(m_lev), DistributionMap(m_lev),
+        boxArray(LEV), DistributionMap(LEV),
         static_cast<int>(plot_file_var_names().size()), 0, amrex::MFInfo());
     m_plt_mf.setVal(0.0);
     int cnt = 0;
@@ -896,7 +895,7 @@ void SPADES::write_plot_file()
                    << m_t_new << std::endl;
 
     amrex::WriteSingleLevelPlotfile(
-        plotfilename, m_plt_mf, varnames, Geom(m_lev), m_t_new, m_istep);
+        plotfilename, m_plt_mf, varnames, Geom(LEV), m_t_new, m_istep);
     if (m_write_particles) {
         m_pc->write_plot_file(plotfilename);
     }
@@ -971,7 +970,7 @@ void SPADES::write_checkpoint_file() const
 
         // write the BoxArray at each level
 
-        boxArray(m_lev).writeOn(header_file);
+        boxArray(LEV).writeOn(header_file);
         header_file << '\n';
         header_file.close();
     }
@@ -980,7 +979,7 @@ void SPADES::write_checkpoint_file() const
 
     amrex::VisMF::Write(
         m_state, amrex::MultiFabFileFullPrefix(
-                     m_lev, checkpointname, "Level_", varnames[0]));
+                     LEV, checkpointname, "Level_", varnames[0]));
 
     m_pc->Checkpoint(checkpointname, m_pc->identifier());
 
@@ -1021,7 +1020,6 @@ void SPADES::read_checkpoint_file()
     std::getline(is, line);
     {
         std::istringstream lis(line);
-        int i = 0;
         while (lis >> word) {
             m_istep = std::stoi(word);
         }
@@ -1031,7 +1029,6 @@ void SPADES::read_checkpoint_file()
     std::getline(is, line);
     {
         std::istringstream lis(line);
-        int i = 0;
         while (lis >> word) {
             m_dt = std::stod(word);
         }
@@ -1041,7 +1038,6 @@ void SPADES::read_checkpoint_file()
     std::getline(is, line);
     {
         std::istringstream lis(line);
-        int i = 0;
         while (lis >> word) {
             m_t_new = std::stod(word);
         }
@@ -1057,8 +1053,8 @@ void SPADES::read_checkpoint_file()
 
     // set BoxArray grids and DistributionMapping dmap in
     // AMReX_AmrMesh.H class
-    SetBoxArray(m_lev, ba);
-    SetDistributionMap(m_lev, dm);
+    SetBoxArray(LEV, ba);
+    SetDistributionMap(LEV, dm);
 
     // build MultiFabs
     const int ncomp = static_cast<int>(varnames.size());
@@ -1068,7 +1064,7 @@ void SPADES::read_checkpoint_file()
     // read in the MultiFab data
     amrex::VisMF::Read(
         m_state, amrex::MultiFabFileFullPrefix(
-                     m_lev, m_restart_chkfile, "Level_", varnames[0]));
+                     LEV, m_restart_chkfile, "Level_", varnames[0]));
     update_gvt();
 
     read_rng_file(m_restart_chkfile);
@@ -1095,12 +1091,12 @@ void SPADES::write_info_file(const std::string& path) const
 
     fh << dash_line << "Grid information: " << std::endl;
 
-    fh << "  Level: " << m_lev << "\n"
+    fh << "  Level: " << LEV << "\n"
        << "    num. boxes = " << boxArray().size() << "\n"
        << "    maximum zones = ";
 
     for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
-        fh << Geom(m_lev).Domain().length(dir) << " ";
+        fh << Geom(LEV).Domain().length(dir) << " ";
     }
     fh << "\n";
 
