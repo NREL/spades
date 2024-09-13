@@ -186,7 +186,8 @@ void SPADES::evolve()
             amrex::ParallelDescriptor::second() - start_time;
         const auto n_processed_messages = m_nprocessed_messages;
         const amrex::Vector<amrex::Real> timings{
-            delta_time, n_processed_messages / delta_time};
+            delta_time,
+            static_cast<amrex::Real>(n_processed_messages) / delta_time};
         for (int i = 0; i < timings.size(); i++) {
             m_min_timings[i] = timings[i];
             m_max_timings[i] = timings[i];
