@@ -76,50 +76,23 @@ public:
        @brief Get the message counts
        @return message counts
      **/
-    const amrex::Vector<amrex::iMultiFab>& message_counts() const
-    {
-        return m_message_counts;
-    };
+    const amrex::iMultiFab& message_counts() const { return m_message_counts; };
 
     /**
        @brief Get the message offsets
        @return message offsets
      **/
-    const amrex::Vector<amrex::iMultiFab>& offsets() const
-    {
-        return m_offsets;
-    };
+    const amrex::iMultiFab& offsets() const { return m_offsets; };
 
     /**
-       @brief Get the message counts at a level
-       @param lev [in] level
-       @return message counts
-     **/
-    const amrex::iMultiFab& message_counts(const int lev) const
-    {
-        return m_message_counts[lev];
-    };
-
-    /**
-       @brief Get the message offsets at a level
-       @param lev [in] level
-       @return message offsets
-     **/
-    const amrex::iMultiFab& offsets(const int lev) const
-    {
-        return m_offsets[lev];
-    };
-
-    /**
-       @brief Get the total number of messages of \p typ at a level
-       @param lev [in] level
+       @brief Get the total number of messages of \p typ
        @param typ [in] message type
        @return message counts
      **/
-    amrex::Long total_count(const int lev, const int typ) const
+    amrex::Long total_count(const int typ) const
     {
         BL_PROFILE("spades::CellSortedParticleContainer::total_count()");
-        return m_message_counts[lev].sum(typ);
+        return m_message_counts.sum(typ);
     }
 
     /**
@@ -181,10 +154,10 @@ private:
     int m_ngrow;
 
     //! Count of message types in each cell
-    amrex::Vector<amrex::iMultiFab> m_message_counts;
+    amrex::iMultiFab m_message_counts;
 
     //! Offsets of message types in each cell
-    amrex::Vector<amrex::iMultiFab> m_offsets;
+    amrex::iMultiFab m_offsets;
 
     //! Lower bound for undefined message counts
     const int m_lower_undefined_count{40};
@@ -194,6 +167,8 @@ private:
 
     //! Upper bound for undefined message counts
     const int m_upper_undefined_count{100};
+
+    static constexpr int m_lev{0};
 };
 } // namespace spades::particles
 #endif

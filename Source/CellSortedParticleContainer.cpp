@@ -77,36 +77,30 @@ void CellSortedParticleContainer::initialize_vectors()
     m_writeflags_int[IntData::receiver] = 1;
     m_int_data_names[IntData::receiver] = "pair";
     m_writeflags_int[IntData::receiver] = 0;
-
-    const int nlevs_max = m_gdb->maxLevel() + 1;
-    m_message_counts.resize(nlevs_max);
-    m_offsets.resize(nlevs_max);
 }
 
 void CellSortedParticleContainer::initialize_state()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::initialize_state()");
 
-    const int lev = 0;
-
-    m_message_counts[lev].define(
-        ParticleBoxArray(lev), ParticleDistributionMap(lev),
+    m_message_counts.define(
+        ParticleBoxArray(m_lev), ParticleDistributionMap(m_lev),
         MessageTypes::NTYPES, m_ngrow, amrex::MFInfo());
 
-    m_offsets[lev].define(
-        ParticleBoxArray(lev), ParticleDistributionMap(lev),
+    m_offsets.define(
+        ParticleBoxArray(m_lev), ParticleDistributionMap(m_lev),
         MessageTypes::NTYPES, m_ngrow, amrex::MFInfo());
 
-    m_message_counts[lev].setVal(0);
-    m_offsets[lev].setVal(0);
+    m_message_counts.setVal(0);
+    m_offsets.setVal(0);
 }
 
 void CellSortedParticleContainer::clear_state()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::clear_state()");
-    const int lev = 0;
-    m_message_counts[lev].clear();
-    m_offsets[lev].clear();
+
+    m_message_counts.clear();
+    m_offsets.clear();
 }
 
 void CellSortedParticleContainer::update_counts()
@@ -120,19 +114,18 @@ void CellSortedParticleContainer::count_messages()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::count_messages()");
 
-    const int lev = 0;
-    m_message_counts[lev].setVal(0);
+    m_message_counts.setVal(0);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
 
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_message_counts[lev].array(mfi);
-        auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
+        const auto& cnt_arr = m_message_counts.array(mfi);
+        auto& pti = GetParticles(m_lev)[std::make_pair(gid, tid)];
         const auto& particles = pti.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
         const int np = pti.numParticles();
@@ -154,17 +147,16 @@ void CellSortedParticleContainer::count_offsets()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::count_offsets()");
 
-    const int lev = 0;
-    m_offsets[lev].setVal(0);
+    m_offsets.setVal(0);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const auto ncell = box.numPts();
-        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
-        const auto& offsets_arr = m_offsets[lev].array(mfi);
+        const auto& cnt_arr = m_message_counts.const_array(mfi);
+        const auto& offsets_arr = m_offsets.array(mfi);
         int* p_offsets = offsets_arr.dataPtr();
         amrex::Scan::PrefixSum<int>(
             ncell,
@@ -196,11 +188,9 @@ void CellSortedParticleContainer::initialize_messages(
 {
     BL_PROFILE("spades::CellSortedParticleContainer::initialize_messages()");
 
-    const int lev = 0;
-
-    const auto& plo = Geom(lev).ProbLoArray();
-    const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dom = Geom(lev).Domain();
+    const auto& plo = Geom(m_lev).ProbLoArray();
+    const auto& dx = Geom(m_lev).CellSizeArray();
+    const auto& dom = Geom(m_lev).Domain();
     // const auto& dlo = dom.smallEnd();
     // const auto& dhi = dom.bigEnd();
 
@@ -208,11 +198,11 @@ void CellSortedParticleContainer::initialize_messages(
     // #ifdef AMREX_USE_OMP
     // #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     // #endif
-    //     for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    //     for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
     //         const amrex::Box& box = mfi.tilebox();
     //         const int gid = mfi.index();
     //         const int tid = mfi.LocalTileIndex();
-    //         auto& pti = GetParticles(lev)[std::make_pair(gid, tid)];
+    //         auto& pti = GetParticles(m_lev)[std::make_pair(gid, tid)];
 
     //         for (amrex::IntVect iv = box.smallEnd(); iv <= box.bigEnd();
     //              box.next(iv)) {
@@ -364,15 +354,15 @@ void CellSortedParticleContainer::initialize_messages(
     AMREX_ALWAYS_ASSERT(np_per_cell > msg_per_cell);
 
     amrex::iMultiFab num_particles(
-        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0,
+        ParticleBoxArray(m_lev), ParticleDistributionMap(m_lev), 1, 0,
         amrex::MFInfo());
     amrex::iMultiFab init_offsets(
-        ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0,
+        ParticleBoxArray(m_lev), ParticleDistributionMap(m_lev), 1, 0,
         amrex::MFInfo());
     num_particles.setVal(np_per_cell);
     init_offsets.setVal(0);
 
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
 
         const auto ncells = static_cast<int>(box.numPts());
@@ -392,7 +382,7 @@ void CellSortedParticleContainer::initialize_messages(
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
         const auto& offset_arr = init_offsets[mfi].const_array();
         const auto& num_particles_arr = num_particles[mfi].const_array();
-        auto& pti = DefineAndReturnParticleTile(lev, mfi);
+        auto& pti = DefineAndReturnParticleTile(m_lev, mfi);
         pti.resize(np);
         auto* aos = pti.GetArrayOfStructs().dataPtr();
         amrex::ParallelForRNG(
@@ -440,10 +430,10 @@ void CellSortedParticleContainer::initialize_messages(
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
+    for (MyParIter pti(*this, m_lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
 
-        auto& particle_tile = GetParticles(lev)[index];
+        auto& particle_tile = GetParticles(m_lev)[index];
         const size_t np = particle_tile.numParticles();
         auto& particles = particle_tile.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
@@ -468,13 +458,11 @@ void CellSortedParticleContainer::sort_messages()
     // Taking inspiration from AMReX's SortParticlesByBin
     BL_PROFILE("spades::CellSortedParticleContainer::sort_messages()");
 
-    const int lev = 0;
-
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
-        auto& particle_tile = ParticlesAt(lev, mfi);
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
+        auto& particle_tile = ParticlesAt(m_lev, mfi);
         const size_t np = particle_tile.numParticles();
 
         if (np == 0) {
@@ -542,7 +530,7 @@ void CellSortedParticleContainer::sort_messages()
         //     "spades::CellSortedParticleContainer::sort_messages::"
         //     "ReorderParticles",
         //     reorder);
-        ReorderParticles(lev, mfi, cell_list.data());
+        ReorderParticles(m_lev, mfi, cell_list.data());
         // amrex::Gpu::Device::synchronize();
         // BL_PROFILE_VAR_STOP(reorder);
     }
@@ -553,10 +541,9 @@ void CellSortedParticleContainer::update_undefined()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::update_undefined()");
 
-    const int lev = 0;
-    const auto& plo = Geom(lev).ProbLoArray();
-    const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dom = Geom(lev).Domain();
+    const auto& plo = Geom(m_lev).ProbLoArray();
+    const auto& dx = Geom(m_lev).CellSizeArray();
+    const auto& dom = Geom(m_lev).Domain();
     const int lower_count = m_lower_undefined_count;
     const int upper_count = m_upper_undefined_count;
     const int reset_count = m_reset_undefined_count;
@@ -567,13 +554,13 @@ void CellSortedParticleContainer::update_undefined()
     CellSortedParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
 
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
-        const auto& offsets_arr = m_offsets[lev].const_array(mfi);
-        auto& particle_tile = GetParticles(lev)[std::make_pair(gid, tid)];
+        const auto& cnt_arr = m_message_counts.const_array(mfi);
+        const auto& offsets_arr = m_offsets.const_array(mfi);
+        auto& particle_tile = GetParticles(m_lev)[std::make_pair(gid, tid)];
         auto& particles = particle_tile.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -638,7 +625,7 @@ void CellSortedParticleContainer::update_undefined()
             static_cast<amrex::Long>(pid + np) < amrex::LastParticleID,
             "Error: overflow on particle id numbers!");
 
-        auto& ptile_adds = pc_adds.DefineAndReturnParticleTile(lev, mfi);
+        auto& ptile_adds = pc_adds.DefineAndReturnParticleTile(m_lev, mfi);
         ptile_adds.resize(np);
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
         auto* aos = ptile_adds.GetArrayOfStructs().dataPtr();
@@ -681,19 +668,18 @@ void CellSortedParticleContainer::resolve_pairs()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::resolve_pairs()");
 
-    const int lev = 0;
-    const auto& dom = Geom(lev).Domain();
+    const auto& dom = Geom(m_lev).Domain();
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
-        const auto& offsets_arr = m_offsets[lev].const_array(mfi);
-        auto& particle_tile = GetParticles(lev)[std::make_pair(gid, tid)];
+        const auto& cnt_arr = m_message_counts.const_array(mfi);
+        const auto& offsets_arr = m_offsets.const_array(mfi);
+        auto& particle_tile = GetParticles(m_lev)[std::make_pair(gid, tid)];
         auto& particles = particle_tile.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -758,15 +744,13 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
 {
     BL_PROFILE("spades::CellSortedParticleContainer::garbage_collect()");
 
-    const int lev = 0;
-
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
+    for (MyParIter pti(*this, m_lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
 
-        auto& particle_tile = GetParticles(lev)[index];
+        auto& particle_tile = GetParticles(m_lev)[index];
         const size_t np = particle_tile.numParticles();
         auto& particles = particle_tile.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
@@ -791,17 +775,15 @@ amrex::Real CellSortedParticleContainer::compute_gvt()
     // If this becomes a performance bottleneck it could be sped up by
     // making a vector of just the message time stamps before the min op
 
-    const int lev = 0;
-
     amrex::Real gvt = constants::LARGE_NUM;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion()) reduction(min : gvt)
 #endif
-    for (MyParIter pti(*this, lev); pti.isValid(); ++pti) {
+    for (MyParIter pti(*this, m_lev); pti.isValid(); ++pti) {
         auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
 
-        const auto& particle_tile = GetParticles(lev)[index];
+        const auto& particle_tile = GetParticles(m_lev)[index];
         const size_t np = particle_tile.numParticles();
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
@@ -825,24 +807,23 @@ void CellSortedParticleContainer::reposition_messages()
 {
     BL_PROFILE("spades::CellSortedParticleContainer::reposition_messages()");
 
-    const int lev = 0;
-    const auto& plo = Geom(lev).ProbLoArray();
-    const auto& dx = Geom(lev).CellSizeArray();
-    const auto& dxi = Geom(lev).InvCellSizeArray();
-    const auto& dom = Geom(lev).Domain();
+    const auto& plo = Geom(m_lev).ProbLoArray();
+    const auto& dx = Geom(m_lev).CellSizeArray();
+    const auto& dxi = Geom(m_lev).InvCellSizeArray();
+    const auto& dom = Geom(m_lev).Domain();
     const int nbins = 500;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = MakeMFIter(m_lev); mfi.isValid(); ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_message_counts[lev].const_array(mfi);
-        const auto& offsets_arr = m_offsets[lev].const_array(mfi);
+        const auto& cnt_arr = m_message_counts.const_array(mfi);
+        const auto& offsets_arr = m_offsets.const_array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = GetParticles(lev)[index];
+        auto& pti = GetParticles(m_lev)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 

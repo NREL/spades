@@ -336,7 +336,7 @@ void SPADES::advance(
     update_lbts(lev);
 
     const auto n_processed_messages_pre =
-        m_pc->total_count(lev, particles::MessageTypes::PROCESSED);
+        m_pc->total_count(particles::MessageTypes::PROCESSED);
 
     process_messages(lev);
     m_pc->Redistribute();
@@ -345,7 +345,7 @@ void SPADES::advance(
     rollback(lev);
 
     const auto n_processed_messages_post =
-        m_pc->total_count(lev, particles::MessageTypes::PROCESSED);
+        m_pc->total_count(particles::MessageTypes::PROCESSED);
 
     m_nprocessed_messages[lev] =
         static_cast<int>(n_processed_messages_post - n_processed_messages_pre);
@@ -359,7 +359,7 @@ void SPADES::level_summary(const int lev)
 {
     BL_PROFILE("spades::SPADES::level_summary()");
     m_ntotal_messages[lev] = m_pc->TotalNumberOfParticles(lev != 0);
-    m_nmessages[lev] = m_pc->total_count(lev, particles::MessageTypes::MESSAGE);
+    m_nmessages[lev] = m_pc->total_count(particles::MessageTypes::MESSAGE);
     m_ncells[lev] = CountCells(lev);
     if (Verbose() > 0) {
         amrex::Print() << "[Level " << lev << " step " << m_isteps[lev]
@@ -411,8 +411,8 @@ void SPADES::process_messages(const int lev)
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& sarr = m_state[lev].array(mfi);
-        const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
-        const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+        const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
+        const auto& offsets_arr = m_pc->offsets().const_array(mfi);
         const auto index = std::make_pair(gid, tid);
         auto& pti = m_pc->GetParticles(lev)[index];
         auto& particles = pti.GetArrayOfStructs();
@@ -535,8 +535,8 @@ void SPADES::rollback(const int lev)
             const int tid = mfi.LocalTileIndex();
             const auto& sarr = m_state[lev].array(mfi);
             const auto& rarr = rollback.array(mfi);
-            const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
-            const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+            const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
+            const auto& offsets_arr = m_pc->offsets().const_array(mfi);
             const auto index = std::make_pair(gid, tid);
             auto& pti = m_pc->GetParticles(lev)[index];
             auto& particles = pti.GetArrayOfStructs();
@@ -680,8 +680,7 @@ void SPADES::rollback(const int lev)
     m_pc->resolve_pairs();
 
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-        m_pc->message_counts(lev).sum(particles::MessageTypes::ANTI_MESSAGE) ==
-            0,
+        m_pc->message_counts().sum(particles::MessageTypes::ANTI_MESSAGE) == 0,
         "There should be no anti-messages left after rollback");
 }
 
@@ -747,8 +746,8 @@ void SPADES::update_lbts(const int lev)
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_pc->message_counts(lev).const_array(mfi);
-        const auto& offsets_arr = m_pc->offsets(lev).const_array(mfi);
+        const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
+        const auto& offsets_arr = m_pc->offsets().const_array(mfi);
         const auto& lbts_arr = lbts.array(mfi);
         const auto index = std::make_pair(gid, tid);
         auto& pti = m_pc->GetParticles(lev)[index];
@@ -925,10 +924,10 @@ SPADES::get_field(const std::string& name, const int lev, const int ngrow)
     }
     const int srccomp_id = get_field_component(name, m_message_counts_varnames);
     if (srccomp_id != -1) {
-        auto const& cnt_arrs = m_pc->message_counts(lev).const_arrays();
+        auto const& cnt_arrs = m_pc->message_counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
-            *mf, mf->nGrowVect(), m_pc->message_counts(lev).nComp(),
+            *mf, mf->nGrowVect(), m_pc->message_counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = cnt_arrs[nbx](i, j, k, n);
             });
@@ -965,11 +964,11 @@ void SPADES::plot_file_mf()
         amrex::MultiFab::Copy(
             m_plt_mf[lev], m_state[lev], 0, cnt, m_state[lev].nComp(), 0);
         cnt += m_state[lev].nComp();
-        auto const& cnt_arrs = m_pc->message_counts(lev).const_arrays();
+        auto const& cnt_arrs = m_pc->message_counts().const_arrays();
         auto const& plt_mf_arrs = m_plt_mf[lev].arrays();
         amrex::ParallelFor(
             m_plt_mf[lev], m_plt_mf[lev].nGrowVect(),
-            m_pc->message_counts(lev).nComp(),
+            m_pc->message_counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
             });
