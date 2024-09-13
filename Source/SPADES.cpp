@@ -453,8 +453,6 @@ void SPADES::process_messages(const int lev)
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
-                    auto& psnd =
-                        getter(2 * n, particles::MessageTypes::UNDEFINED);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
@@ -469,6 +467,8 @@ void SPADES::process_messages(const int lev)
                                            random_exponential(1.0, engine) +
                                            lookahead;
                     // FIXME, in general, Create is clunky. Better way?
+                    auto& psnd =
+                        getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::Create()(
                         psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
@@ -477,6 +477,7 @@ void SPADES::process_messages(const int lev)
                     psnd.idata(particles::IntData::pair) = pair;
                     psnd.rdata(particles::RealData::creation_time) =
                         sarr(iv, constants::LVT_IDX);
+
                     // Create the conjugate message
                     auto& pcnj =
                         getter(2 * n + 1, particles::MessageTypes::UNDEFINED);
