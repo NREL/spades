@@ -453,8 +453,7 @@ void SPADES::rollback()
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-        for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid();
-             ++mfi) {
+        for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
             const amrex::Box& box = mfi.tilebox();
             const int gid = mfi.index();
             const int tid = mfi.LocalTileIndex();
