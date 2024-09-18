@@ -51,9 +51,8 @@ int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 
     amrex::Initialize(argc, argv);
 
-    BL_PROFILE("SPADES::main()");
-
     {
+        BL_PROFILE("SPADES::main()");
 
         amrex::Real start_time = amrex::ParallelDescriptor::second();
         amrex::Print() << "Initializing SPADES ..." << std::endl;
