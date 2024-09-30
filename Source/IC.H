@@ -48,7 +48,7 @@ public:
 
     virtual ~InitializerBase() = default;
 
-    virtual void initialize(const int lev, amrex::GeometryData const& geom) = 0;
+    virtual void initialize(amrex::GeometryData const& geom) = 0;
 };
 
 //! Initial condition class
@@ -58,7 +58,7 @@ class Initializer : public InitializerBase
 public:
     using ICDeviceOp = typename ICOp::DeviceType;
 
-    Initializer(const ICOp ic_op, amrex::Vector<amrex::MultiFab>& state)
+    Initializer(const ICOp ic_op, amrex::MultiFab& state)
         : m_op(ic_op), m_state(state)
     {}
 
@@ -66,15 +66,14 @@ public:
 
     /**
        @brief Initialize m_state using the initial condition operator
-       @param lev [in] level
        @param geom [in] geometry information
      **/
-    void initialize(const int lev, amrex::GeometryData const& geom) override
+    void initialize(amrex::GeometryData const& geom) override
     {
-        auto const& s_arrs = m_state[lev].arrays();
+        auto const& s_arrs = m_state.arrays();
         ICDeviceOp ic(m_op.device_instance());
         amrex::ParallelFor(
-            m_state[lev], m_state[lev].nGrowVect(), constants::N_STATES,
+            m_state, m_state.nGrowVect(), constants::N_STATES,
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 amrex::Real state = 0.0;
@@ -89,7 +88,7 @@ public:
     const ICOp m_op;
 
     //! State that will be filled with the initial condition operator
-    amrex::Vector<amrex::MultiFab>& m_state;
+    amrex::MultiFab& m_state;
 };
 
 } // namespace spades::ic
