@@ -26,8 +26,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends graphviz
-          curl --no-progress-meter -O https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz
-          tar -xvf doxygen-1.12.0.tgz
+          wget https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz
+          tar -xvf doxygen-1.12.0.linux.bin.tar.gz
+          cd doxygen-1.12.0/bin
           doxygen -V
           echo $PATH
           python3 -m pip install --upgrade pip
