@@ -28,7 +28,7 @@ public:
     SPADES();
     ~SPADES() override;
 
-    //! Initializes multilevel data
+    //! Initializes data
     void init_data();
 
     //! Advance solution to final time
@@ -185,7 +185,7 @@ private:
     /**
        @brief Advance for a single time step
        @param time [in] time
-       @param dt_lev [in] time step for this level
+       @param dt [in] time step
      **/
     void advance(const amrex::Real time, const amrex::Real dt);
 
@@ -268,7 +268,7 @@ private:
     void write_data_file(const bool is_init) const;
 
     /**
-       @brief Compute summary data for this level
+       @brief Compute summary data
      **/
     void summary();
 
@@ -281,7 +281,7 @@ private:
     //! New time
     amrex::Real m_t_new{0.0};
 
-    //! Old time at each level
+    //! Old time
     amrex::Real m_t_old{constants::LOW_NUM};
 
     //! Time step
