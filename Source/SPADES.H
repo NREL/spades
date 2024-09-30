@@ -14,7 +14,7 @@
 #include "Constants.H"
 #include "IC.H"
 #include "Utilities.H"
-#include "CellSortedParticleContainer.H"
+#include "MessageParticleContainer.H"
 
 /**
    @brief Scalable PArallel Discrete Event Simulation
@@ -387,7 +387,7 @@ private:
     std::string m_ic_type;
 
     //! Particle container
-    std::unique_ptr<particles::CellSortedParticleContainer> m_pc;
+    std::unique_ptr<particles::MessageParticleContainer> m_message_pc;
 };
 } // namespace spades
 #endif

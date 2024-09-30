@@ -1,5 +1,5 @@
-#ifndef CELLSORTEDPARTICLECONTAINER_H
-#define CELLSORTEDPARTICLECONTAINER_H
+#ifndef MESSAGEPARTICLECONTAINER_H
+#define MESSAGEPARTICLECONTAINER_H
 #include <AMReX.H>
 #include <AMReX_AmrCore.H>
 #include <AMReX_AmrParGDB.H>
@@ -26,7 +26,7 @@ struct ParticleContainerInfo
 };
 
 //! Main SPADES particle container
-class CellSortedParticleContainer
+class MessageParticleContainer
     : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
 {
 public:
@@ -41,8 +41,7 @@ public:
        @param par_gdb [in] particle database
        @param ngrow [in] number of grow cells
      **/
-    explicit CellSortedParticleContainer(
-        amrex::AmrParGDB* par_gdb, int ngrow = 0);
+    explicit MessageParticleContainer(amrex::AmrParGDB* par_gdb, int ngrow = 0);
 
     /**
        @brief Constructor
@@ -51,7 +50,7 @@ public:
        @param ba [in] box array
        @param ngrow [in] number of grow cells
      **/
-    explicit CellSortedParticleContainer(
+    explicit MessageParticleContainer(
         const amrex::Vector<amrex::Geometry>& geom,
         const amrex::Vector<amrex::DistributionMapping>& dmap,
         const amrex::Vector<amrex::BoxArray>& ba,
@@ -91,7 +90,7 @@ public:
      **/
     amrex::Long total_count(const int typ) const
     {
-        BL_PROFILE("spades::CellSortedParticleContainer::total_count()");
+        BL_PROFILE("spades::MessageParticleContainer::total_count()");
         return m_message_counts.sum(typ);
     }
 

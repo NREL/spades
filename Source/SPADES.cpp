@@ -93,8 +93,8 @@ void SPADES::init_data()
 void SPADES::init_particle_container()
 {
     BL_PROFILE("spades::SPADES::init_particle_container()");
-    m_pc =
-        std::make_unique<particles::CellSortedParticleContainer>(GetParGDB());
+    m_message_pc =
+        std::make_unique<particles::MessageParticleContainer>(GetParGDB());
 }
 
 void SPADES::read_parameters()
@@ -252,25 +252,25 @@ void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
 {
     BL_PROFILE("spades::SPADES::advance()");
 
-    m_pc->update_undefined();
+    m_message_pc->update_undefined();
 
     update_gvt();
-    m_pc->garbage_collect(m_gvt);
-    m_pc->sort_messages();
+    m_message_pc->garbage_collect(m_gvt);
+    m_message_pc->sort_messages();
 
     update_lbts();
 
     const auto n_processed_messages_pre =
-        m_pc->total_count(particles::MessageTypes::PROCESSED);
+        m_message_pc->total_count(particles::MessageTypes::PROCESSED);
 
     process_messages();
-    m_pc->Redistribute();
-    m_pc->sort_messages();
+    m_message_pc->Redistribute();
+    m_message_pc->sort_messages();
 
     rollback();
 
     const auto n_processed_messages_post =
-        m_pc->total_count(particles::MessageTypes::PROCESSED);
+        m_message_pc->total_count(particles::MessageTypes::PROCESSED);
 
     m_nprocessed_messages =
         static_cast<int>(n_processed_messages_post - n_processed_messages_pre);
@@ -284,8 +284,8 @@ void SPADES::summary()
 {
     BL_PROFILE("spades::SPADES::summary()");
 
-    m_ntotal_messages = m_pc->TotalNumberOfParticles(LEV != 0);
-    m_nmessages = m_pc->total_count(particles::MessageTypes::MESSAGE);
+    m_ntotal_messages = m_message_pc->TotalNumberOfParticles(LEV != 0);
+    m_nmessages = m_message_pc->total_count(particles::MessageTypes::MESSAGE);
     m_ncells = CountCells(LEV);
     if (Verbose() > 0) {
         amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
@@ -315,7 +315,7 @@ void SPADES::process_messages()
 {
     BL_PROFILE("spades::SPADES::process_messages()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-        m_state_ngrow == m_pc->ngrow(),
+        m_state_ngrow == m_message_pc->ngrow(),
         "Particle and state cells must be equal for now");
 
     const auto& plo = Geom(LEV).ProbLoArray();
@@ -331,15 +331,16 @@ void SPADES::process_messages()
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = m_message_pc->MakeMFIter(LEV); mfi.isValid();
+         ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& sarr = m_state.array(mfi);
-        const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
-        const auto& offsets_arr = m_pc->offsets().const_array(mfi);
+        const auto& cnt_arr = m_message_pc->message_counts().const_array(mfi);
+        const auto& offsets_arr = m_message_pc->offsets().const_array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_pc->GetParticles(LEV)[index];
+        auto& pti = m_message_pc->GetParticles(LEV)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -454,16 +455,18 @@ void SPADES::rollback()
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-        for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+        for (amrex::MFIter mfi = m_message_pc->MakeMFIter(LEV); mfi.isValid();
+             ++mfi) {
             const amrex::Box& box = mfi.tilebox();
             const int gid = mfi.index();
             const int tid = mfi.LocalTileIndex();
             const auto& sarr = m_state.array(mfi);
             const auto& rarr = rollback.array(mfi);
-            const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
-            const auto& offsets_arr = m_pc->offsets().const_array(mfi);
+            const auto& cnt_arr =
+                m_message_pc->message_counts().const_array(mfi);
+            const auto& offsets_arr = m_message_pc->offsets().const_array(mfi);
             const auto index = std::make_pair(gid, tid);
-            auto& pti = m_pc->GetParticles(LEV)[index];
+            auto& pti = m_message_pc->GetParticles(LEV)[index];
             auto& particles = pti.GetArrayOfStructs();
             auto* pstruct = particles().dataPtr();
 
@@ -588,8 +591,8 @@ void SPADES::rollback()
                 });
         }
 
-        m_pc->Redistribute();
-        m_pc->sort_messages();
+        m_message_pc->Redistribute();
+        m_message_pc->sort_messages();
         require_rollback = rollback.max(0) > 0;
         iter++;
     }
@@ -602,10 +605,11 @@ void SPADES::rollback()
         rollback_statistics();
     }
 
-    m_pc->resolve_pairs();
+    m_message_pc->resolve_pairs();
 
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-        m_pc->message_counts().sum(particles::MessageTypes::ANTI_MESSAGE) == 0,
+        m_message_pc->message_counts().sum(
+            particles::MessageTypes::ANTI_MESSAGE) == 0,
         "There should be no anti-messages left after rollback");
 }
 
@@ -652,7 +656,7 @@ void SPADES::rollback_statistics()
 void SPADES::update_gvt()
 {
     BL_PROFILE("spades::SPADES::update_gvt()");
-    const amrex::Real gvt = m_pc->compute_gvt();
+    const amrex::Real gvt = m_message_pc->compute_gvt();
     AMREX_ALWAYS_ASSERT(gvt >= m_gvt);
     AMREX_ALWAYS_ASSERT(gvt >= m_state.min(constants::LVT_IDX, 0));
     m_gvt = gvt;
@@ -668,15 +672,16 @@ void SPADES::update_lbts()
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi = m_pc->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi = m_message_pc->MakeMFIter(LEV); mfi.isValid();
+         ++mfi) {
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_pc->message_counts().const_array(mfi);
-        const auto& offsets_arr = m_pc->offsets().const_array(mfi);
+        const auto& cnt_arr = m_message_pc->message_counts().const_array(mfi);
+        const auto& offsets_arr = m_message_pc->offsets().const_array(mfi);
         const auto& lbts_arr = lbts.array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_pc->GetParticles(LEV)[index];
+        auto& pti = m_message_pc->GetParticles(LEV)[index];
         auto& particles = pti.GetArrayOfStructs();
         auto* pstruct = particles().dataPtr();
 
@@ -750,10 +755,10 @@ void SPADES::MakeNewLevelFromScratch(
     initialize_state();
 
     // Update particle container
-    m_pc->Define(Geom(LEV), dm, ba);
-    m_pc->initialize_messages(m_lookahead);
-    m_pc->initialize_state();
-    m_pc->sort_messages();
+    m_message_pc->Define(Geom(LEV), dm, ba);
+    m_message_pc->initialize_messages(m_lookahead);
+    m_message_pc->initialize_state();
+    m_message_pc->sort_messages();
 }
 
 void SPADES::initialize_state()
@@ -778,7 +783,7 @@ void SPADES::RemakeLevel(
 void SPADES::ClearLevel(int /*lev*/)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
-    m_pc->clear_state();
+    m_message_pc->clear_state();
     m_state.clear();
     m_plt_mf.clear();
 }
@@ -836,10 +841,10 @@ SPADES::get_field(const std::string& name, const int ngrow)
     }
     const int srccomp_id = get_field_component(name, m_message_counts_varnames);
     if (srccomp_id != -1) {
-        auto const& cnt_arrs = m_pc->message_counts().const_arrays();
+        auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
-            *mf, mf->nGrowVect(), m_pc->message_counts().nComp(),
+            *mf, mf->nGrowVect(), m_message_pc->message_counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = cnt_arrs[nbx](i, j, k, n);
             });
@@ -874,10 +879,10 @@ void SPADES::plot_file_mf()
     int cnt = 0;
     amrex::MultiFab::Copy(m_plt_mf, m_state, 0, cnt, m_state.nComp(), 0);
     cnt += m_state.nComp();
-    auto const& cnt_arrs = m_pc->message_counts().const_arrays();
+    auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
     auto const& plt_mf_arrs = m_plt_mf.arrays();
     amrex::ParallelFor(
-        m_plt_mf, m_plt_mf.nGrowVect(), m_pc->message_counts().nComp(),
+        m_plt_mf, m_plt_mf.nGrowVect(), m_message_pc->message_counts().nComp(),
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
             plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
         });
@@ -897,7 +902,7 @@ void SPADES::write_plot_file()
     amrex::WriteSingleLevelPlotfile(
         plotfilename, m_plt_mf, varnames, Geom(LEV), m_t_new, m_istep);
     if (m_write_particles) {
-        m_pc->write_plot_file(plotfilename);
+        m_message_pc->write_plot_file(plotfilename);
     }
 
     write_info_file(plotfilename);
@@ -981,7 +986,7 @@ void SPADES::write_checkpoint_file() const
         m_state, amrex::MultiFabFileFullPrefix(
                      LEV, checkpointname, "Level_", varnames[0]));
 
-    m_pc->Checkpoint(checkpointname, m_pc->identifier());
+    m_message_pc->Checkpoint(checkpointname, m_message_pc->identifier());
 
     write_info_file(checkpointname);
 
@@ -1070,9 +1075,9 @@ void SPADES::read_checkpoint_file()
     read_rng_file(m_restart_chkfile);
 
     init_particle_container();
-    m_pc->Restart(m_restart_chkfile, m_pc->identifier());
-    m_pc->initialize_state();
-    m_pc->sort_messages();
+    m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());
+    m_message_pc->initialize_state();
+    m_message_pc->sort_messages();
 }
 
 void SPADES::write_info_file(const std::string& path) const

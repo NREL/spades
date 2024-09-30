@@ -1,5 +1,5 @@
 #include <utility>
-#include "CellSortedParticleContainer.H"
+#include "MessageParticleContainer.H"
 
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
 #include <thrust/sort.h>
@@ -14,7 +14,7 @@ ParticleContainerInfo::ParticleContainerInfo(std::string basename)
 
 ParticleContainerInfo::~ParticleContainerInfo() = default;
 
-CellSortedParticleContainer::CellSortedParticleContainer(
+MessageParticleContainer::MessageParticleContainer(
     amrex::AmrParGDB* par_gdb, int ngrow)
     : amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>(
           par_gdb, ngrow)
@@ -25,15 +25,15 @@ CellSortedParticleContainer::CellSortedParticleContainer(
 
     if (nlevs_max > 1) {
         amrex::Abort(
-            "spades::SPADES::CellSortedParticleContainer::"
-            "CellSortedParticleContainer(): not supporting multilevel right "
+            "spades::SPADES::MessageParticleContainer::"
+            "MessageParticleContainer(): not supporting multilevel right "
             "now");
     }
 
     initialize_vectors();
 }
 
-CellSortedParticleContainer::CellSortedParticleContainer(
+MessageParticleContainer::MessageParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
     const amrex::Vector<amrex::DistributionMapping>& dmap,
     const amrex::Vector<amrex::BoxArray>& ba,
@@ -45,17 +45,17 @@ CellSortedParticleContainer::CellSortedParticleContainer(
 {
     if (geom.size() > 1) {
         amrex::Abort(
-            "spades::SPADES::CellSortedParticleContainer::"
-            "CellSortedParticleContainer(): not supporting multilevel right "
+            "spades::SPADES::MessageParticleContainer::"
+            "MessageParticleContainer(): not supporting multilevel right "
             "now");
     }
 
     initialize_vectors();
 }
 
-void CellSortedParticleContainer::initialize_vectors()
+void MessageParticleContainer::initialize_vectors()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::initialize_vectors()");
+    BL_PROFILE("spades::MessageParticleContainer::initialize_vectors()");
 
     m_real_data_names.resize(RealData::ncomps, "");
     m_writeflags_real.resize(RealData::ncomps, 0);
@@ -79,9 +79,9 @@ void CellSortedParticleContainer::initialize_vectors()
     m_writeflags_int[IntData::receiver] = 0;
 }
 
-void CellSortedParticleContainer::initialize_state()
+void MessageParticleContainer::initialize_state()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::initialize_state()");
+    BL_PROFILE("spades::MessageParticleContainer::initialize_state()");
 
     m_message_counts.define(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV),
@@ -95,24 +95,24 @@ void CellSortedParticleContainer::initialize_state()
     m_offsets.setVal(0);
 }
 
-void CellSortedParticleContainer::clear_state()
+void MessageParticleContainer::clear_state()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::clear_state()");
+    BL_PROFILE("spades::MessageParticleContainer::clear_state()");
 
     m_message_counts.clear();
     m_offsets.clear();
 }
 
-void CellSortedParticleContainer::update_counts()
+void MessageParticleContainer::update_counts()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::update_counts()");
+    BL_PROFILE("spades::MessageParticleContainer::update_counts()");
     count_messages();
     count_offsets();
 }
 
-void CellSortedParticleContainer::count_messages()
+void MessageParticleContainer::count_messages()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::count_messages()");
+    BL_PROFILE("spades::MessageParticleContainer::count_messages()");
 
     m_message_counts.setVal(0);
 
@@ -143,9 +143,9 @@ void CellSortedParticleContainer::count_messages()
     }
 }
 
-void CellSortedParticleContainer::count_offsets()
+void MessageParticleContainer::count_offsets()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::count_offsets()");
+    BL_PROFILE("spades::MessageParticleContainer::count_offsets()");
 
     m_offsets.setVal(0);
 
@@ -183,10 +183,9 @@ void CellSortedParticleContainer::count_offsets()
     }
 }
 
-void CellSortedParticleContainer::initialize_messages(
-    const amrex::Real lookahead)
+void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::initialize_messages()");
+    BL_PROFILE("spades::MessageParticleContainer::initialize_messages()");
 
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
@@ -453,10 +452,10 @@ void CellSortedParticleContainer::initialize_messages(
     }
 }
 
-void CellSortedParticleContainer::sort_messages()
+void MessageParticleContainer::sort_messages()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::CellSortedParticleContainer::sort_messages()");
+    BL_PROFILE("spades::MessageParticleContainer::sort_messages()");
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -470,7 +469,7 @@ void CellSortedParticleContainer::sort_messages()
         }
 
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_messages::sort_prep",
+        //     "spades::MessageParticleContainer::sort_messages::sort_prep",
         //     prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
@@ -482,7 +481,7 @@ void CellSortedParticleContainer::sort_messages()
 
         // Sort particle indices based on the cell index
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_messages::sort",
+        //     "spades::MessageParticleContainer::sort_messages::sort",
         //     sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
@@ -527,7 +526,7 @@ void CellSortedParticleContainer::sort_messages()
 
         // Reorder the particles in memory
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::sort_messages::"
+        //     "spades::MessageParticleContainer::sort_messages::"
         //     "ReorderParticles",
         //     reorder);
         ReorderParticles(LEV, mfi, cell_list.data());
@@ -537,9 +536,9 @@ void CellSortedParticleContainer::sort_messages()
     update_counts();
 }
 
-void CellSortedParticleContainer::update_undefined()
+void MessageParticleContainer::update_undefined()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::update_undefined()");
+    BL_PROFILE("spades::MessageParticleContainer::update_undefined()");
 
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
@@ -551,7 +550,7 @@ void CellSortedParticleContainer::update_undefined()
     AMREX_ALWAYS_ASSERT(lower_count < reset_count);
     int n_removals = 0;
 
-    CellSortedParticleContainer pc_adds(
+    MessageParticleContainer pc_adds(
         m_gdb->Geom(), m_gdb->DistributionMap(), m_gdb->boxArray(), ngrow());
 
     for (amrex::MFIter mfi = MakeMFIter(LEV); mfi.isValid(); ++mfi) {
@@ -566,7 +565,7 @@ void CellSortedParticleContainer::update_undefined()
 
         // remove particles
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::update_undefined::remove",
+        //     "spades::MessageParticleContainer::update_undefined::remove",
         //     remove);
         const auto ncells = static_cast<int>(box.numPts());
         amrex::Gpu::DeviceVector<int> removals(ncells, 0);
@@ -597,7 +596,7 @@ void CellSortedParticleContainer::update_undefined()
         // BL_PROFILE_VAR_STOP(remove);
 
         // BL_PROFILE_VAR(
-        //     "spades::CellSortedParticleContainer::update_undefined::compute_add",
+        //     "spades::MessageParticleContainer::update_undefined::compute_add",
         //     compute_add);
         amrex::Gpu::DeviceVector<int> additions(ncells, 0);
         auto* p_additions = additions.data();
@@ -664,9 +663,9 @@ void CellSortedParticleContainer::update_undefined()
     }
 }
 
-void CellSortedParticleContainer::resolve_pairs()
+void MessageParticleContainer::resolve_pairs()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::resolve_pairs()");
+    BL_PROFILE("spades::MessageParticleContainer::resolve_pairs()");
 
     const auto& dom = Geom(LEV).Domain();
 
@@ -740,9 +739,9 @@ void CellSortedParticleContainer::resolve_pairs()
     sort_messages();
 }
 
-void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
+void MessageParticleContainer::garbage_collect(const amrex::Real gvt)
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::garbage_collect()");
+    BL_PROFILE("spades::MessageParticleContainer::garbage_collect()");
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -769,9 +768,9 @@ void CellSortedParticleContainer::garbage_collect(const amrex::Real gvt)
     }
 }
 
-amrex::Real CellSortedParticleContainer::compute_gvt()
+amrex::Real MessageParticleContainer::compute_gvt()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::compute_gvt()");
+    BL_PROFILE("spades::MessageParticleContainer::compute_gvt()");
     // If this becomes a performance bottleneck it could be sped up by
     // making a vector of just the message time stamps before the min op
 
@@ -803,9 +802,9 @@ amrex::Real CellSortedParticleContainer::compute_gvt()
     return gvt;
 }
 
-void CellSortedParticleContainer::reposition_messages()
+void MessageParticleContainer::reposition_messages()
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::reposition_messages()");
+    BL_PROFILE("spades::MessageParticleContainer::reposition_messages()");
 
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
@@ -861,10 +860,9 @@ void CellSortedParticleContainer::reposition_messages()
     }
 }
 
-void CellSortedParticleContainer::write_plot_file(
-    const std::string& plt_filename)
+void MessageParticleContainer::write_plot_file(const std::string& plt_filename)
 {
-    BL_PROFILE("spades::CellSortedParticleContainer::write_plot_file()");
+    BL_PROFILE("spades::MessageParticleContainer::write_plot_file()");
     reposition_messages();
     WritePlotFile(
         plt_filename, identifier(), m_writeflags_real, m_writeflags_int,
