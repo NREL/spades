@@ -688,10 +688,9 @@ void MessageParticleContainer::resolve_pairs()
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 
-                for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI_MESSAGE);
-                     n++) {
+                for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI); n++) {
 
-                    auto& pant = getter(n, MessageTypes::ANTI_MESSAGE);
+                    auto& pant = getter(n, MessageTypes::ANTI);
                     AMREX_ALWAYS_ASSERT(pant.idata(IntData::pair) != -1);
                     AMREX_ALWAYS_ASSERT(
                         pant.idata(IntData::receiver) == dom.index(iv));

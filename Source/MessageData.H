@@ -31,7 +31,7 @@ struct MessageTypes
     //! Processed message
     static constexpr int PROCESSED = 1;
     //! Anti-message
-    static constexpr int ANTI_MESSAGE = 2;
+    static constexpr int ANTI = 2;
     //! Conjugate message (unsent anti-message)
     static constexpr int CONJUGATE = 3;
     //! Undefined message

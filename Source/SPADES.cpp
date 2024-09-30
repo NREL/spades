@@ -20,8 +20,7 @@ SPADES::SPADES()
     m_message_counts_varnames.resize(particles::MessageTypes::NTYPES);
     m_message_counts_varnames[particles::MessageTypes::MESSAGE] = "message";
     m_message_counts_varnames[particles::MessageTypes::PROCESSED] = "processed";
-    m_message_counts_varnames[particles::MessageTypes::ANTI_MESSAGE] =
-        "anti_message";
+    m_message_counts_varnames[particles::MessageTypes::ANTI] = "anti";
     m_message_counts_varnames[particles::MessageTypes::CONJUGATE] = "conjugate";
     m_message_counts_varnames[particles::MessageTypes::UNDEFINED] = "undefined";
     for (const auto& mm : m_message_counts_varnames) {
@@ -483,8 +482,8 @@ void SPADES::rollback()
                                   .rdata(particles::RealData::timestamp)
                             : constants::LARGE_NUM;
                     const amrex::Real ant_lvt =
-                        cnt_arr(iv, particles::MessageTypes::ANTI_MESSAGE) > 0
-                            ? getter(0, particles::MessageTypes::ANTI_MESSAGE)
+                        cnt_arr(iv, particles::MessageTypes::ANTI) > 0
+                            ? getter(0, particles::MessageTypes::ANTI)
                                   .rdata(particles::RealData::timestamp)
                             : constants::LARGE_NUM;
                     const amrex::Real rollback_timestamp =
@@ -525,8 +524,7 @@ void SPADES::rollback()
                                         getter.assert_different(
                                             m,
                                             particles::MessageTypes::CONJUGATE,
-                                            particles::MessageTypes::
-                                                ANTI_MESSAGE);
+                                            particles::MessageTypes::ANTI);
                                         continue;
                                     }
 
@@ -544,8 +542,7 @@ void SPADES::rollback()
                                             constants::EPS);
                                         pcnj.idata(
                                             particles::IntData::type_id) =
-                                            particles::MessageTypes::
-                                                ANTI_MESSAGE;
+                                            particles::MessageTypes::ANTI;
                                         const auto piv =
                                             dom.atOffset(pcnj.idata(
                                                 particles::IntData::receiver));
@@ -608,8 +605,7 @@ void SPADES::rollback()
     m_message_pc->resolve_pairs();
 
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-        m_message_pc->message_counts().sum(
-            particles::MessageTypes::ANTI_MESSAGE) == 0,
+        m_message_pc->message_counts().sum(particles::MessageTypes::ANTI) == 0,
         "There should be no anti-messages left after rollback");
 }
 
