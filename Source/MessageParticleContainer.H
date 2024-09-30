@@ -5,8 +5,8 @@
 #include <AMReX_AmrParGDB.H>
 #include <AMReX_NeighborParticles.H>
 #include <AMReX_Random.H>
-#include "ParticleData.H"
-#include "ParticleOps.H"
+#include "MessageData.H"
+#include "MessageOps.H"
 #include "Utilities.H"
 
 /**
@@ -14,18 +14,18 @@
  **/
 namespace spades::particles {
 
-//! Information for a particle container
-struct ParticleContainerInfo
+//! Information for a message container
+struct MessageParticleContainerInfo
 {
-    explicit ParticleContainerInfo(std::string basename);
+    explicit MessageParticleContainerInfo(std::string basename);
 
-    ~ParticleContainerInfo();
+    ~MessageParticleContainerInfo();
 
     //! Field name without state information
     std::string m_basename;
 };
 
-//! Main SPADES particle container
+//! Main SPADES message container
 class MessageParticleContainer
     : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
 {
@@ -138,7 +138,7 @@ private:
     void initialize_vectors();
 
     //! Data for particle container
-    ParticleContainerInfo m_info;
+    MessageParticleContainerInfo m_info;
 
     //! Flags for real data to write to file
     amrex::Vector<int> m_writeflags_real;

@@ -1,16 +1,16 @@
-#ifndef PARTICLEDATA_H
-#define PARTICLEDATA_H
+#ifndef MESSAGEDATA_H
+#define MESSAGEDATA_H
 
 #include <AMReX.H>
 
 namespace spades::particles {
-//! Particle real data
+//! Message real data
 struct RealData
 {
     enum : std::uint8_t { timestamp, old_timestamp, creation_time, ncomps };
 };
 
-//! Particle int data
+//! Message int data
 struct IntData
 {
     enum : std::uint8_t {

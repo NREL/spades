@@ -8,11 +8,11 @@
 
 namespace spades::particles {
 
-ParticleContainerInfo::ParticleContainerInfo(std::string basename)
+MessageParticleContainerInfo::MessageParticleContainerInfo(std::string basename)
     : m_basename(std::move(basename))
 {}
 
-ParticleContainerInfo::~ParticleContainerInfo() = default;
+MessageParticleContainerInfo::~MessageParticleContainerInfo() = default;
 
 MessageParticleContainer::MessageParticleContainer(
     amrex::AmrParGDB* par_gdb, int ngrow)

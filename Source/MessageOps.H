@@ -1,24 +1,24 @@
-#ifndef PARTICLEOPS_H
-#define PARTICLEOPS_H
+#ifndef MESSAGEOPS_H
+#define MESSAGEOPS_H
 
 #include <AMReX.H>
 #include <AMReX_Array4.H>
 #include <AMReX_Print.H>
-#include "ParticleData.H"
+#include "MessageData.H"
 
 namespace spades::particles {
 
-//! Functor for printing particle data
+//! Functor for printing message data
 struct Print
 {
     /**
-       @brief Print particle data to screen
-       @param p [in] particle whose data is printed
+       @brief Print message data to screen
+       @param p [in] message whose data is printed
      **/
     template <class P>
     void operator()(P& p) const
     {
-        amrex::Print() << "Particle data: \n"
+        amrex::Print() << "Message data: \n"
                        << "  id: " << p.id() << "\n"
                        << "  cpu: " << p.cpu() << "\n"
                        << "  type: " << p.idata(IntData::type_id) << "\n"
@@ -35,17 +35,17 @@ struct Print
 };
 
 /**
-   @brief Functor for comparing particles
+   @brief Functor for comparing messages
 
-   This is used to sort particles based on cell index, message type,
+   This is used to sort messages based on cell index, message type,
    and timestamp (in that order).
  **/
 struct Compare
 {
     /**
-       @brief Compare particles
-       @param p1 [in] first particle
-       @param p2 [in] second particle
+       @brief Compare messages
+       @param p1 [in] first message
+       @param p2 [in] second message
        @return boolean of p1 < p2 based on criteria
      **/
     template <class P>
@@ -67,13 +67,13 @@ struct Compare
     }
 };
 
-//! Functor for copying a particle's data to another
+//! Functor for copying a message's data to another
 struct Copy
 {
     /**
-       @brief Copy particle data
-       @param p1 [in] first particle
-       @param p2 [out] second particle
+       @brief Copy message data
+       @param p1 [in] first message
+       @param p2 [out] second message
      **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
@@ -88,13 +88,13 @@ struct Copy
     }
 };
 
-//! Functor for making a conjugate particle out of another
+//! Functor for making a conjugate message out of another
 struct MakeConjugate
 {
     /**
-       @brief Create a conjugate particle
-       @param p1 [in] first particle
-       @param p2 [out] second particle
+       @brief Create a conjugate message
+       @param p1 [in] first message
+       @param p2 [out] second message
      **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
@@ -105,12 +105,12 @@ struct MakeConjugate
     }
 };
 
-//! Functor for populating particle data
+//! Functor for populating message data
 struct Create
 {
     /**
-       @brief Create a conjugate particle
-       @param p [in, out] particle
+       @brief Create a conjugate message
+       @param p [in, out] message
        @param timestamp [in] time stamp
        @param pos [in] position
        @param iv [in] index
@@ -139,12 +139,12 @@ struct Create
     }
 };
 
-//! Functor for making a particle undefined
+//! Functor for making a message undefined
 struct MarkUndefined
 {
     /**
-       @brief Mark a particle as undefined
-       @param p [in, out] particle
+       @brief Mark a message as undefined
+       @param p [in, out] message
      **/
     template <class P>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
@@ -157,16 +157,16 @@ struct MarkUndefined
     }
 };
 
-//! Functor for accessing a particle in a cell
+//! Functor for accessing a message in a cell
 template <class P>
 struct Get
 {
     /**
        @brief Constructor
-       @param iv [in] cell index of the particle
-       @param counts [in] cell counts of particle types
-       @param offsets [in] cell offsets of particle types
-       @param pstruct [in] particle array
+       @param iv [in] cell index of the message
+       @param counts [in] cell counts of message types
+       @param offsets [in] cell offsets of message types
+       @param pstruct [in] message array
      **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE
     Get(const amrex::IntVect& iv,
@@ -177,10 +177,10 @@ struct Get
     {}
 
     /**
-       @brief Get a particle in a cell
-       @param n [in] nth particle to return
-       @param typ [in] particle type that is requested
-       @return particle of type \p typ and at position \p n
+       @brief Get a message in a cell
+       @param n [in] nth message to return
+       @param typ [in] message type that is requested
+       @return message of type \p typ and at position \p n
      **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE P&
     operator()(const int n, const int typ) const
@@ -198,10 +198,10 @@ struct Get
     }
 
     /**
-       @brief Check validity of the particle type
-       @param n [in] nth particle to return
-       @param typ [in] particle type that is requested
-       @return boolean if the particle is of the requested type
+       @brief Check validity of the message type
+       @param n [in] nth message to return
+       @param typ [in] message type that is requested
+       @return boolean if the message is of the requested type
      **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
     check(const int n, const int typ) const
@@ -213,16 +213,16 @@ struct Get
     }
 
     /**
-       @brief Assert that the particle is of a different but expected type
+       @brief Assert that the message is of a different but expected type
 
-       A particle sometimes changes type (e.g., marked as undefined)
+       A message sometimes changes type (e.g., marked as undefined)
        but the counts and offsets haven't been updated yet. This
-       asserts that the requested particle of a certain type \p typ
+       asserts that the requested message of a certain type \p typ
        changed to another type \p expected_type.
 
-       @param n [in] nth particle to return
-       @param typ [in] particle type that is requested
-       @param expected_type [in] expected particle type
+       @param n [in] nth message to return
+       @param typ [in] message type that is requested
+       @param expected_type [in] expected message type
      **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     assert_different(const int n, const int typ, const int expected_type) const
@@ -235,21 +235,21 @@ struct Get
     //! Cell index
     const amrex::IntVect& m_iv;
 
-    //! Cell counts of particle types
+    //! Cell counts of message types
     const amrex::Array4<const int>& m_counts;
 
-    //! Cell offsets of particle types
+    //! Cell offsets of message types
     const amrex::Array4<const int>& m_offsets;
 
-    //! Particle array
+    //! Message array
     P* m_pstruct;
 };
 
-//! Functor for pairing particles
+//! Functor for pairing messages
 struct CheckPair
 {
     /**
-       @brief Compare particles for pairing
+       @brief Compare messages for pairing
        @return boolean of p1 and p2 are pairs
      **/
     template <class P>
