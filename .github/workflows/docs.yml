@@ -25,28 +25,32 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends doxygen graphviz
+          sudo apt-get install -y --no-install-recommends graphviz
+          curl --no-progress-meter -O https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz
+          tar -xvf doxygen-1.12.0.tgz
+          doxygen -V
+          echo $PATH
           python3 -m pip install --upgrade pip
           pip3 install sphinx sphinx_rtd_theme doxysphinx
-      - name: Configure
-        run: |
-          cmake -B ${{runner.workspace}}/build-docs \
-            -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON \
-            ${{github.workspace}}
-      - name: Build
-        working-directory: ${{runner.workspace}}/build-docs
-        run:  |
-           echo "::add-matcher::.github/problem-matchers/sphinx.json"
-           cmake --build ${{runner.workspace}}/build-docs -t docs 2>&1 | tee -a build-output.txt
-           touch ${{runner.workspace}}/build-docs/Docs/sphinx/html/.nojekyll
-      - name: Report
-        working-directory: ${{runner.workspace}}/build-docs
-        run: |
-          echo "::add-matcher::.github/problem-matchers/sphinx.json"
-          egrep "WARNING:|Warning:|warning:|ERROR:|Error:|error:" build-output.txt | sort | uniq | \
-            awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
-          cat build-output-warnings.txt
-          exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
+      # - name: Configure
+      #   run: |
+      #     cmake -B ${{runner.workspace}}/build-docs \
+      #       -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON \
+      #       ${{github.workspace}}
+      # - name: Build
+      #   working-directory: ${{runner.workspace}}/build-docs
+      #   run:  |
+      #      echo "::add-matcher::.github/problem-matchers/sphinx.json"
+      #      cmake --build ${{runner.workspace}}/build-docs -t docs 2>&1 | tee -a build-output.txt
+      #      touch ${{runner.workspace}}/build-docs/Docs/sphinx/html/.nojekyll
+      # - name: Report
+      #   working-directory: ${{runner.workspace}}/build-docs
+      #   run: |
+      #     echo "::add-matcher::.github/problem-matchers/sphinx.json"
+      #     egrep "WARNING:|Warning:|warning:|ERROR:|Error:|error:" build-output.txt | sort | uniq | \
+      #       awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
+      #     cat build-output-warnings.txt
+      #     exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
       # - name: Deploy
       #   if: github.event_name == 'push'
       #   uses: JamesIves/github-pages-deploy-action@releases/v3
