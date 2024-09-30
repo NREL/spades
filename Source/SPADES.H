@@ -178,7 +178,6 @@ private:
        @brief Advance by the time step
 
        @param time [in] time
-       @param iteration [in] iteration
      **/
     void time_step(const amrex::Real time);
 

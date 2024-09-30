@@ -17,12 +17,12 @@ jobs:
     - name: Clone
       uses: actions/checkout@v4
     - name: Check formatting
-      uses: DoozyX/clang-format-lint-action@v0.17
+      uses: DoozyX/clang-format-lint-action@v0.18.2
       with:
         source: './Source'
         exclude: '.'
         extensions: 'H,h,cpp'
-        clangFormatVersion: 17
+        clangFormatVersion: 18
   CPU:
     needs: Formatting
     runs-on: ${{matrix.os}}
@@ -313,18 +313,6 @@ jobs:
           echo "CCACHE_EXTRAFILES=${{github.workspace}}/.clang-tidy" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
-          echo "LLVM_VERSION=18" >> $GITHUB_ENV
-      - name: Install clang-tidy
-        run: |
-          echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
-          if [[ ! -f /etc/apt/trusted.gpg.d/apt.llvm.org.asc ]]; then
-              wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
-          fi
-          source /etc/os-release # set UBUNTU_CODENAME
-          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME} main"
-          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main"
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang-tidy-${LLVM_VERSION} libomp-${LLVM_VERSION}-dev
       - name: Install Ccache
         run: |
           wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
@@ -352,7 +340,6 @@ jobs:
           -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
           -DSPADES_ENABLE_CLANG_TIDY:BOOL=ON \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
-          -DCLANG_TIDY_EXEC_NAME:STRING=clang-tidy-${LLVM_VERSION} \
           ${{github.workspace}}
       - name: Check
         working-directory: ${{runner.workspace}}/build-clang-tidy
