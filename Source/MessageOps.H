@@ -21,16 +21,18 @@ struct Print
         amrex::Print() << "Message data: \n"
                        << "  id: " << p.id() << "\n"
                        << "  cpu: " << p.cpu() << "\n"
-                       << "  type: " << p.idata(IntData::type_id) << "\n"
-                       << "  sender: " << p.idata(IntData::sender) << "\n"
-                       << "  receiver: " << p.idata(IntData::receiver) << "\n"
-                       << "  pair: " << p.idata(IntData::pair) << "\n"
-                       << "  timestamp: " << p.rdata(RealData::timestamp)
+                       << "  type: " << p.idata(MessageIntData::type_id) << "\n"
+                       << "  sender: " << p.idata(MessageIntData::sender)
+                       << "\n"
+                       << "  receiver: " << p.idata(MessageIntData::receiver)
+                       << "\n"
+                       << "  pair: " << p.idata(MessageIntData::pair) << "\n"
+                       << "  timestamp: " << p.rdata(MessageRealData::timestamp)
                        << "\n"
                        << "  old_timestamp: "
-                       << p.rdata(RealData::old_timestamp) << "\n"
+                       << p.rdata(MessageRealData::old_timestamp) << "\n"
                        << "  creation_time: "
-                       << p.rdata(RealData::creation_time) << std::endl;
+                       << p.rdata(MessageRealData::creation_time) << std::endl;
     }
 };
 
@@ -54,14 +56,16 @@ struct Compare
     {
         // sort by iv, then message type then by timestamp
         const amrex::IntVect piv1(AMREX_D_DECL(
-            p1.idata(IntData::i), p1.idata(IntData::j), p1.idata(IntData::k)));
+            p1.idata(MessageIntData::i), p1.idata(MessageIntData::j),
+            p1.idata(MessageIntData::k)));
         const amrex::IntVect piv2(AMREX_D_DECL(
-            p2.idata(IntData::i), p2.idata(IntData::j), p2.idata(IntData::k)));
+            p2.idata(MessageIntData::i), p2.idata(MessageIntData::j),
+            p2.idata(MessageIntData::k)));
 
-        const auto m1 = p1.idata(IntData::type_id);
-        const auto m2 = p2.idata(IntData::type_id);
-        const auto t1 = p1.rdata(RealData::timestamp);
-        const auto t2 = p2.rdata(RealData::timestamp);
+        const auto m1 = p1.idata(MessageIntData::type_id);
+        const auto m2 = p2.idata(MessageIntData::type_id);
+        const auto t1 = p1.rdata(MessageRealData::timestamp);
+        const auto t2 = p2.rdata(MessageRealData::timestamp);
         return (piv1 < piv2) ||
                (piv1 == piv2 && ((m1 < m2) || (m1 == m2 && t1 < t2)));
     }
@@ -79,10 +83,10 @@ struct Copy
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     operator()(const P& p1, P& p2) const
     {
-        for (int i = 0; i < RealData::ncomps; i++) {
+        for (int i = 0; i < MessageRealData::ncomps; i++) {
             p2.rdata(i) = p1.rdata(i);
         }
-        for (int i = 0; i < IntData::ncomps; i++) {
+        for (int i = 0; i < MessageIntData::ncomps; i++) {
             p2.idata(i) = p1.idata(i);
         }
     }
@@ -101,7 +105,7 @@ struct MakeConjugate
     operator()(const P& p1, P& p2) const
     {
         Copy()(p1, p2);
-        p2.idata(IntData::type_id) = MessageTypes::CONJUGATE;
+        p2.idata(MessageIntData::type_id) = MessageTypes::CONJUGATE;
     }
 };
 
@@ -126,16 +130,18 @@ struct Create
         const int sender,
         const int receiver) const
     {
-        AMREX_ASSERT(p.idata(IntData::type_id) == MessageTypes::UNDEFINED);
+        AMREX_ASSERT(
+            p.idata(MessageIntData::type_id) == MessageTypes::UNDEFINED);
 
-        p.idata(IntData::type_id) = MessageTypes::MESSAGE;
-        p.rdata(RealData::timestamp) = timestamp;
+        p.idata(MessageIntData::type_id) = MessageTypes::MESSAGE;
+        p.rdata(MessageRealData::timestamp) = timestamp;
 
         AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)
-        AMREX_D_TERM(p.idata(IntData::i) = iv[0];, p.idata(IntData::j) = iv[1];
-                     , p.idata(IntData::k) = iv[2];)
-        p.idata(IntData::sender) = sender;
-        p.idata(IntData::receiver) = receiver;
+        AMREX_D_TERM(p.idata(MessageIntData::i) = iv[0];
+                     , p.idata(MessageIntData::j) = iv[1];
+                     , p.idata(MessageIntData::k) = iv[2];)
+        p.idata(MessageIntData::sender) = sender;
+        p.idata(MessageIntData::receiver) = receiver;
     }
 };
 
@@ -149,11 +155,11 @@ struct MarkUndefined
     template <class P>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
     {
-        p.idata(IntData::type_id) = MessageTypes::UNDEFINED;
-        p.idata(IntData::pair) = -1;
-        p.rdata(RealData::timestamp) = 0.0;
-        p.rdata(RealData::old_timestamp) = 0.0;
-        p.rdata(RealData::creation_time) = 0.0;
+        p.idata(MessageIntData::type_id) = MessageTypes::UNDEFINED;
+        p.idata(MessageIntData::pair) = -1;
+        p.rdata(MessageRealData::timestamp) = 0.0;
+        p.rdata(MessageRealData::old_timestamp) = 0.0;
+        p.rdata(MessageRealData::creation_time) = 0.0;
     }
 };
 
@@ -192,7 +198,7 @@ struct Get
         P& p = m_pstruct[idx];
 
         AMREX_ALWAYS_ASSERT(p.id() >= 0);
-        AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == typ);
+        AMREX_ALWAYS_ASSERT(p.idata(MessageIntData::type_id) == typ);
 
         return p;
     }
@@ -209,7 +215,7 @@ struct Get
         AMREX_ALWAYS_ASSERT(m_counts(m_iv, typ) > n);
         const int idx = m_offsets(m_iv, typ) + n;
         P& p = m_pstruct[idx];
-        return p.idata(IntData::type_id) == typ;
+        return p.idata(MessageIntData::type_id) == typ;
     }
 
     /**
@@ -229,7 +235,7 @@ struct Get
     {
         const int idx = m_offsets(m_iv, typ) + n;
         P& p = m_pstruct[idx];
-        AMREX_ALWAYS_ASSERT(p.idata(IntData::type_id) == expected_type);
+        AMREX_ALWAYS_ASSERT(p.idata(MessageIntData::type_id) == expected_type);
     }
 
     //! Cell index

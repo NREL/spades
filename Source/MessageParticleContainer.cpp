@@ -16,8 +16,9 @@ MessageParticleContainerInfo::~MessageParticleContainerInfo() = default;
 
 MessageParticleContainer::MessageParticleContainer(
     amrex::AmrParGDB* par_gdb, int ngrow)
-    : amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>(
-          par_gdb, ngrow)
+    : amrex::NeighborParticleContainer<
+          MessageRealData::ncomps,
+          MessageIntData::ncomps>(par_gdb, ngrow)
     , m_info(identifier())
     , m_ngrow(ngrow)
 {
@@ -38,8 +39,9 @@ MessageParticleContainer::MessageParticleContainer(
     const amrex::Vector<amrex::DistributionMapping>& dmap,
     const amrex::Vector<amrex::BoxArray>& ba,
     int ngrow)
-    : amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>(
-          geom, dmap, ba, {2}, ngrow)
+    : amrex::NeighborParticleContainer<
+          MessageRealData::ncomps,
+          MessageIntData::ncomps>(geom, dmap, ba, {2}, ngrow)
     , m_info(identifier())
     , m_ngrow(ngrow)
 {
@@ -57,26 +59,26 @@ void MessageParticleContainer::initialize_vectors()
 {
     BL_PROFILE("spades::MessageParticleContainer::initialize_vectors()");
 
-    m_real_data_names.resize(RealData::ncomps, "");
-    m_writeflags_real.resize(RealData::ncomps, 0);
-    m_int_data_names.resize(IntData::ncomps, "");
-    m_writeflags_int.resize(IntData::ncomps, 0);
+    m_real_data_names.resize(MessageRealData::ncomps, "");
+    m_writeflags_real.resize(MessageRealData::ncomps, 0);
+    m_int_data_names.resize(MessageIntData::ncomps, "");
+    m_writeflags_int.resize(MessageIntData::ncomps, 0);
 
-    m_real_data_names[RealData::timestamp] = "timestamp";
-    m_writeflags_real[RealData::timestamp] = 1;
-    m_real_data_names[RealData::old_timestamp] = "old_timestamp";
-    m_writeflags_real[RealData::old_timestamp] = 1;
-    m_real_data_names[RealData::creation_time] = "creation_time";
-    m_writeflags_real[RealData::creation_time] = 1;
+    m_real_data_names[MessageRealData::timestamp] = "timestamp";
+    m_writeflags_real[MessageRealData::timestamp] = 1;
+    m_real_data_names[MessageRealData::old_timestamp] = "old_timestamp";
+    m_writeflags_real[MessageRealData::old_timestamp] = 1;
+    m_real_data_names[MessageRealData::creation_time] = "creation_time";
+    m_writeflags_real[MessageRealData::creation_time] = 1;
 
-    m_int_data_names[IntData::type_id] = "type_id";
-    m_writeflags_int[IntData::type_id] = 1;
-    m_int_data_names[IntData::sender] = "sender";
-    m_writeflags_int[IntData::sender] = 1;
-    m_int_data_names[IntData::receiver] = "receiver";
-    m_writeflags_int[IntData::receiver] = 1;
-    m_int_data_names[IntData::receiver] = "pair";
-    m_writeflags_int[IntData::receiver] = 0;
+    m_int_data_names[MessageIntData::type_id] = "type_id";
+    m_writeflags_int[MessageIntData::type_id] = 1;
+    m_int_data_names[MessageIntData::sender] = "sender";
+    m_writeflags_int[MessageIntData::sender] = 1;
+    m_int_data_names[MessageIntData::receiver] = "receiver";
+    m_writeflags_int[MessageIntData::receiver] = 1;
+    m_int_data_names[MessageIntData::receiver] = "pair";
+    m_writeflags_int[MessageIntData::receiver] = 0;
 }
 
 void MessageParticleContainer::initialize_state()
@@ -133,11 +135,12 @@ void MessageParticleContainer::count_messages()
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             const amrex::IntVect iv(AMREX_D_DECL(
-                p.idata(IntData::i), p.idata(IntData::j), p.idata(IntData::k)));
+                p.idata(MessageIntData::i), p.idata(MessageIntData::j),
+                p.idata(MessageIntData::k)));
 
             if (box.contains(iv)) {
                 amrex::Gpu::Atomic::AddNoRet(
-                    &cnt_arr(iv, p.idata(IntData::type_id)), 1);
+                    &cnt_arr(iv, p.idata(MessageIntData::type_id)), 1);
             }
         });
     }
@@ -222,13 +225,13 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(IntData::type_id) =
+    //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::anti_message;
-    //                     p.idata(IntData::sender) =
+    //                     p.idata(MessageIntData::sender) =
     //                     dom.index(iv_src);
-    //                     p.idata(IntData::receiver) =
+    //                     p.idata(MessageIntData::receiver) =
     //                     dom.index(iv_dest);
-    //                     p.rdata(RealData::timestamp) =
+    //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead + 20;
 
     //                     AMREX_D_TERM(
@@ -238,11 +241,11 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         p.pos(2) = plo[2] + (iv_dest[2] +
     //                         constants::HALF) * dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(IntData::i) =
+    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
     //                     iv_dest[0];
-    //                                  , p.idata(IntData::j) =
+    //                                  , p.idata(MessageIntData::j) =
     //                                  iv_dest[1]; ,
-    //                                  p.idata(IntData::k) =
+    //                                  p.idata(MessageIntData::k) =
     //                                  iv_dest[2];)
 
     //                     pti.push_back(p);
@@ -253,13 +256,13 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(IntData::type_id) =
+    //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::message;
-    //                     p.idata(IntData::sender) =
+    //                     p.idata(MessageIntData::sender) =
     //                     dom.index(iv_src);
-    //                     p.idata(IntData::receiver) =
+    //                     p.idata(MessageIntData::receiver) =
     //                     dom.index(iv_dest2);
-    //                     p.rdata(RealData::timestamp) =
+    //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
@@ -270,12 +273,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         constants::HALF)
     //                         * dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(IntData::i) =
+    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
     //                     iv_dest2[0];
-    //                                  , p.idata(IntData::j) =
+    //                                  , p.idata(MessageIntData::j) =
     //                                  iv_dest2[1];
     //                                  ,
-    //                                  p.idata(IntData::k) =
+    //                                  p.idata(MessageIntData::k) =
     //                                  iv_dest2[2];)
 
     //                     pti.push_back(p);
@@ -286,13 +289,13 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(IntData::type_id) =
+    //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::message;
-    //                     p.idata(IntData::sender) =
+    //                     p.idata(MessageIntData::sender) =
     //                     dom.index(iv_src);
-    //                     p.idata(IntData::receiver) =
+    //                     p.idata(MessageIntData::receiver) =
     //                     dom.index(iv_dest);
-    //                     p.rdata(RealData::timestamp) =
+    //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
@@ -302,11 +305,11 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         p.pos(2) = plo[2] + (iv_dest[2] +
     //                         constants::HALF) * dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(IntData::i) =
+    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
     //                     iv_dest[0];
-    //                                  , p.idata(IntData::j) =
+    //                                  , p.idata(MessageIntData::j) =
     //                                  iv_dest[1]; ,
-    //                                  p.idata(IntData::k) =
+    //                                  p.idata(MessageIntData::k) =
     //                                  iv_dest[2];)
 
     //                     pti.push_back(p);
@@ -317,13 +320,13 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         ParticleType::NextID();
     //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    //                     p.idata(IntData::type_id) =
+    //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::undefined;
-    //                     p.idata(IntData::sender) =
+    //                     p.idata(MessageIntData::sender) =
     //                     dom.index(iv_src);
-    //                     p.idata(IntData::receiver) =
+    //                     p.idata(MessageIntData::receiver) =
     //                     dom.index(iv_dest2);
-    //                     p.rdata(RealData::timestamp) =
+    //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead;
 
     //                     AMREX_D_TERM(
@@ -334,12 +337,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //                         constants::HALF)
     //                         * dx[2];)
 
-    //                     AMREX_D_TERM(p.idata(IntData::i) =
+    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
     //                     iv_dest2[0];
-    //                                  , p.idata(IntData::j) =
+    //                                  , p.idata(MessageIntData::j) =
     //                                  iv_dest2[1];
     //                                  ,
-    //                                  p.idata(IntData::k) =
+    //                                  p.idata(MessageIntData::k) =
     //                                  iv_dest2[2];)
 
     //                     pti.push_back(p);
@@ -396,8 +399,9 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     p.cpu() = my_proc;
 
                     MarkUndefined()(p);
-                    p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
-                    p.idata(IntData::receiver) =
+                    p.idata(MessageIntData::sender) =
+                        static_cast<int>(dom.index(iv));
+                    p.idata(MessageIntData::receiver) =
                         static_cast<int>(dom.index(iv));
 
                     AMREX_D_TERM(
@@ -406,9 +410,9 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(p.idata(IntData::i) = iv[0];
-                                 , p.idata(IntData::j) = iv[1];
-                                 , p.idata(IntData::k) = iv[2];)
+                    AMREX_D_TERM(p.idata(MessageIntData::i) = iv[0];
+                                 , p.idata(MessageIntData::j) = iv[1];
+                                 , p.idata(MessageIntData::k) = iv[2];)
                 }
 
                 for (int n = start; n < start + msg_per_cell; n++) {
@@ -416,10 +420,10 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     const amrex::Real ts =
                         random_exponential(1.0, engine) + lookahead;
 
-                    pmsg.rdata(RealData::timestamp) = ts;
-                    pmsg.rdata(RealData::creation_time) = 0;
-                    pmsg.idata(IntData::type_id) = MessageTypes::MESSAGE;
-                    pmsg.idata(IntData::pair) = -1;
+                    pmsg.rdata(MessageRealData::timestamp) = ts;
+                    pmsg.rdata(MessageRealData::creation_time) = 0;
+                    pmsg.idata(MessageIntData::type_id) = MessageTypes::MESSAGE;
+                    pmsg.idata(MessageIntData::pair) = -1;
                 }
             });
     }
@@ -441,7 +445,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
             auto& p = pstruct[pindex];
             bool valid_type = false;
             for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
-                valid_type = p.idata(IntData::type_id) == typ;
+                valid_type = p.idata(MessageIntData::type_id) == typ;
                 if (valid_type) {
                     break;
                 }
@@ -637,17 +641,19 @@ void MessageParticleContainer::update_undefined()
                 p.cpu() = my_proc;
 
                 MarkUndefined()(p);
-                p.idata(IntData::sender) = static_cast<int>(dom.index(iv));
-                p.idata(IntData::receiver) = static_cast<int>(dom.index(iv));
+                p.idata(MessageIntData::sender) =
+                    static_cast<int>(dom.index(iv));
+                p.idata(MessageIntData::receiver) =
+                    static_cast<int>(dom.index(iv));
 
                 AMREX_D_TERM(
                     p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
                     , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
                     , p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                AMREX_D_TERM(p.idata(IntData::i) = iv[0];
-                             , p.idata(IntData::j) = iv[1];
-                             , p.idata(IntData::k) = iv[2];)
+                AMREX_D_TERM(p.idata(MessageIntData::i) = iv[0];
+                             , p.idata(MessageIntData::j) = iv[1];
+                             , p.idata(MessageIntData::k) = iv[2];)
             }
         });
         // amrex::Gpu::Device::synchronize();
@@ -691,9 +697,9 @@ void MessageParticleContainer::resolve_pairs()
                 for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI); n++) {
 
                     auto& pant = getter(n, MessageTypes::ANTI);
-                    AMREX_ALWAYS_ASSERT(pant.idata(IntData::pair) != -1);
+                    AMREX_ALWAYS_ASSERT(pant.idata(MessageIntData::pair) != -1);
                     AMREX_ALWAYS_ASSERT(
-                        pant.idata(IntData::receiver) == dom.index(iv));
+                        pant.idata(MessageIntData::receiver) == dom.index(iv));
 
                     bool found_pair = false;
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
@@ -707,22 +713,23 @@ void MessageParticleContainer::resolve_pairs()
                             continue;
                         }
                         auto& pmsg = getter(m, MessageTypes::MESSAGE);
-                        if ((pmsg.idata(IntData::pair) ==
-                             pant.idata(IntData::pair)) &&
+                        if ((pmsg.idata(MessageIntData::pair) ==
+                             pant.idata(MessageIntData::pair)) &&
                             (std::abs(
-                                 pmsg.rdata(RealData::timestamp) -
-                                 pant.rdata(RealData::timestamp)) <
+                                 pmsg.rdata(MessageRealData::timestamp) -
+                                 pant.rdata(MessageRealData::timestamp)) <
                              constants::EPS)) {
                             AMREX_ALWAYS_ASSERT(
-                                pmsg.idata(IntData::sender) ==
-                                pant.idata(IntData::sender));
+                                pmsg.idata(MessageIntData::sender) ==
+                                pant.idata(MessageIntData::sender));
                             AMREX_ALWAYS_ASSERT(
-                                pmsg.idata(IntData::receiver) ==
-                                pant.idata(IntData::receiver));
+                                pmsg.idata(MessageIntData::receiver) ==
+                                pant.idata(MessageIntData::receiver));
                             AMREX_ALWAYS_ASSERT(
                                 std::abs(
-                                    pmsg.rdata(RealData::creation_time) -
-                                    pant.rdata(RealData::creation_time)) <
+                                    pmsg.rdata(MessageRealData::creation_time) -
+                                    pant.rdata(
+                                        MessageRealData::creation_time)) <
                                 constants::EPS);
                             MarkUndefined()(pant);
                             MarkUndefined()(pmsg);
@@ -755,12 +762,14 @@ void MessageParticleContainer::garbage_collect(const amrex::Real gvt)
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             auto& p = pstruct[pindex];
-            if (((p.rdata(RealData::timestamp) < gvt) &&
-                 (p.idata(IntData::type_id) != MessageTypes::UNDEFINED)) ||
-                ((p.idata(IntData::type_id) == MessageTypes::CONJUGATE) &&
-                 (p.rdata(RealData::creation_time) < gvt))) {
+            if (((p.rdata(MessageRealData::timestamp) < gvt) &&
+                 (p.idata(MessageIntData::type_id) !=
+                  MessageTypes::UNDEFINED)) ||
+                ((p.idata(MessageIntData::type_id) ==
+                  MessageTypes::CONJUGATE) &&
+                 (p.rdata(MessageRealData::creation_time) < gvt))) {
                 AMREX_ALWAYS_ASSERT(
-                    p.idata(IntData::type_id) != MessageTypes::MESSAGE);
+                    p.idata(MessageIntData::type_id) != MessageTypes::MESSAGE);
                 MarkUndefined()(p);
             }
         });
@@ -790,8 +799,8 @@ amrex::Real MessageParticleContainer::compute_gvt()
         auto* p_ts = ts.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
-            if (p.idata(IntData::type_id) == MessageTypes::MESSAGE) {
-                p_ts[pindex] = p.rdata(RealData::timestamp);
+            if (p.idata(MessageIntData::type_id) == MessageTypes::MESSAGE) {
+                p_ts[pindex] = p.rdata(MessageRealData::timestamp);
             }
         });
         gvt = std::min(amrex::Reduce::Min(np, ts.data()), gvt);
@@ -837,8 +846,9 @@ void MessageParticleContainer::reposition_messages()
                         auto& p = getter(n, typ);
 
                         const amrex::IntVect piv(AMREX_D_DECL(
-                            p.idata(IntData::i), p.idata(IntData::j),
-                            p.idata(IntData::k)));
+                            p.idata(MessageIntData::i),
+                            p.idata(MessageIntData::j),
+                            p.idata(MessageIntData::k)));
                         AMREX_ALWAYS_ASSERT(piv == iv);
 
                         AMREX_D_TERM(

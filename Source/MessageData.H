@@ -5,13 +5,13 @@
 
 namespace spades::particles {
 //! Message real data
-struct RealData
+struct MessageRealData
 {
     enum : std::uint8_t { timestamp, old_timestamp, creation_time, ncomps };
 };
 
 //! Message int data
-struct IntData
+struct MessageIntData
 {
     enum : std::uint8_t {
         AMREX_D_DECL(i, j, k),

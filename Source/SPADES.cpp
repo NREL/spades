@@ -359,23 +359,23 @@ void SPADES::process_messages()
                      n++) {
 
                     auto& prcv = getter(n, particles::MessageTypes::MESSAGE);
-                    if (prcv.rdata(particles::RealData::timestamp) >=
+                    if (prcv.rdata(particles::MessageRealData::timestamp) >=
                         lbts + lookahead + window_size) {
                         return;
                     }
                     AMREX_ALWAYS_ASSERT(
                         sarr(iv, constants::LVT_IDX) <
-                        prcv.rdata(particles::RealData::timestamp));
+                        prcv.rdata(particles::MessageRealData::timestamp));
 
                     // process the event
                     AMREX_ALWAYS_ASSERT(
-                        dom.atOffset(
-                            prcv.idata(particles::IntData::receiver)) == iv);
-                    prcv.rdata(particles::RealData::old_timestamp) =
+                        dom.atOffset(prcv.idata(
+                            particles::MessageIntData::receiver)) == iv);
+                    prcv.rdata(particles::MessageRealData::old_timestamp) =
                         sarr(iv, constants::LVT_IDX);
                     sarr(iv, constants::LVT_IDX) =
-                        prcv.rdata(particles::RealData::timestamp);
-                    prcv.idata(particles::IntData::type_id) =
+                        prcv.rdata(particles::MessageRealData::timestamp);
+                    prcv.idata(particles::MessageIntData::type_id) =
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
@@ -400,8 +400,8 @@ void SPADES::process_messages()
                         static_cast<int>(dom.index(iv_dest)));
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
-                    psnd.idata(particles::IntData::pair) = pair;
-                    psnd.rdata(particles::RealData::creation_time) =
+                    psnd.idata(particles::MessageIntData::pair) = pair;
+                    psnd.rdata(particles::MessageRealData::creation_time) =
                         sarr(iv, constants::LVT_IDX);
 
                     // Create the conjugate message
@@ -422,10 +422,10 @@ void SPADES::process_messages()
                     particles::Create()(
                         pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
-                    pcnj.idata(particles::IntData::pair) = pair;
-                    pcnj.rdata(particles::RealData::creation_time) =
+                    pcnj.idata(particles::MessageIntData::pair) = pair;
+                    pcnj.rdata(particles::MessageRealData::creation_time) =
                         sarr(iv, constants::LVT_IDX);
-                    pcnj.idata(particles::IntData::type_id) =
+                    pcnj.idata(particles::MessageIntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
             });
@@ -480,12 +480,12 @@ void SPADES::rollback()
                     const amrex::Real msg_lvt =
                         cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0
                             ? getter(0, particles::MessageTypes::MESSAGE)
-                                  .rdata(particles::RealData::timestamp)
+                                  .rdata(particles::MessageRealData::timestamp)
                             : constants::LARGE_NUM;
                     const amrex::Real ant_lvt =
                         cnt_arr(iv, particles::MessageTypes::ANTI) > 0
                             ? getter(0, particles::MessageTypes::ANTI)
-                                  .rdata(particles::RealData::timestamp)
+                                  .rdata(particles::MessageRealData::timestamp)
                             : constants::LARGE_NUM;
                     const amrex::Real rollback_timestamp =
                         amrex::min<amrex::Real>(msg_lvt, ant_lvt);
@@ -504,7 +504,8 @@ void SPADES::rollback()
                              n++) {
                             auto& pprd =
                                 getter(n, particles::MessageTypes::PROCESSED);
-                            if (pprd.rdata(particles::RealData::timestamp) >=
+                            if (pprd.rdata(
+                                    particles::MessageRealData::timestamp) >=
                                 rollback_timestamp) {
 
                                 const int pair = static_cast<int>(
@@ -533,20 +534,24 @@ void SPADES::rollback()
                                         m, particles::MessageTypes::CONJUGATE);
 
                                     if (pair ==
-                                        pcnj.idata(particles::IntData::pair)) {
+                                        pcnj.idata(
+                                            particles::MessageIntData::pair)) {
                                         AMREX_ALWAYS_ASSERT(
                                             std::abs(
-                                                pprd.rdata(particles::RealData::
-                                                               timestamp) -
-                                                pcnj.rdata(particles::RealData::
-                                                               creation_time)) <
+                                                pprd.rdata(
+                                                    particles::MessageRealData::
+                                                        timestamp) -
+                                                pcnj.rdata(
+                                                    particles::MessageRealData::
+                                                        creation_time)) <
                                             constants::EPS);
-                                        pcnj.idata(
-                                            particles::IntData::type_id) =
+                                        pcnj.idata(particles::MessageIntData::
+                                                       type_id) =
                                             particles::MessageTypes::ANTI;
                                         const auto piv =
                                             dom.atOffset(pcnj.idata(
-                                                particles::IntData::receiver));
+                                                particles::MessageIntData::
+                                                    receiver));
                                         AMREX_D_TERM(
                                             pcnj.pos(0) =
                                                 plo[0] +
@@ -561,27 +566,32 @@ void SPADES::rollback()
                                                   (piv[2] + constants::HALF) *
                                                       dx[2];)
                                         AMREX_D_TERM(
-                                            pcnj.idata(particles::IntData::i) =
+                                            pcnj.idata(
+                                                particles::MessageIntData::i) =
                                                 piv[0];
                                             ,
-                                            pcnj.idata(particles::IntData::j) =
+                                            pcnj.idata(
+                                                particles::MessageIntData::j) =
                                                 piv[1];
                                             ,
-                                            pcnj.idata(particles::IntData::k) =
+                                            pcnj.idata(
+                                                particles::MessageIntData::k) =
                                                 piv[2];)
                                     }
                                 }
 
-                                pprd.idata(particles::IntData::type_id) =
+                                pprd.idata(particles::MessageIntData::type_id) =
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
                                 sarr(iv, constants::LVT_IDX) =
                                     sarr(iv, constants::LVT_IDX) >
-                                            pprd.rdata(particles::RealData::
-                                                           old_timestamp)
-                                        ? pprd.rdata(particles::RealData::
-                                                         old_timestamp)
+                                            pprd.rdata(
+                                                particles::MessageRealData::
+                                                    old_timestamp)
+                                        ? pprd.rdata(
+                                              particles::MessageRealData::
+                                                  old_timestamp)
                                         : sarr(iv, constants::LVT_IDX);
                             }
                         }
@@ -691,7 +701,8 @@ void SPADES::update_lbts()
 
                 if (cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
                     auto& prcv = getter(0, particles::MessageTypes::MESSAGE);
-                    lbts_arr(iv) = prcv.rdata(particles::RealData::timestamp);
+                    lbts_arr(iv) =
+                        prcv.rdata(particles::MessageRealData::timestamp);
                 }
             });
     }

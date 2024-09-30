@@ -27,7 +27,9 @@ struct MessageParticleContainerInfo
 
 //! Main SPADES message container
 class MessageParticleContainer
-    : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
+    : public amrex::NeighborParticleContainer<
+          MessageRealData::ncomps,
+          MessageIntData::ncomps>
 {
 public:
     /**
