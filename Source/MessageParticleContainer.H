@@ -1,12 +1,12 @@
-#ifndef CELLSORTEDPARTICLECONTAINER_H
-#define CELLSORTEDPARTICLECONTAINER_H
+#ifndef MESSAGEPARTICLECONTAINER_H
+#define MESSAGEPARTICLECONTAINER_H
 #include <AMReX.H>
 #include <AMReX_AmrCore.H>
 #include <AMReX_AmrParGDB.H>
 #include <AMReX_NeighborParticles.H>
 #include <AMReX_Random.H>
-#include "ParticleData.H"
-#include "ParticleOps.H"
+#include "MessageData.H"
+#include "MessageOps.H"
 #include "Utilities.H"
 
 /**
@@ -14,19 +14,19 @@
  **/
 namespace spades::particles {
 
-//! Information for a particle container
-struct ParticleContainerInfo
+//! Information for a message container
+struct MessageParticleContainerInfo
 {
-    explicit ParticleContainerInfo(std::string basename);
+    explicit MessageParticleContainerInfo(std::string basename);
 
-    ~ParticleContainerInfo();
+    ~MessageParticleContainerInfo();
 
     //! Field name without state information
     std::string m_basename;
 };
 
-//! Main SPADES particle container
-class CellSortedParticleContainer
+//! Main SPADES message container
+class MessageParticleContainer
     : public amrex::NeighborParticleContainer<RealData::ncomps, IntData::ncomps>
 {
 public:
@@ -41,8 +41,7 @@ public:
        @param par_gdb [in] particle database
        @param ngrow [in] number of grow cells
      **/
-    explicit CellSortedParticleContainer(
-        amrex::AmrParGDB* par_gdb, int ngrow = 0);
+    explicit MessageParticleContainer(amrex::AmrParGDB* par_gdb, int ngrow = 0);
 
     /**
        @brief Constructor
@@ -51,7 +50,7 @@ public:
        @param ba [in] box array
        @param ngrow [in] number of grow cells
      **/
-    explicit CellSortedParticleContainer(
+    explicit MessageParticleContainer(
         const amrex::Vector<amrex::Geometry>& geom,
         const amrex::Vector<amrex::DistributionMapping>& dmap,
         const amrex::Vector<amrex::BoxArray>& ba,
@@ -91,7 +90,7 @@ public:
      **/
     amrex::Long total_count(const int typ) const
     {
-        BL_PROFILE("spades::CellSortedParticleContainer::total_count()");
+        BL_PROFILE("spades::MessageParticleContainer::total_count()");
         return m_message_counts.sum(typ);
     }
 
@@ -139,7 +138,7 @@ private:
     void initialize_vectors();
 
     //! Data for particle container
-    ParticleContainerInfo m_info;
+    MessageParticleContainerInfo m_info;
 
     //! Flags for real data to write to file
     amrex::Vector<int> m_writeflags_real;
