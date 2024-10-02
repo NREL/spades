@@ -19,10 +19,13 @@ SPADES::SPADES()
 
     m_message_counts_varnames.resize(particles::MessageTypes::NTYPES);
     m_message_counts_varnames[particles::MessageTypes::MESSAGE] = "message";
-    m_message_counts_varnames[particles::MessageTypes::PROCESSED] = "processed";
-    m_message_counts_varnames[particles::MessageTypes::ANTI] = "anti";
-    m_message_counts_varnames[particles::MessageTypes::CONJUGATE] = "conjugate";
-    m_message_counts_varnames[particles::MessageTypes::UNDEFINED] = "undefined";
+    m_message_counts_varnames[particles::MessageTypes::PROCESSED] =
+        "processed_message";
+    m_message_counts_varnames[particles::MessageTypes::ANTI] = "anti_message";
+    m_message_counts_varnames[particles::MessageTypes::CONJUGATE] =
+        "conjugate_message";
+    m_message_counts_varnames[particles::MessageTypes::UNDEFINED] =
+        "undefined_message";
     for (const auto& mm : m_message_counts_varnames) {
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
             !mm.empty(), "Message variable name needs to be specified");
@@ -30,8 +33,9 @@ SPADES::SPADES()
 
     m_entity_counts_varnames.resize(particles::EntityTypes::NTYPES);
     m_entity_counts_varnames[particles::EntityTypes::ENTITY] = "entity";
-    m_entity_counts_varnames[particles::EntityTypes::BACKUP] = "backup";
-    m_entity_counts_varnames[particles::EntityTypes::UNDEFINED] = "undefined";
+    m_entity_counts_varnames[particles::EntityTypes::BACKUP] = "backup_entity";
+    m_entity_counts_varnames[particles::EntityTypes::UNDEFINED] =
+        "undefined_entity";
     for (const auto& mm : m_entity_counts_varnames) {
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
             !mm.empty(), "Entity variable name needs to be specified");
@@ -48,7 +52,8 @@ SPADES::SPADES()
     }
     AMREX_ALWAYS_ASSERT(
         m_spades_varnames.size() ==
-        (constants::N_STATES + particles::MessageTypes::NTYPES + particles::EntityTypes::NTYPES));
+        (constants::N_STATES + particles::MessageTypes::NTYPES +
+         particles::EntityTypes::NTYPES));
 
     m_nrollbacks.resize(constants::MAX_ROLLBACK_ITERS, 0);
     m_min_timings.resize(2, 0);
@@ -782,11 +787,17 @@ void SPADES::MakeNewLevelFromScratch(
     // Initialize the data
     initialize_state();
 
-    // Update particle container
+    // Update message particle container
     m_message_pc->Define(Geom(LEV), dm, ba);
     m_message_pc->initialize_messages(m_lookahead);
     m_message_pc->initialize_state();
     m_message_pc->sort_messages();
+
+    // Update entity particle container
+    m_entity_pc->Define(Geom(LEV), dm, ba);
+    m_entity_pc->initialize_entities();
+    m_entity_pc->initialize_state();
+    m_entity_pc->sort_entities();
 }
 
 void SPADES::initialize_state()
@@ -812,6 +823,7 @@ void SPADES::ClearLevel(int /*lev*/)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
     m_message_pc->clear_state();
+    m_entity_pc->clear_state();
     m_state.clear();
     m_plt_mf.clear();
 }
@@ -832,7 +844,8 @@ void SPADES::set_ics()
 bool SPADES::check_field_existence(const std::string& name)
 {
     BL_PROFILE("spades::SPADES::check_field_existence()");
-    const auto vnames = {m_state_varnames, m_message_counts_varnames, m_entity_counts_varnames};
+    const auto vnames = {
+        m_state_varnames, m_message_counts_varnames, m_entity_counts_varnames};
     return std::any_of(vnames.begin(), vnames.end(), [=](const auto& vn) {
         return get_field_component(name, vn) != -1;
     });
@@ -867,7 +880,8 @@ SPADES::get_field(const std::string& name, const int ngrow)
     if (srccomp_sd != -1) {
         amrex::MultiFab::Copy(*mf, m_state, srccomp_sd, 0, nc, ngrow);
     }
-    const int srccomp_mid = get_field_component(name, m_message_counts_varnames);
+    const int srccomp_mid =
+        get_field_component(name, m_message_counts_varnames);
     if (srccomp_mid != -1) {
         auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
@@ -1029,6 +1043,8 @@ void SPADES::write_checkpoint_file() const
                      LEV, checkpointname, "Level_", varnames[0]));
 
     m_message_pc->Checkpoint(checkpointname, m_message_pc->identifier());
+
+    m_entity_pc->Checkpoint(checkpointname, m_entity_pc->identifier());
 
     write_info_file(checkpointname);
 

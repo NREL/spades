@@ -85,11 +85,8 @@ public:
         return m_entity_counts.sum(typ);
     }
 
-    /**
-       @brief Initialize the entities
-       @param lookahead [in] lookahead
-     **/
-    void initialize_entities(const amrex::Real lookahead);
+    //! Initialize the entities
+    void initialize_entities();
 
     //! Sort the entities
     void sort_entities();
