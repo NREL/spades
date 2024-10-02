@@ -14,17 +14,6 @@
  **/
 namespace spades::particles {
 
-//! Information for a message container
-struct MessageParticleContainerInfo
-{
-    explicit MessageParticleContainerInfo(std::string basename);
-
-    ~MessageParticleContainerInfo();
-
-    //! Field name without state information
-    std::string m_basename;
-};
-
 //! Main SPADES message container
 class MessageParticleContainer
     : public amrex::NeighborParticleContainer<
@@ -36,7 +25,7 @@ public:
        @brief Class identifier name
        @return class identifier
      **/
-    static std::string identifier() { return "particles"; }
+    static std::string identifier() { return "messages"; }
 
     /**
        @brief Constructor
@@ -140,7 +129,7 @@ private:
     void initialize_vectors();
 
     //! Data for particle container
-    MessageParticleContainerInfo m_info;
+    ParticleContainerInfo m_info;
 
     //! Flags for real data to write to file
     amrex::Vector<int> m_writeflags_real;

@@ -58,7 +58,7 @@ void SPADES::init_data()
         const amrex::Real time = 0.0;
         set_ics();
 
-        init_particle_container();
+        init_particle_containers();
 
         InitFromScratch(time);
 
@@ -89,11 +89,13 @@ void SPADES::init_data()
     write_data_file(true);
 }
 
-void SPADES::init_particle_container()
+void SPADES::init_particle_containers()
 {
-    BL_PROFILE("spades::SPADES::init_particle_container()");
+    BL_PROFILE("spades::SPADES::init_particle_containers()");
     m_message_pc =
         std::make_unique<particles::MessageParticleContainer>(GetParGDB());
+    m_entity_pc =
+        std::make_unique<particles::EntityParticleContainer>(GetParGDB());
 }
 
 void SPADES::read_parameters()
@@ -1082,10 +1084,15 @@ void SPADES::read_checkpoint_file()
 
     read_rng_file(m_restart_chkfile);
 
-    init_particle_container();
+    init_particle_containers();
+
     m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());
     m_message_pc->initialize_state();
     m_message_pc->sort_messages();
+
+    m_entity_pc->Restart(m_restart_chkfile, m_entity_pc->identifier());
+    m_entity_pc->initialize_state();
+    m_entity_pc->sort_entities();
 }
 
 void SPADES::write_info_file(const std::string& path) const

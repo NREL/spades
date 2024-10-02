@@ -15,6 +15,7 @@
 #include "IC.H"
 #include "Utilities.H"
 #include "MessageParticleContainer.H"
+#include "EntityParticleContainer.H"
 
 /**
    @brief Scalable PArallel Discrete Event Simulation
@@ -132,8 +133,8 @@ public:
      **/
     void initialize_state();
 
-    //! Initialize the particle container
-    void init_particle_container();
+    //! Initialize the particle containers
+    void init_particle_containers();
 
     /**
        @brief Process messages
@@ -384,8 +385,11 @@ private:
     //! Initial condition type (optional user input)
     std::string m_ic_type;
 
-    //! Particle container
+    //! Message particle container
     std::unique_ptr<particles::MessageParticleContainer> m_message_pc;
+
+    //! Entity article container
+    std::unique_ptr<particles::EntityParticleContainer> m_entity_pc;
 };
 } // namespace spades
 #endif
