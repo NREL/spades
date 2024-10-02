@@ -931,13 +931,21 @@ void SPADES::plot_file_mf()
     int cnt = 0;
     amrex::MultiFab::Copy(m_plt_mf, m_state, 0, cnt, m_state.nComp(), 0);
     cnt += m_state.nComp();
-    auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
     auto const& plt_mf_arrs = m_plt_mf.arrays();
+    auto const& msg_cnt_arrs = m_message_pc->message_counts().const_arrays();
     amrex::ParallelFor(
         m_plt_mf, m_plt_mf.nGrowVect(), m_message_pc->message_counts().nComp(),
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-            plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
+            plt_mf_arrs[nbx](i, j, k, n + cnt) = msg_cnt_arrs[nbx](i, j, k, n);
         });
+    cnt += m_message_pc->message_counts().nComp();
+    auto const& ent_cnt_arrs = m_entity_pc->entity_counts().const_arrays();
+    amrex::ParallelFor(
+        m_plt_mf, m_plt_mf.nGrowVect(), m_entity_pc->entity_counts().nComp(),
+        [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+            plt_mf_arrs[nbx](i, j, k, n + cnt) = ent_cnt_arrs[nbx](i, j, k, n);
+        });
+    cnt += m_entity_pc->entity_counts().nComp();
     amrex::Gpu::synchronize();
 }
 
