@@ -395,7 +395,7 @@ void SPADES::process_messages()
                     // FIXME, in general, Create is clunky. Better way?
                     auto& psnd =
                         getter(2 * n, particles::MessageTypes::UNDEFINED);
-                    particles::Create()(
+                    particles::CreateMessage()(
                         psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     const auto pair = static_cast<int>(
@@ -419,7 +419,7 @@ void SPADES::process_messages()
                             plo[1] + (iv[1] + constants::HALF) * dx[1],
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
-                    particles::Create()(
+                    particles::CreateMessage()(
                         pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     pcnj.idata(particles::MessageIntData::pair) = pair;

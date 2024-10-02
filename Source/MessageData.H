@@ -2,20 +2,27 @@
 #define MESSAGEDATA_H
 
 #include <AMReX.H>
+#include "ParticleData.H"
 
 namespace spades::particles {
 //! Message real data
 struct MessageRealData
 {
-    enum : std::uint8_t { timestamp, old_timestamp, creation_time, ncomps };
+    enum : std::uint8_t {
+        timestamp = CommonRealData::timestamp,
+        old_timestamp,
+        creation_time,
+        ncomps
+    };
 };
 
 //! Message int data
 struct MessageIntData
 {
     enum : std::uint8_t {
-        AMREX_D_DECL(i, j, k),
-        type_id,
+        AMREX_D_DECL(
+            i = CommonIntData::i, j = CommonIntData::j, k = CommonIntData::k),
+        type_id = CommonIntData::type_id,
         sender,
         receiver,
         pair,
