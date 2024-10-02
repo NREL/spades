@@ -15,7 +15,8 @@ amr.chk_int = 1
 amr.v = 1
 
 spades.ic_type = "constant"
-spades.write_particles = t
+spades.write_messages = t
+spades.write_entities = t
 spades.seed = 10
 
 amrex.fpe_trap_invalid = 1

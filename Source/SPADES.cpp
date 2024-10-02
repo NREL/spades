@@ -25,7 +25,16 @@ SPADES::SPADES()
     m_message_counts_varnames[particles::MessageTypes::UNDEFINED] = "undefined";
     for (const auto& mm : m_message_counts_varnames) {
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-            !mm.empty(), "Variable name needs to be specified");
+            !mm.empty(), "Message variable name needs to be specified");
+    }
+
+    m_entity_counts_varnames.resize(particles::EntityTypes::NTYPES);
+    m_entity_counts_varnames[particles::EntityTypes::ENTITY] = "entity";
+    m_entity_counts_varnames[particles::EntityTypes::BACKUP] = "backup";
+    m_entity_counts_varnames[particles::EntityTypes::UNDEFINED] = "undefined";
+    for (const auto& mm : m_entity_counts_varnames) {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            !mm.empty(), "Entity variable name needs to be specified");
     }
 
     for (const auto& vname : m_state_varnames) {
@@ -34,9 +43,12 @@ SPADES::SPADES()
     for (const auto& vname : m_message_counts_varnames) {
         m_spades_varnames.push_back(vname);
     }
+    for (const auto& vname : m_entity_counts_varnames) {
+        m_spades_varnames.push_back(vname);
+    }
     AMREX_ALWAYS_ASSERT(
         m_spades_varnames.size() ==
-        (constants::N_STATES + particles::MessageTypes::NTYPES));
+        (constants::N_STATES + particles::MessageTypes::NTYPES + particles::EntityTypes::NTYPES));
 
     m_nrollbacks.resize(constants::MAX_ROLLBACK_ITERS, 0);
     m_min_timings.resize(2, 0);
@@ -126,7 +138,8 @@ void SPADES::read_parameters()
     {
         amrex::ParmParse pp("spades");
         pp.get("ic_type", m_ic_type);
-        pp.query("write_particles", m_write_particles);
+        pp.query("write_messages", m_write_messages);
+        pp.query("write_entities", m_write_entities);
         pp.query("seed", m_seed);
         pp.query("lookahead", m_lookahead);
         pp.query("window_size", m_window_size);
@@ -288,6 +301,8 @@ void SPADES::summary()
 
     m_ntotal_messages = m_message_pc->TotalNumberOfParticles(LEV != 0);
     m_nmessages = m_message_pc->total_count(particles::MessageTypes::MESSAGE);
+    m_ntotal_entities = m_entity_pc->TotalNumberOfParticles(LEV != 0);
+    m_nentities = m_entity_pc->total_count(particles::EntityTypes::ENTITY);
     m_ncells = CountCells(LEV);
     if (Verbose() > 0) {
         amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
@@ -296,12 +311,15 @@ void SPADES::summary()
         amrex::Print() << "  " << m_nmessages << " messages" << std::endl;
         amrex::Print() << "  " << m_nprocessed_messages << " processed messages"
                        << std::endl;
-        amrex::Print() << "  " << m_ncells << " nodes" << std::endl;
+        amrex::Print() << "  " << m_ntotal_entities << " total entities"
+                       << std::endl;
+        amrex::Print() << "  " << m_nentities << " entities" << std::endl;
+        amrex::Print() << "  " << m_ncells << " logical processes" << std::endl;
         for (int n = 0; n < m_nrollbacks.size(); n++) {
             const auto nrlbk = m_nrollbacks[n];
             if (nrlbk > 0) {
-                amrex::Print() << "  " << nrlbk << " nodes doing " << n
-                               << " rollbacks" << std::endl;
+                amrex::Print() << "  " << nrlbk << " logical processes doing "
+                               << n << " rollbacks" << std::endl;
             }
         }
     }
@@ -814,7 +832,7 @@ void SPADES::set_ics()
 bool SPADES::check_field_existence(const std::string& name)
 {
     BL_PROFILE("spades::SPADES::check_field_existence()");
-    const auto vnames = {m_state_varnames, m_message_counts_varnames};
+    const auto vnames = {m_state_varnames, m_message_counts_varnames, m_entity_counts_varnames};
     return std::any_of(vnames.begin(), vnames.end(), [=](const auto& vn) {
         return get_field_component(name, vn) != -1;
     });
@@ -849,12 +867,23 @@ SPADES::get_field(const std::string& name, const int ngrow)
     if (srccomp_sd != -1) {
         amrex::MultiFab::Copy(*mf, m_state, srccomp_sd, 0, nc, ngrow);
     }
-    const int srccomp_id = get_field_component(name, m_message_counts_varnames);
-    if (srccomp_id != -1) {
+    const int srccomp_mid = get_field_component(name, m_message_counts_varnames);
+    if (srccomp_mid != -1) {
         auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
             *mf, mf->nGrowVect(), m_message_pc->message_counts().nComp(),
+            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+                mf_arrs[nbx](i, j, k, n) = cnt_arrs[nbx](i, j, k, n);
+            });
+        amrex::Gpu::synchronize();
+    }
+    const int srccomp_eid = get_field_component(name, m_entity_counts_varnames);
+    if (srccomp_eid != -1) {
+        auto const& cnt_arrs = m_entity_pc->entity_counts().const_arrays();
+        auto const& mf_arrs = mf->arrays();
+        amrex::ParallelFor(
+            *mf, mf->nGrowVect(), m_entity_pc->entity_counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = cnt_arrs[nbx](i, j, k, n);
             });
@@ -911,8 +940,11 @@ void SPADES::write_plot_file()
     amrex::VisMF::SetNOutFiles(m_nfiles);
     amrex::WriteSingleLevelPlotfile(
         plotfilename, m_plt_mf, varnames, Geom(LEV), m_t_new, m_istep);
-    if (m_write_particles) {
+    if (m_write_messages) {
         m_message_pc->write_plot_file(plotfilename);
+    }
+    if (m_write_entities) {
+        m_entity_pc->write_plot_file(plotfilename);
     }
 
     write_info_file(plotfilename);
@@ -1200,7 +1232,9 @@ void SPADES::write_data_file(const bool is_init) const
         if (is_init) {
             std::ofstream fh(m_data_fname.c_str(), std::ios::out);
             fh.precision(m_data_precision);
-            fh << "step,gvt,lbts,nodes,total_messages,messages,processed_"
+            fh << "step,gvt,lbts,lps,total_messages,messages,total_entities,"
+                  "entities,"
+                  "processed_"
                   "messages,min_time,avg_time,max_time,min_rate,avg_rate,"
                   "max_rate";
             for (int i = 0; i < m_nrollbacks.size(); i++) {
@@ -1219,10 +1253,10 @@ void SPADES::write_data_file(const bool is_init) const
         const auto n_processed_messages = m_nprocessed_messages;
         fh << m_t_new << "," << m_gvt << "," << m_lbts << "," << m_ncells << ","
            << m_ntotal_messages << "," << m_nmessages << ","
-           << n_processed_messages << "," << m_min_timings[0] << ","
-           << m_avg_timings[0] << "," << m_max_timings[0] << ","
-           << m_min_timings[1] << "," << m_avg_timings[1] << ","
-           << m_max_timings[1];
+           << n_processed_messages << "," << m_ntotal_entities << ","
+           << m_nentities << "," << m_min_timings[0] << "," << m_avg_timings[0]
+           << "," << m_max_timings[0] << "," << m_min_timings[1] << ","
+           << m_avg_timings[1] << "," << m_max_timings[1];
 
         for (const auto& rlbk : m_nrollbacks) {
             fh << "," << rlbk;
