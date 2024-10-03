@@ -9,6 +9,11 @@
 #include "ParticleOps.H"
 #include "Utilities.H"
 
+#if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+#include <thrust/sort.h>
+#include <thrust/execution_policy.h>
+#endif
+
 /**
    @brief SPADES particles
  **/
