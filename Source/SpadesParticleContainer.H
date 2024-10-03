@@ -142,10 +142,10 @@ protected:
     //! Names for int data to write to file
     amrex::Vector<std::string> m_int_data_names;
 
-    //! Count of types in each cell
+    //! Count of particles in each cell
     amrex::iMultiFab m_counts;
 
-    //! Offsets of types in each cell
+    //! Offsets of particles in each cell
     amrex::iMultiFab m_offsets;
 };
 
