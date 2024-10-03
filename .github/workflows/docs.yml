@@ -47,8 +47,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/problem-matchers/sphinx.json"
           # Doxygen on ubuntu-latest is old and complains of unsupported tag
-          grep -E "WARNING:|Warning:|warning:|ERROR:|Error:|error:" build-output.txt | \
-            grep -E -v "ignoring unsupported tag" | sort | uniq | \
+          grep -E "WARNING:|Warning:|warning:|ERROR:|Error:|error:" build-output.txt | sort | uniq | \
             awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > build-output-warnings.txt
           cat build-output-warnings.txt
           exit $(tail -n 1 build-output-warnings.txt | awk '{print $2}')
