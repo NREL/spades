@@ -93,10 +93,9 @@ void EntityParticleContainer::initialize_entities()
         auto& pti = DefineAndReturnParticleTile(LEV, mfi);
         pti.resize(np);
         auto* aos = pti.GetArrayOfStructs().dataPtr();
-        amrex::ParallelForRNG(
+        amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int AMREX_D_PICK(, , k),
-                     amrex::RandomEngine const& engine) noexcept {
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const int start = offset_arr(iv);
                 for (int n = start; n < start + num_particles_arr(iv); n++) {
