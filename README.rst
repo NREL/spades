@@ -3,7 +3,7 @@ SPADES: Scalable PArallel Discrete Event Simulation
 
 |CI Badge| |Documentation Badge| |License Badge| |AMReX Badge| |C++ Badge|
 
-.. |CI Badge| image:: https://github.com/NREL/spades/workflows/SPADES-CI/badge.svg
+.. |CI Badge| image:: https://github.com/NREL/spades/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/NREL/spades/actions
 
 .. |Documentation Badge| image:: https://github.com/NREL/spades/workflows/SPADES-Docs/badge.svg
