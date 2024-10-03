@@ -2,7 +2,6 @@ target_sources(${spades_lib_name}
   PRIVATE
     MessageParticleContainer.cpp
     EntityParticleContainer.cpp
-    ParticleData.cpp
     ConsoleIO.cpp
     IC.cpp
     SPADES.cpp

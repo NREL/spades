@@ -276,7 +276,7 @@ void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
 
     update_gvt();
     m_message_pc->garbage_collect(m_gvt);
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
 
     update_lbts();
 
@@ -285,7 +285,7 @@ void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
 
     process_messages();
     m_message_pc->Redistribute();
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
 
     rollback();
 
@@ -362,8 +362,7 @@ void SPADES::process_messages()
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& sarr = m_state.array(mfi);
-        const auto& msg_cnt_arr =
-            m_message_pc->message_counts().const_array(mfi);
+        const auto& msg_cnt_arr = m_message_pc->counts().const_array(mfi);
         const auto& msg_offsets_arr = m_message_pc->offsets().const_array(mfi);
         const auto index = std::make_pair(gid, tid);
         auto& pti = m_message_pc->GetParticles(LEV)[index];
@@ -488,8 +487,7 @@ void SPADES::rollback()
             const int tid = mfi.LocalTileIndex();
             const auto& sarr = m_state.array(mfi);
             const auto& rarr = rollback.array(mfi);
-            const auto& msg_cnt_arr =
-                m_message_pc->message_counts().const_array(mfi);
+            const auto& msg_cnt_arr = m_message_pc->counts().const_array(mfi);
             const auto& msg_offsets_arr =
                 m_message_pc->offsets().const_array(mfi);
             const auto index = std::make_pair(gid, tid);
@@ -627,7 +625,7 @@ void SPADES::rollback()
         }
 
         m_message_pc->Redistribute();
-        m_message_pc->sort_messages();
+        m_message_pc->sort();
         require_rollback = rollback.max(0) > 0;
         iter++;
     }
@@ -643,7 +641,7 @@ void SPADES::rollback()
     m_message_pc->resolve_pairs();
 
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-        m_message_pc->message_counts().sum(particles::MessageTypes::ANTI) == 0,
+        m_message_pc->counts().sum(particles::MessageTypes::ANTI) == 0,
         "There should be no anti-messages left after rollback");
 }
 
@@ -711,8 +709,7 @@ void SPADES::update_lbts()
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& msg_cnt_arr =
-            m_message_pc->message_counts().const_array(mfi);
+        const auto& msg_cnt_arr = m_message_pc->counts().const_array(mfi);
         const auto& msg_offsets_arr = m_message_pc->offsets().const_array(mfi);
         const auto& lbts_arr = lbts.array(mfi);
         const auto index = std::make_pair(gid, tid);
@@ -794,13 +791,13 @@ void SPADES::MakeNewLevelFromScratch(
     m_message_pc->Define(Geom(LEV), dm, ba);
     m_message_pc->initialize_messages(m_lookahead);
     m_message_pc->initialize_state();
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
 
     // Update entity particle container
     m_entity_pc->Define(Geom(LEV), dm, ba);
     m_entity_pc->initialize_entities();
     m_entity_pc->initialize_state();
-    m_entity_pc->sort_entities();
+    m_entity_pc->sort();
 }
 
 void SPADES::initialize_state()
@@ -886,11 +883,10 @@ SPADES::get_field(const std::string& name, const int ngrow)
     const int srccomp_mid =
         get_field_component(name, m_message_counts_varnames);
     if (srccomp_mid != -1) {
-        auto const& msg_cnt_arrs =
-            m_message_pc->message_counts().const_arrays();
+        auto const& msg_cnt_arrs = m_message_pc->counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
-            *mf, mf->nGrowVect(), m_message_pc->message_counts().nComp(),
+            *mf, mf->nGrowVect(), m_message_pc->counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
             });
@@ -898,10 +894,10 @@ SPADES::get_field(const std::string& name, const int ngrow)
     }
     const int srccomp_eid = get_field_component(name, m_entity_counts_varnames);
     if (srccomp_eid != -1) {
-        auto const& msg_cnt_arrs = m_entity_pc->entity_counts().const_arrays();
+        auto const& msg_cnt_arrs = m_entity_pc->counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
-            *mf, mf->nGrowVect(), m_entity_pc->entity_counts().nComp(),
+            *mf, mf->nGrowVect(), m_entity_pc->counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
             });
@@ -936,20 +932,20 @@ void SPADES::plot_file_mf()
     amrex::MultiFab::Copy(m_plt_mf, m_state, 0, cnt, m_state.nComp(), 0);
     cnt += m_state.nComp();
     auto const& plt_mf_arrs = m_plt_mf.arrays();
-    auto const& msg_cnt_arrs = m_message_pc->message_counts().const_arrays();
+    auto const& msg_cnt_arrs = m_message_pc->counts().const_arrays();
     amrex::ParallelFor(
-        m_plt_mf, m_plt_mf.nGrowVect(), m_message_pc->message_counts().nComp(),
+        m_plt_mf, m_plt_mf.nGrowVect(), m_message_pc->counts().nComp(),
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
             plt_mf_arrs[nbx](i, j, k, n + cnt) = msg_cnt_arrs[nbx](i, j, k, n);
         });
-    cnt += m_message_pc->message_counts().nComp();
-    auto const& ent_cnt_arrs = m_entity_pc->entity_counts().const_arrays();
+    cnt += m_message_pc->counts().nComp();
+    auto const& ent_cnt_arrs = m_entity_pc->counts().const_arrays();
     amrex::ParallelFor(
-        m_plt_mf, m_plt_mf.nGrowVect(), m_entity_pc->entity_counts().nComp(),
+        m_plt_mf, m_plt_mf.nGrowVect(), m_entity_pc->counts().nComp(),
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
             plt_mf_arrs[nbx](i, j, k, n + cnt) = ent_cnt_arrs[nbx](i, j, k, n);
         });
-    cnt += m_entity_pc->entity_counts().nComp();
+    cnt += m_entity_pc->counts().nComp();
     amrex::Gpu::synchronize();
 }
 
@@ -1148,11 +1144,11 @@ void SPADES::read_checkpoint_file()
 
     m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());
     m_message_pc->initialize_state();
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
 
     m_entity_pc->Restart(m_restart_chkfile, m_entity_pc->identifier());
     m_entity_pc->initialize_state();
-    m_entity_pc->sort_entities();
+    m_entity_pc->sort();
 }
 
 void SPADES::write_info_file(const std::string& path) const

@@ -14,6 +14,7 @@
 #include "Constants.H"
 #include "IC.H"
 #include "Utilities.H"
+#include "SpadesParticleContainer.H"
 #include "MessageParticleContainer.H"
 #include "EntityParticleContainer.H"
 
