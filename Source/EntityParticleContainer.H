@@ -63,16 +63,6 @@ public:
 protected:
     //! Initialize variable names
     void initialize_variable_names() override;
-
-private:
-    //! Lower bound for undefined entity counts
-    const int m_lower_undefined_count{40};
-
-    //! Reset value for undefined entity counts
-    const int m_reset_undefined_count{50};
-
-    //! Upper bound for undefined entity counts
-    const int m_upper_undefined_count{100};
 };
 } // namespace spades::particles
 #endif
