@@ -59,7 +59,6 @@ public:
         write_plot_file_impl(plt_filename, identifier());
     };
 
-protected:
     //! Initialize variable names
     void initialize_variable_names() override;
 };
