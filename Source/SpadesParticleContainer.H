@@ -91,10 +91,10 @@ public:
     void reposition_particles();
 
     /**
-       @brief Write the particles to file
-       @param plt_filename [in] file name for the plot file
-     **/
-    void write_plot_file(const std::string& plt_filename);
+      @brief Write the particles to file
+      @param plt_filename [in] file name for the plot file
+    **/
+    virtual void write_plot_file(const std::string& plt_filename) = 0;
 
     //! Number of grow cells
     int ngrow() const { return m_ngrow; }
@@ -106,9 +106,21 @@ protected:
     //! Initialize variable names
     virtual void initialize_variable_names() = 0;
 
-    //! Sort the particles
+    /**
+      @brief Sort the particles implementation
+      @param compare [in] comparison functor
+    **/
+    //!
     template <typename CompareFunctor>
-    void sort_impl(const CompareFunctor&);
+    void sort_impl(const CompareFunctor& compare);
+
+    /**
+      @brief Write the particles to file (implementation)
+      @param plt_filename [in] file name for the plot file
+      @param name [in] file name for the particle file
+    **/
+    void write_plot_file_impl(
+        const std::string& plt_filename, const std::string& name);
 
     //! Number of grow cells
     int m_ngrow;

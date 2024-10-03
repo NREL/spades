@@ -164,10 +164,4 @@ void EntityParticleContainer::sort()
     sort_impl(CompareEntity());
 }
 
-void EntityParticleContainer::garbage_collect(const amrex::Real gvt)
-{
-    BL_PROFILE("spades::EntityParticleContainer::garbage_collect()");
-    amrex::Abort("Not implemented");
-}
-
 } // namespace spades::particles

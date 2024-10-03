@@ -146,7 +146,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::update_counts()
 template <typename PType, int NStructReal, int NStructInt>
 template <typename CompareFunc>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
-    const CompareFunc& Compare)
+    const CompareFunc& compare)
 {
     // Taking inspiration from AMReX's SortParticlesByBin
     BL_PROFILE("spades::SpadesParticleContainer::sort_impl()");
@@ -187,7 +187,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
                 const amrex::Long xi, const amrex::Long yi) noexcept {
                 const auto& p1 = pstruct[xi];
                 const auto& p2 = pstruct[yi];
-                return Compare(p1, p2);
+                return compare(p1, p2);
             });
 #else
         // Perform sort on CPU, then copy back to device (not good)
@@ -200,7 +200,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
             [=](const amrex::Long xi, const amrex::Long yi) {
                 const auto& p1 = pstruct[xi];
                 const auto& p2 = pstruct[yi];
-                return Compare(p1, p2);
+                return compare(p1, p2);
             });
         amrex::Gpu::copy(
             amrex::Gpu::hostToDevice, h_cell_list.begin(), h_cell_list.end(),
@@ -212,7 +212,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
             [=](const amrex::Long xi, const amrex::Long yi) {
                 const auto& p1 = pstruct[xi];
                 const auto& p2 = pstruct[yi];
-                return Compare(p1, p2);
+                return compare(p1, p2);
             });
 #endif
         // amrex::Gpu::Device::synchronize();
@@ -291,12 +291,13 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 }
 
 template <typename PType, int NStructReal, int NStructInt>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::write_plot_file(
-    const std::string& plt_filename)
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::
+    write_plot_file_impl(
+        const std::string& plt_filename, const std::string& name)
 {
     BL_PROFILE("spades::SpadesParticleContainer::write_plot_file()");
     reposition_particles();
     this->WritePlotFile(
-        plt_filename, identifier(), m_writeflags_real, m_writeflags_int,
+        plt_filename, name, m_writeflags_real, m_writeflags_int,
         m_real_data_names, m_int_data_names);
 }

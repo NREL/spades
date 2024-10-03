@@ -72,6 +72,11 @@ public:
      **/
     void garbage_collect(const amrex::Real gvt);
 
+    void write_plot_file(const std::string& plt_filename) override
+    {
+        write_plot_file_impl(plt_filename, identifier());
+    };
+
 protected:
     //! Initialize variable names
     void initialize_variable_names() override;
