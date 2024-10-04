@@ -124,11 +124,7 @@ public:
     std::unique_ptr<amrex::MultiFab>
     get_field(const std::string& name, const int ngrow);
 
-    /**
-       @brief Put together an array of MultiFab for writing
-       @return array of MultiFab
-     **/
-    //!
+    //! Put together the MultiFab for output
     void plot_file_mf();
 
     /**
