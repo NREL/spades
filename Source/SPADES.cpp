@@ -392,32 +392,36 @@ void SPADES::process_messages()
 
                     auto& prcv =
                         msg_getter(n, particles::MessageTypes::MESSAGE);
-                    if (prcv.rdata(particles::MessageRealData::timestamp) >=
-                        lbts + lookahead + window_size) {
+                    const auto ts =
+                        prcv.rdata(particles::MessageRealData::timestamp);
+                    if (ts >= lbts + lookahead + window_size) {
                         return;
                     }
+
+                    AMREX_ALWAYS_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
+
+                    // FIXME: loop on entities and grab the one this message is
+                    // destined to
+                    auto& pe = ent_getter(0, particles::EntityTypes::ENTITY);
                     AMREX_ALWAYS_ASSERT(
-                        sarr(iv, constants::LVT_IDX) <
-                        prcv.rdata(particles::MessageRealData::timestamp));
+                        dom.atOffset(
+                            pe.idata(particles::EntityIntData::owner)) == iv);
+                    AMREX_ALWAYS_ASSERT(
+                        pe.rdata(particles::EntityRealData::timestamp) < ts);
 
                     // process the event
                     AMREX_ALWAYS_ASSERT(
                         dom.atOffset(prcv.idata(
                             particles::MessageIntData::receiver)) == iv);
                     prcv.rdata(particles::MessageRealData::old_timestamp) =
-                        sarr(iv, constants::LVT_IDX);
-                    sarr(iv, constants::LVT_IDX) =
-                        prcv.rdata(particles::MessageRealData::timestamp);
+                        pe.rdata(particles::EntityRealData::timestamp);
+                    pe.rdata(particles::EntityRealData::timestamp) = ts;
                     prcv.idata(particles::MessageIntData::type_id) =
                         particles::MessageTypes::PROCESSED;
-                    auto& pe = ent_getter(0, particles::EntityTypes::ENTITY);
-                    AMREX_ALWAYS_ASSERT(
-                        dom.atOffset(
-                            pe.idata(particles::EntityIntData::owner)) == iv);
-                    pe.rdata(particles::EntityRealData::timestamp) =
-                        prcv.rdata(particles::MessageRealData::timestamp);
 
                     // Create a new message to send
+                    const auto ent_lvt =
+                        pe.rdata(particles::EntityRealData::timestamp);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
@@ -428,20 +432,20 @@ void SPADES::process_messages()
                             plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
                             plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
                             plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
-                    const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
-                                           random_exponential(1.0, engine) +
-                                           lookahead;
+                    const amrex::Real next_ts =
+                        ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     auto& psnd =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::CreateMessage()(
-                        psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
+                        psnd, next_ts, pos, iv_dest,
+                        static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
                     psnd.idata(particles::MessageIntData::pair) = pair;
                     psnd.rdata(particles::MessageRealData::creation_time) =
-                        sarr(iv, constants::LVT_IDX);
+                        ent_lvt;
 
                     // Create the conjugate message
                     auto& pcnj = msg_getter(
@@ -459,14 +463,30 @@ void SPADES::process_messages()
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
                     particles::CreateMessage()(
-                        pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
+                        pcnj, next_ts, conj_pos, iv,
+                        static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     pcnj.idata(particles::MessageIntData::pair) = pair;
                     pcnj.rdata(particles::MessageRealData::creation_time) =
-                        sarr(iv, constants::LVT_IDX);
+                        ent_lvt;
                     pcnj.idata(particles::MessageIntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
+
+                // Update LVT for the logical process
+                amrex::Real min_ent_lvt = constants::LARGE_NUM;
+                for (int n = 0;
+                     n < ent_cnt_arr(iv, particles::EntityTypes::ENTITY); n++) {
+                    auto& pe = ent_getter(n, particles::EntityTypes::ENTITY);
+                    const auto ent_lvt =
+                        pe.rdata(particles::EntityRealData::timestamp);
+                    if (min_ent_lvt > ent_lvt) {
+                        min_ent_lvt = ent_lvt;
+                    }
+                }
+                AMREX_ALWAYS_ASSERT(
+                    sarr(iv, constants::LVT_IDX) <= min_ent_lvt);
+                sarr(iv, constants::LVT_IDX) = min_ent_lvt;
             });
     }
 }
