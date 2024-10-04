@@ -1,6 +1,11 @@
 import sys
 
-extensions = ["sphinx.ext.mathjax", "sphinx.ext.graphviz"]
+extensions = ["sphinx.ext.mathjax", "sphinx.ext.graphviz", "sphinxcontrib.spelling"]
+
+spelling_word_list_filename = "spelling-wordlist.txt"
+spelling_show_suggestions = True
+spelling_warning = True
+
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"

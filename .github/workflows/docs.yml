@@ -25,9 +25,9 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends graphviz
+          sudo apt-get install -y --no-install-recommends graphviz libenchant-2-dev
           python3 -m pip install --upgrade pip
-          pip3 install sphinx sphinx_rtd_theme doxysphinx
+          pip3 install sphinx sphinx_rtd_theme doxysphinx pyenchant sphinxcontrib-spelling
       - name: Doxygen install
         uses: ssciwr/doxygen-install@v1.6.0
         with:
