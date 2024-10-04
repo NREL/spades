@@ -866,7 +866,6 @@ std::string SPADES::chk_file_name(const int step) const
 
 void SPADES::plot_file_mf()
 {
-
     m_plt_mf.clear();
     m_plt_mf.define(
         boxArray(LEV), DistributionMap(LEV),
