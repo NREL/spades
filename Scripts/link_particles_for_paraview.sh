@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 usage() {
-    cat <<-END
-                Usage:
-                ------
-                   -n <name_of_particle_directory>
-                     Link <name_of_particle_directory> to "particles"
-                   -c
-                     Remove links
-                   -h
-                     Link particle directories to "particles" for easy viewing in ParaView
+    cat <<EOF
+Usage:
+------
+   -n <name_of_particle_directory>
+     Link <name_of_particle_directory> to "particles"
+   -c
+     Remove links
+   -h
+     Link particle directories to "particles" for easy viewing in ParaView
 
-                   link_particles_for_paraview.sh -n <name_of_particle_directory>
-        END
+   link_particles_for_paraview.sh -n <name_of_particle_directory>
+EOF
 }
 
 unset -v PARTICLE_DIR_NAME
