@@ -1,0 +1,9 @@
+CMake
+CTest
+Github
+PArallel
+cmake
+cppcheck
+fcompare
+namespace
+namespaces

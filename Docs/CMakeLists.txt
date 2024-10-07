@@ -40,12 +40,18 @@ add_dependencies(doxysphinx doxygen)
 # Sphinx target
 find_package(Sphinx REQUIRED)
 
+add_custom_target(sphinx-spelling
+  COMMAND ${SPHINX_EXECUTABLE} -b spelling
+  ${SPHINX_SOURCE} ${SPHINX_BUILD}/spelling
+  COMMENT "Spell checking the documentation")
+add_dependencies(sphinx-spelling doxysphinx)
+
 add_custom_target(sphinx
   COMMAND ${SPHINX_EXECUTABLE} -M html
   ${SPHINX_SOURCE} ${SPHINX_BUILD}
   -c ${SPHINX_SOURCE} -W --keep-going -n
   COMMENT "Generating documentation with Sphinx")
-add_dependencies(sphinx doxysphinx)
+add_dependencies(sphinx sphinx-spelling)
 
 # All documentation
 add_custom_target(docs ALL)
