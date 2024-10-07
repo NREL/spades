@@ -3,9 +3,10 @@ import sys
 extensions = ["sphinx.ext.mathjax", "sphinx.ext.graphviz", "sphinxcontrib.spelling"]
 
 spelling_word_list_filename = "spelling-wordlist.txt"
-spelling_exclude_patterns=['doxygen/html/*']
+spelling_exclude_patterns = ["doxygen/html/*"]
 spelling_show_suggestions = True
 spelling_warning = True
+spelling_ignore_contributor_names = False
 
 templates_path = ["_templates"]
 source_suffix = ".rst"
