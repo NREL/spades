@@ -58,21 +58,21 @@ macro(setup_test)
       set(SAVE_GOLDS_COMMAND "&& cp -R ${PLOT_TEST} ${SAVED_GOLDS_DIRECTORY}/${TEST_NAME}/")
     endif()
     if(SPADES_TEST_WITH_FCOMPARE)
-      set(FCOMPARE_COMMAND "&& ${MPI_COMMANDS} ${FCOMPARE_EXE} ${FCOMPARE_TOLERANCE} ${PLOT_GOLD} ${PLOT_TEST}")
+      set(FCOMPARE_COMMAND "&& ${FCOMPARE_EXE} ${FCOMPARE_TOLERANCE} ${PLOT_GOLD} ${PLOT_TEST}")
     endif()
 endmacro(setup_test)
 
 # Standard regression test
 function(add_test_r TEST_NAME)
     setup_test()
-    add_test(${TEST_NAME} sh -c "${MPI_COMMANDS} ${CMAKE_BINARY_DIR}/${spades_exe_name} ${MPIEXEC_POSTFLAGS} ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp ${RUNTIME_OPTIONS} > ${TEST_NAME}.log ${SAVE_GOLDS_COMMAND} ${FCOMPARE_COMMAND}")
+    add_test(${TEST_NAME} bash -c "set -o pipefail && ${MPI_COMMANDS} ${CMAKE_BINARY_DIR}/${spades_exe_name} ${MPIEXEC_POSTFLAGS} ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp ${RUNTIME_OPTIONS} 2>&1 | tee ${TEST_NAME}.log ${SAVE_GOLDS_COMMAND} ${FCOMPARE_COMMAND}")
     # Set properties for test
     set_tests_properties(${TEST_NAME} PROPERTIES
                          TIMEOUT 5400
                          PROCESSORS ${TEST_NP}
                          WORKING_DIRECTORY "${CURRENT_TEST_BINARY_DIR}/"
                          LABELS "regression"
-                         ATTACHED_FILES_ON_FAIL "${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.log")
+                         ATTACHED_FILES "${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.log")
 endfunction(add_test_r)
 
 # Regression tests excluded from CI
@@ -90,7 +90,7 @@ function(add_test_u TEST_NAME)
     else()
       unset(MPI_COMMANDS)
     endif()
-    add_test(${TEST_NAME} sh -c "${MPI_COMMANDS} ${CMAKE_BINARY_DIR}/${spades_unit_test_exe_name}")
+    add_test(${TEST_NAME} bash -c "set -o pipefail && ${MPI_COMMANDS} ${CMAKE_BINARY_DIR}/${spades_unit_test_exe_name}")
     set_tests_properties(${TEST_NAME} PROPERTIES
                          TIMEOUT 500
                          PROCESSORS ${TEST_NP}
@@ -101,14 +101,14 @@ endfunction(add_test_u)
 # Seed test
 function(add_test_seed TEST_NAME)
     setup_test()
-    add_test(${TEST_NAME} sh -c "cd ${CURRENT_TEST_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/test_seeds.sh -e ${CMAKE_BINARY_DIR}/${spades_exe_name} -f ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp -n 10")
+    add_test(${TEST_NAME} bash -c "set -o pipefail && cd ${CURRENT_TEST_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/test_seeds.sh -e ${CMAKE_BINARY_DIR}/${spades_exe_name} -f ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp -n 10 2>&1 | tee ${TEST_NAME}.log")
     # Set properties for test
     set_tests_properties(${TEST_NAME} PROPERTIES
                          TIMEOUT 5400
                          PROCESSORS ${TEST_NP}
                          WORKING_DIRECTORY "${CURRENT_TEST_BINARY_DIR}/"
                          LABELS "seed;no_ci"
-                         ATTACHED_FILES_ON_FAIL "${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.log")
+                         ATTACHED_FILES "${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.log")
 endfunction(add_test_seed)
 
 
