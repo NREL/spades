@@ -113,6 +113,7 @@ void SPADES::read_parameters()
         pp.query("plot_int", m_plot_int);
         pp.query("chk_file", m_chk_file);
         pp.query("chk_int", m_chk_int);
+        pp.query("nfiles", m_nfiles);
         pp.query("restart", m_restart_chkfile);
         pp.query("file_name_digits", m_file_name_digits);
         pp.query("rng_file_name_digits", m_rng_file_name_digits);
@@ -894,6 +895,7 @@ void SPADES::write_plot_file()
     amrex::Print() << "Writing plot file " << plotfilename << " at time "
                    << m_t_new << std::endl;
 
+    amrex::VisMF::SetNOutFiles(m_nfiles);
     amrex::WriteSingleLevelPlotfile(
         plotfilename, m_plt_mf, varnames, Geom(LEV), m_t_new, m_istep);
     if (m_write_particles) {
