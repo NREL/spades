@@ -649,6 +649,8 @@ void SPADES::rollback()
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
+                                // FIXME: loop on entities and grab the one this message is
+                                // destined to
                                 const auto ent_getter = particles::Get(
                                     iv, ent_cnt_arr, ent_offsets_arr,
                                     ent_pstruct);
