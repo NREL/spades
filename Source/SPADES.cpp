@@ -19,13 +19,26 @@ SPADES::SPADES()
 
     m_message_counts_varnames.resize(particles::MessageTypes::NTYPES);
     m_message_counts_varnames[particles::MessageTypes::MESSAGE] = "message";
-    m_message_counts_varnames[particles::MessageTypes::PROCESSED] = "processed";
-    m_message_counts_varnames[particles::MessageTypes::ANTI] = "anti";
-    m_message_counts_varnames[particles::MessageTypes::CONJUGATE] = "conjugate";
-    m_message_counts_varnames[particles::MessageTypes::UNDEFINED] = "undefined";
+    m_message_counts_varnames[particles::MessageTypes::PROCESSED] =
+        "processed_message";
+    m_message_counts_varnames[particles::MessageTypes::ANTI] = "anti_message";
+    m_message_counts_varnames[particles::MessageTypes::CONJUGATE] =
+        "conjugate_message";
+    m_message_counts_varnames[particles::MessageTypes::UNDEFINED] =
+        "undefined_message";
     for (const auto& mm : m_message_counts_varnames) {
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-            !mm.empty(), "Variable name needs to be specified");
+            !mm.empty(), "Message variable name needs to be specified");
+    }
+
+    m_entity_counts_varnames.resize(particles::EntityTypes::NTYPES);
+    m_entity_counts_varnames[particles::EntityTypes::ENTITY] = "entity";
+    m_entity_counts_varnames[particles::EntityTypes::BACKUP] = "backup_entity";
+    m_entity_counts_varnames[particles::EntityTypes::UNDEFINED] =
+        "undefined_entity";
+    for (const auto& mm : m_entity_counts_varnames) {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            !mm.empty(), "Entity variable name needs to be specified");
     }
 
     for (const auto& vname : m_state_varnames) {
@@ -34,9 +47,13 @@ SPADES::SPADES()
     for (const auto& vname : m_message_counts_varnames) {
         m_spades_varnames.push_back(vname);
     }
+    for (const auto& vname : m_entity_counts_varnames) {
+        m_spades_varnames.push_back(vname);
+    }
     AMREX_ALWAYS_ASSERT(
         m_spades_varnames.size() ==
-        (constants::N_STATES + particles::MessageTypes::NTYPES));
+        (constants::N_STATES + particles::MessageTypes::NTYPES +
+         particles::EntityTypes::NTYPES));
 
     m_nrollbacks.resize(constants::MAX_ROLLBACK_ITERS, 0);
     m_min_timings.resize(2, 0);
@@ -58,7 +75,7 @@ void SPADES::init_data()
         const amrex::Real time = 0.0;
         set_ics();
 
-        init_particle_container();
+        init_particle_containers();
 
         InitFromScratch(time);
 
@@ -89,11 +106,13 @@ void SPADES::init_data()
     write_data_file(true);
 }
 
-void SPADES::init_particle_container()
+void SPADES::init_particle_containers()
 {
-    BL_PROFILE("spades::SPADES::init_particle_container()");
+    BL_PROFILE("spades::SPADES::init_particle_containers()");
     m_message_pc =
         std::make_unique<particles::MessageParticleContainer>(GetParGDB());
+    m_entity_pc =
+        std::make_unique<particles::EntityParticleContainer>(GetParGDB());
 }
 
 void SPADES::read_parameters()
@@ -124,7 +143,8 @@ void SPADES::read_parameters()
     {
         amrex::ParmParse pp("spades");
         pp.get("ic_type", m_ic_type);
-        pp.query("write_particles", m_write_particles);
+        pp.query("write_messages", m_write_messages);
+        pp.query("write_entities", m_write_entities);
         pp.query("seed", m_seed);
         pp.query("lookahead", m_lookahead);
         pp.query("window_size", m_window_size);
@@ -256,7 +276,7 @@ void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
 
     update_gvt();
     m_message_pc->garbage_collect(m_gvt);
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
 
     update_lbts();
 
@@ -265,7 +285,7 @@ void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
 
     process_messages();
     m_message_pc->Redistribute();
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
 
     rollback();
 
@@ -286,6 +306,8 @@ void SPADES::summary()
 
     m_ntotal_messages = m_message_pc->TotalNumberOfParticles(LEV != 0);
     m_nmessages = m_message_pc->total_count(particles::MessageTypes::MESSAGE);
+    m_ntotal_entities = m_entity_pc->TotalNumberOfParticles(LEV != 0);
+    m_nentities = m_entity_pc->total_count(particles::EntityTypes::ENTITY);
     m_ncells = CountCells(LEV);
     if (Verbose() > 0) {
         amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
@@ -294,12 +316,15 @@ void SPADES::summary()
         amrex::Print() << "  " << m_nmessages << " messages" << std::endl;
         amrex::Print() << "  " << m_nprocessed_messages << " processed messages"
                        << std::endl;
-        amrex::Print() << "  " << m_ncells << " nodes" << std::endl;
+        amrex::Print() << "  " << m_ntotal_entities << " total entities"
+                       << std::endl;
+        amrex::Print() << "  " << m_nentities << " entities" << std::endl;
+        amrex::Print() << "  " << m_ncells << " logical processes" << std::endl;
         for (int n = 0; n < m_nrollbacks.size(); n++) {
             const auto nrlbk = m_nrollbacks[n];
             if (nrlbk > 0) {
-                amrex::Print() << "  " << nrlbk << " nodes doing " << n
-                               << " rollbacks" << std::endl;
+                amrex::Print() << "  " << nrlbk << " logical processes doing "
+                               << n << " rollbacks" << std::endl;
             }
         }
     }
@@ -337,48 +362,66 @@ void SPADES::process_messages()
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         const auto& sarr = m_state.array(mfi);
-        const auto& cnt_arr = m_message_pc->message_counts().const_array(mfi);
-        const auto& offsets_arr = m_message_pc->offsets().const_array(mfi);
+        const auto& msg_cnt_arr = m_message_pc->counts().const_array(mfi);
+        const auto& msg_offsets_arr = m_message_pc->offsets().const_array(mfi);
+        const auto& ent_cnt_arr = m_entity_pc->counts().const_array(mfi);
+        const auto& ent_offsets_arr = m_entity_pc->offsets().const_array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_message_pc->GetParticles(LEV)[index];
-        auto& particles = pti.GetArrayOfStructs();
-        auto* pstruct = particles().dataPtr();
+        auto& msg_pti = m_message_pc->GetParticles(LEV)[index];
+        auto& msg_particles = msg_pti.GetArrayOfStructs();
+        auto* msg_pstruct = msg_particles().dataPtr();
+        auto& ent_pti = m_entity_pc->GetParticles(LEV)[index];
+        auto& ent_particles = ent_pti.GetArrayOfStructs();
+        auto* ent_pstruct = ent_particles().dataPtr();
 
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k),
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto getter =
-                    particles::Get(iv, cnt_arr, offsets_arr, pstruct);
+                const auto msg_getter = particles::Get(
+                    iv, msg_cnt_arr, msg_offsets_arr, msg_pstruct);
+                const auto ent_getter = particles::Get(
+                    iv, ent_cnt_arr, ent_offsets_arr, ent_pstruct);
 
                 for (int n = 0;
                      n < amrex::min<int>(
-                             cnt_arr(iv, particles::MessageTypes::MESSAGE),
+                             msg_cnt_arr(iv, particles::MessageTypes::MESSAGE),
                              messages_per_step);
                      n++) {
 
-                    auto& prcv = getter(n, particles::MessageTypes::MESSAGE);
-                    if (prcv.rdata(particles::RealData::timestamp) >=
-                        lbts + lookahead + window_size) {
+                    auto& prcv =
+                        msg_getter(n, particles::MessageTypes::MESSAGE);
+                    const auto ts =
+                        prcv.rdata(particles::MessageRealData::timestamp);
+                    if (ts >= lbts + lookahead + window_size) {
                         return;
                     }
+
+                    AMREX_ALWAYS_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
+
+                    // FIXME: loop on entities and grab the one this message is
+                    // destined to
+                    auto& pe = ent_getter(0, particles::EntityTypes::ENTITY);
                     AMREX_ALWAYS_ASSERT(
-                        sarr(iv, constants::LVT_IDX) <
-                        prcv.rdata(particles::RealData::timestamp));
+                        dom.atOffset(
+                            pe.idata(particles::EntityIntData::owner)) == iv);
+                    AMREX_ALWAYS_ASSERT(
+                        pe.rdata(particles::EntityRealData::timestamp) < ts);
 
                     // process the event
                     AMREX_ALWAYS_ASSERT(
-                        dom.atOffset(
-                            prcv.idata(particles::IntData::receiver)) == iv);
-                    prcv.rdata(particles::RealData::old_timestamp) =
-                        sarr(iv, constants::LVT_IDX);
-                    sarr(iv, constants::LVT_IDX) =
-                        prcv.rdata(particles::RealData::timestamp);
-                    prcv.idata(particles::IntData::type_id) =
+                        dom.atOffset(prcv.idata(
+                            particles::MessageIntData::receiver)) == iv);
+                    prcv.rdata(particles::MessageRealData::old_timestamp) =
+                        pe.rdata(particles::EntityRealData::timestamp);
+                    pe.rdata(particles::EntityRealData::timestamp) = ts;
+                    prcv.idata(particles::MessageIntData::type_id) =
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
+                    const auto ent_lvt =
+                        pe.rdata(particles::EntityRealData::timestamp);
                     amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
@@ -389,24 +432,24 @@ void SPADES::process_messages()
                             plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
                             plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
                             plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
-                    const amrex::Real ts = sarr(iv, constants::LVT_IDX) +
-                                           random_exponential(1.0, engine) +
-                                           lookahead;
+                    const amrex::Real next_ts =
+                        ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     auto& psnd =
-                        getter(2 * n, particles::MessageTypes::UNDEFINED);
-                    particles::Create()(
-                        psnd, ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
+                        msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
+                    particles::CreateMessage()(
+                        psnd, next_ts, pos, iv_dest,
+                        static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
-                    psnd.idata(particles::IntData::pair) = pair;
-                    psnd.rdata(particles::RealData::creation_time) =
-                        sarr(iv, constants::LVT_IDX);
+                    psnd.idata(particles::MessageIntData::pair) = pair;
+                    psnd.rdata(particles::MessageRealData::creation_time) =
+                        ent_lvt;
 
                     // Create the conjugate message
-                    auto& pcnj =
-                        getter(2 * n + 1, particles::MessageTypes::UNDEFINED);
+                    auto& pcnj = msg_getter(
+                        2 * n + 1, particles::MessageTypes::UNDEFINED);
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
@@ -419,15 +462,31 @@ void SPADES::process_messages()
                             plo[1] + (iv[1] + constants::HALF) * dx[1],
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
-                    particles::Create()(
-                        pcnj, ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
+                    particles::CreateMessage()(
+                        pcnj, next_ts, conj_pos, iv,
+                        static_cast<int>(dom.index(iv)),
                         static_cast<int>(dom.index(iv_dest)));
-                    pcnj.idata(particles::IntData::pair) = pair;
-                    pcnj.rdata(particles::RealData::creation_time) =
-                        sarr(iv, constants::LVT_IDX);
-                    pcnj.idata(particles::IntData::type_id) =
+                    pcnj.idata(particles::MessageIntData::pair) = pair;
+                    pcnj.rdata(particles::MessageRealData::creation_time) =
+                        ent_lvt;
+                    pcnj.idata(particles::MessageIntData::type_id) =
                         particles::MessageTypes::CONJUGATE;
                 }
+
+                // Update LVT for the logical process
+                amrex::Real min_ent_lvt = constants::LARGE_NUM;
+                for (int n = 0;
+                     n < ent_cnt_arr(iv, particles::EntityTypes::ENTITY); n++) {
+                    auto& pe = ent_getter(n, particles::EntityTypes::ENTITY);
+                    const auto ent_lvt =
+                        pe.rdata(particles::EntityRealData::timestamp);
+                    if (min_ent_lvt > ent_lvt) {
+                        min_ent_lvt = ent_lvt;
+                    }
+                }
+                AMREX_ALWAYS_ASSERT(
+                    sarr(iv, constants::LVT_IDX) <= min_ent_lvt);
+                sarr(iv, constants::LVT_IDX) = min_ent_lvt;
             });
     }
 }
@@ -462,30 +521,36 @@ void SPADES::rollback()
             const int tid = mfi.LocalTileIndex();
             const auto& sarr = m_state.array(mfi);
             const auto& rarr = rollback.array(mfi);
-            const auto& cnt_arr =
-                m_message_pc->message_counts().const_array(mfi);
-            const auto& offsets_arr = m_message_pc->offsets().const_array(mfi);
+            const auto& msg_cnt_arr = m_message_pc->counts().const_array(mfi);
+            const auto& msg_offsets_arr =
+                m_message_pc->offsets().const_array(mfi);
+            const auto& ent_cnt_arr = m_entity_pc->counts().const_array(mfi);
+            const auto& ent_offsets_arr =
+                m_entity_pc->offsets().const_array(mfi);
             const auto index = std::make_pair(gid, tid);
-            auto& pti = m_message_pc->GetParticles(LEV)[index];
-            auto& particles = pti.GetArrayOfStructs();
-            auto* pstruct = particles().dataPtr();
+            auto& msg_pti = m_message_pc->GetParticles(LEV)[index];
+            auto& msg_particles = msg_pti.GetArrayOfStructs();
+            auto* msg_pstruct = msg_particles().dataPtr();
+            auto& ent_pti = m_entity_pc->GetParticles(LEV)[index];
+            auto& ent_particles = ent_pti.GetArrayOfStructs();
+            auto* ent_pstruct = ent_particles().dataPtr();
 
             amrex::ParallelFor(
                 box, [=] AMREX_GPU_DEVICE(
                          int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                     const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                    const auto getter =
-                        particles::Get(iv, cnt_arr, offsets_arr, pstruct);
+                    const auto msg_getter = particles::Get(
+                        iv, msg_cnt_arr, msg_offsets_arr, msg_pstruct);
 
                     const amrex::Real msg_lvt =
-                        cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0
-                            ? getter(0, particles::MessageTypes::MESSAGE)
-                                  .rdata(particles::RealData::timestamp)
+                        msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0
+                            ? msg_getter(0, particles::MessageTypes::MESSAGE)
+                                  .rdata(particles::MessageRealData::timestamp)
                             : constants::LARGE_NUM;
                     const amrex::Real ant_lvt =
-                        cnt_arr(iv, particles::MessageTypes::ANTI) > 0
-                            ? getter(0, particles::MessageTypes::ANTI)
-                                  .rdata(particles::RealData::timestamp)
+                        msg_cnt_arr(iv, particles::MessageTypes::ANTI) > 0
+                            ? msg_getter(0, particles::MessageTypes::ANTI)
+                                  .rdata(particles::MessageRealData::timestamp)
                             : constants::LARGE_NUM;
                     const amrex::Real rollback_timestamp =
                         amrex::min<amrex::Real>(msg_lvt, ant_lvt);
@@ -493,25 +558,26 @@ void SPADES::rollback()
                     rarr(iv) = 0;
                     if (rollback_timestamp <= sarr(iv, constants::LVT_IDX)) {
                         AMREX_ALWAYS_ASSERT(
-                            cnt_arr(iv, particles::MessageTypes::PROCESSED) >
-                            0);
+                            msg_cnt_arr(
+                                iv, particles::MessageTypes::PROCESSED) > 0);
                         rarr(iv) = 1;
                         sarr(iv, constants::RLB_IDX) += 1;
 
                         for (int n = 0;
-                             n <
-                             cnt_arr(iv, particles::MessageTypes::PROCESSED);
+                             n < msg_cnt_arr(
+                                     iv, particles::MessageTypes::PROCESSED);
                              n++) {
-                            auto& pprd =
-                                getter(n, particles::MessageTypes::PROCESSED);
-                            if (pprd.rdata(particles::RealData::timestamp) >=
+                            auto& pprd = msg_getter(
+                                n, particles::MessageTypes::PROCESSED);
+                            if (pprd.rdata(
+                                    particles::MessageRealData::timestamp) >=
                                 rollback_timestamp) {
 
                                 const int pair = static_cast<int>(
                                     pairing_function(pprd.cpu(), pprd.id()));
                                 for (int m = 0;
                                      m <
-                                     cnt_arr(
+                                     msg_cnt_arr(
                                          iv,
                                          particles::MessageTypes::CONJUGATE);
                                      m++) {
@@ -519,34 +585,38 @@ void SPADES::rollback()
                                     // This is a conjugate message that was
                                     // already treated, expect it to be an anti
                                     // message
-                                    if (!getter.check(
+                                    if (!msg_getter.check(
                                             m, particles::MessageTypes::
                                                    CONJUGATE)) {
-                                        getter.assert_different(
+                                        msg_getter.assert_different(
                                             m,
                                             particles::MessageTypes::CONJUGATE,
                                             particles::MessageTypes::ANTI);
                                         continue;
                                     }
 
-                                    auto& pcnj = getter(
+                                    auto& pcnj = msg_getter(
                                         m, particles::MessageTypes::CONJUGATE);
 
                                     if (pair ==
-                                        pcnj.idata(particles::IntData::pair)) {
+                                        pcnj.idata(
+                                            particles::MessageIntData::pair)) {
                                         AMREX_ALWAYS_ASSERT(
                                             std::abs(
-                                                pprd.rdata(particles::RealData::
-                                                               timestamp) -
-                                                pcnj.rdata(particles::RealData::
-                                                               creation_time)) <
+                                                pprd.rdata(
+                                                    particles::MessageRealData::
+                                                        timestamp) -
+                                                pcnj.rdata(
+                                                    particles::MessageRealData::
+                                                        creation_time)) <
                                             constants::EPS);
-                                        pcnj.idata(
-                                            particles::IntData::type_id) =
+                                        pcnj.idata(particles::MessageIntData::
+                                                       type_id) =
                                             particles::MessageTypes::ANTI;
                                         const auto piv =
                                             dom.atOffset(pcnj.idata(
-                                                particles::IntData::receiver));
+                                                particles::MessageIntData::
+                                                    receiver));
                                         AMREX_D_TERM(
                                             pcnj.pos(0) =
                                                 plo[0] +
@@ -561,27 +631,48 @@ void SPADES::rollback()
                                                   (piv[2] + constants::HALF) *
                                                       dx[2];)
                                         AMREX_D_TERM(
-                                            pcnj.idata(particles::IntData::i) =
+                                            pcnj.idata(
+                                                particles::MessageIntData::i) =
                                                 piv[0];
                                             ,
-                                            pcnj.idata(particles::IntData::j) =
+                                            pcnj.idata(
+                                                particles::MessageIntData::j) =
                                                 piv[1];
                                             ,
-                                            pcnj.idata(particles::IntData::k) =
+                                            pcnj.idata(
+                                                particles::MessageIntData::k) =
                                                 piv[2];)
                                     }
                                 }
 
-                                pprd.idata(particles::IntData::type_id) =
+                                pprd.idata(particles::MessageIntData::type_id) =
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
+                                // FIXME: loop on entities and grab the one this
+                                // message is destined to
+                                const auto ent_getter = particles::Get(
+                                    iv, ent_cnt_arr, ent_offsets_arr,
+                                    ent_pstruct);
+                                auto& pe = ent_getter(
+                                    0, particles::EntityTypes::ENTITY);
+                                pe.rdata(particles::EntityRealData::timestamp) =
+                                    pe.rdata(
+                                        particles::EntityRealData::timestamp) >
+                                            pprd.rdata(
+                                                particles::MessageRealData::
+                                                    old_timestamp)
+                                        ? pprd.rdata(
+                                              particles::MessageRealData::
+                                                  old_timestamp)
+                                        : pe.rdata(particles::EntityRealData::
+                                                       timestamp);
                                 sarr(iv, constants::LVT_IDX) =
                                     sarr(iv, constants::LVT_IDX) >
-                                            pprd.rdata(particles::RealData::
-                                                           old_timestamp)
-                                        ? pprd.rdata(particles::RealData::
-                                                         old_timestamp)
+                                            pe.rdata(particles::EntityRealData::
+                                                         timestamp)
+                                        ? pe.rdata(particles::EntityRealData::
+                                                       timestamp)
                                         : sarr(iv, constants::LVT_IDX);
                             }
                         }
@@ -590,7 +681,7 @@ void SPADES::rollback()
         }
 
         m_message_pc->Redistribute();
-        m_message_pc->sort_messages();
+        m_message_pc->sort();
         require_rollback = rollback.max(0) > 0;
         iter++;
     }
@@ -606,7 +697,7 @@ void SPADES::rollback()
     m_message_pc->resolve_pairs();
 
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-        m_message_pc->message_counts().sum(particles::MessageTypes::ANTI) == 0,
+        m_message_pc->counts().sum(particles::MessageTypes::ANTI) == 0,
         "There should be no anti-messages left after rollback");
 }
 
@@ -674,24 +765,26 @@ void SPADES::update_lbts()
         const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_message_pc->message_counts().const_array(mfi);
-        const auto& offsets_arr = m_message_pc->offsets().const_array(mfi);
+        const auto& msg_cnt_arr = m_message_pc->counts().const_array(mfi);
+        const auto& msg_offsets_arr = m_message_pc->offsets().const_array(mfi);
         const auto& lbts_arr = lbts.array(mfi);
         const auto index = std::make_pair(gid, tid);
-        auto& pti = m_message_pc->GetParticles(LEV)[index];
-        auto& particles = pti.GetArrayOfStructs();
-        auto* pstruct = particles().dataPtr();
+        auto& msg_pti = m_message_pc->GetParticles(LEV)[index];
+        auto& msg_particles = msg_pti.GetArrayOfStructs();
+        auto* msg_pstruct = msg_particles().dataPtr();
 
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto getter =
-                    particles::Get(iv, cnt_arr, offsets_arr, pstruct);
+                const auto msg_getter = particles::Get(
+                    iv, msg_cnt_arr, msg_offsets_arr, msg_pstruct);
 
-                if (cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
-                    auto& prcv = getter(0, particles::MessageTypes::MESSAGE);
-                    lbts_arr(iv) = prcv.rdata(particles::RealData::timestamp);
+                if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
+                    auto& prcv =
+                        msg_getter(0, particles::MessageTypes::MESSAGE);
+                    lbts_arr(iv) =
+                        prcv.rdata(particles::MessageRealData::timestamp);
                 }
             });
     }
@@ -751,11 +844,17 @@ void SPADES::MakeNewLevelFromScratch(
     // Initialize the data
     initialize_state();
 
-    // Update particle container
+    // Update message particle container
     m_message_pc->Define(Geom(LEV), dm, ba);
     m_message_pc->initialize_messages(m_lookahead);
     m_message_pc->initialize_state();
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
+
+    // Update entity particle container
+    m_entity_pc->Define(Geom(LEV), dm, ba);
+    m_entity_pc->initialize_entities();
+    m_entity_pc->initialize_state();
+    m_entity_pc->sort();
 }
 
 void SPADES::initialize_state()
@@ -781,6 +880,7 @@ void SPADES::ClearLevel(int /*lev*/)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
     m_message_pc->clear_state();
+    m_entity_pc->clear_state();
     m_state.clear();
     m_plt_mf.clear();
 }
@@ -801,7 +901,8 @@ void SPADES::set_ics()
 bool SPADES::check_field_existence(const std::string& name)
 {
     BL_PROFILE("spades::SPADES::check_field_existence()");
-    const auto vnames = {m_state_varnames, m_message_counts_varnames};
+    const auto vnames = {
+        m_state_varnames, m_message_counts_varnames, m_entity_counts_varnames};
     return std::any_of(vnames.begin(), vnames.end(), [=](const auto& vn) {
         return get_field_component(name, vn) != -1;
     });
@@ -836,14 +937,26 @@ SPADES::get_field(const std::string& name, const int ngrow)
     if (srccomp_sd != -1) {
         amrex::MultiFab::Copy(*mf, m_state, srccomp_sd, 0, nc, ngrow);
     }
-    const int srccomp_id = get_field_component(name, m_message_counts_varnames);
-    if (srccomp_id != -1) {
-        auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
+    const int srccomp_mid =
+        get_field_component(name, m_message_counts_varnames);
+    if (srccomp_mid != -1) {
+        auto const& msg_cnt_arrs = m_message_pc->counts().const_arrays();
         auto const& mf_arrs = mf->arrays();
         amrex::ParallelFor(
-            *mf, mf->nGrowVect(), m_message_pc->message_counts().nComp(),
+            *mf, mf->nGrowVect(), m_message_pc->counts().nComp(),
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-                mf_arrs[nbx](i, j, k, n) = cnt_arrs[nbx](i, j, k, n);
+                mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
+            });
+        amrex::Gpu::synchronize();
+    }
+    const int srccomp_eid = get_field_component(name, m_entity_counts_varnames);
+    if (srccomp_eid != -1) {
+        auto const& msg_cnt_arrs = m_entity_pc->counts().const_arrays();
+        auto const& mf_arrs = mf->arrays();
+        amrex::ParallelFor(
+            *mf, mf->nGrowVect(), m_entity_pc->counts().nComp(),
+            [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+                mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
             });
         amrex::Gpu::synchronize();
     }
@@ -875,13 +988,21 @@ void SPADES::plot_file_mf()
     int cnt = 0;
     amrex::MultiFab::Copy(m_plt_mf, m_state, 0, cnt, m_state.nComp(), 0);
     cnt += m_state.nComp();
-    auto const& cnt_arrs = m_message_pc->message_counts().const_arrays();
     auto const& plt_mf_arrs = m_plt_mf.arrays();
+    auto const& msg_cnt_arrs = m_message_pc->counts().const_arrays();
     amrex::ParallelFor(
-        m_plt_mf, m_plt_mf.nGrowVect(), m_message_pc->message_counts().nComp(),
+        m_plt_mf, m_plt_mf.nGrowVect(), m_message_pc->counts().nComp(),
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
-            plt_mf_arrs[nbx](i, j, k, n + cnt) = cnt_arrs[nbx](i, j, k, n);
+            plt_mf_arrs[nbx](i, j, k, n + cnt) = msg_cnt_arrs[nbx](i, j, k, n);
         });
+    cnt += m_message_pc->counts().nComp();
+    auto const& ent_cnt_arrs = m_entity_pc->counts().const_arrays();
+    amrex::ParallelFor(
+        m_plt_mf, m_plt_mf.nGrowVect(), m_entity_pc->counts().nComp(),
+        [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+            plt_mf_arrs[nbx](i, j, k, n + cnt) = ent_cnt_arrs[nbx](i, j, k, n);
+        });
+    cnt += m_entity_pc->counts().nComp();
     amrex::Gpu::synchronize();
 }
 
@@ -898,8 +1019,11 @@ void SPADES::write_plot_file()
     amrex::VisMF::SetNOutFiles(m_nfiles);
     amrex::WriteSingleLevelPlotfile(
         plotfilename, m_plt_mf, varnames, Geom(LEV), m_t_new, m_istep);
-    if (m_write_particles) {
+    if (m_write_messages) {
         m_message_pc->write_plot_file(plotfilename);
+    }
+    if (m_write_entities) {
+        m_entity_pc->write_plot_file(plotfilename);
     }
 
     write_info_file(plotfilename);
@@ -984,6 +1108,8 @@ void SPADES::write_checkpoint_file() const
                      LEV, checkpointname, "Level_", varnames[0]));
 
     m_message_pc->Checkpoint(checkpointname, m_message_pc->identifier());
+
+    m_entity_pc->Checkpoint(checkpointname, m_entity_pc->identifier());
 
     write_info_file(checkpointname);
 
@@ -1071,10 +1197,15 @@ void SPADES::read_checkpoint_file()
 
     read_rng_file(m_restart_chkfile);
 
-    init_particle_container();
+    init_particle_containers();
+
     m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());
     m_message_pc->initialize_state();
-    m_message_pc->sort_messages();
+    m_message_pc->sort();
+
+    m_entity_pc->Restart(m_restart_chkfile, m_entity_pc->identifier());
+    m_entity_pc->initialize_state();
+    m_entity_pc->sort();
 }
 
 void SPADES::write_info_file(const std::string& path) const
@@ -1182,7 +1313,9 @@ void SPADES::write_data_file(const bool is_init) const
         if (is_init) {
             std::ofstream fh(m_data_fname.c_str(), std::ios::out);
             fh.precision(m_data_precision);
-            fh << "step,gvt,lbts,nodes,total_messages,messages,processed_"
+            fh << "step,gvt,lbts,lps,total_messages,messages,total_entities,"
+                  "entities,"
+                  "processed_"
                   "messages,min_time,avg_time,max_time,min_rate,avg_rate,"
                   "max_rate";
             for (int i = 0; i < m_nrollbacks.size(); i++) {
@@ -1201,10 +1334,10 @@ void SPADES::write_data_file(const bool is_init) const
         const auto n_processed_messages = m_nprocessed_messages;
         fh << m_t_new << "," << m_gvt << "," << m_lbts << "," << m_ncells << ","
            << m_ntotal_messages << "," << m_nmessages << ","
-           << n_processed_messages << "," << m_min_timings[0] << ","
-           << m_avg_timings[0] << "," << m_max_timings[0] << ","
-           << m_min_timings[1] << "," << m_avg_timings[1] << ","
-           << m_max_timings[1];
+           << n_processed_messages << "," << m_ntotal_entities << ","
+           << m_nentities << "," << m_min_timings[0] << "," << m_avg_timings[0]
+           << "," << m_max_timings[0] << "," << m_min_timings[1] << ","
+           << m_avg_timings[1] << "," << m_max_timings[1];
 
         for (const auto& rlbk : m_nrollbacks) {
             fh << "," << rlbk;

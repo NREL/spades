@@ -14,7 +14,9 @@
 #include "Constants.H"
 #include "IC.H"
 #include "Utilities.H"
+#include "SpadesParticleContainer.H"
 #include "MessageParticleContainer.H"
+#include "EntityParticleContainer.H"
 
 /**
    @brief Scalable PArallel Discrete Event Simulation
@@ -132,8 +134,8 @@ public:
      **/
     void initialize_state();
 
-    //! Initialize the particle container
-    void init_particle_container();
+    //! Initialize the particle containers
+    void init_particle_containers();
 
     /**
        @brief Process messages
@@ -297,6 +299,12 @@ private:
     //! Count of processed messages
     amrex::Long m_nprocessed_messages{0};
 
+    //! Total entity count
+    amrex::Long m_ntotal_entities{0};
+
+    //! Entity count
+    amrex::Long m_nentities{0};
+
     //! Number of rollbacks
     amrex::Vector<int> m_nrollbacks;
 
@@ -323,6 +331,9 @@ private:
 
     //! Message count names for output
     amrex::Vector<std::string> m_message_counts_varnames;
+
+    //! Entity count names for output
+    amrex::Vector<std::string> m_entity_counts_varnames;
 
     //! Multifabs to store the solution
     amrex::MultiFab m_state;
@@ -357,8 +368,11 @@ private:
     //! Digits used in the rng seed file names
     int m_rng_file_name_digits{constants::RNG_FILE_NAME_DIGITS};
 
-    //! Boolean to output particles (optional user input)
-    bool m_write_particles{false};
+    //! Boolean to output messages (optional user input)
+    bool m_write_messages{false};
+
+    //! Boolean to output entities (optional user input)
+    bool m_write_entities{false};
 
     //! Filename for simulation data
     std::string m_data_fname{"data.csv"};
@@ -384,8 +398,11 @@ private:
     //! Initial condition type (optional user input)
     std::string m_ic_type;
 
-    //! Particle container
+    //! Message particle container
     std::unique_ptr<particles::MessageParticleContainer> m_message_pc;
+
+    //! Entity article container
+    std::unique_ptr<particles::EntityParticleContainer> m_entity_pc;
 };
 } // namespace spades
 #endif

@@ -306,7 +306,7 @@ jobs:
           submodules: true
       - name: Setup
         run: |
-          echo "NPROCS=$(nproc)" >> $GITHUB_ENV
+          echo "NPROCS=$(sysctl -n hw.ncpu)" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
           echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
