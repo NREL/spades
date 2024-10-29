@@ -649,22 +649,29 @@ void SPADES::rollback()
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
-                                sarr(iv, constants::LVT_IDX) =
-                                    sarr(iv, constants::LVT_IDX) >
-                                            pprd.rdata(
-                                                particles::MessageRealData::
-                                                    old_timestamp)
-                                        ? pprd.rdata(
-                                              particles::MessageRealData::
-                                                  old_timestamp)
-                                        : sarr(iv, constants::LVT_IDX);
                                 const auto ent_getter = particles::Get(
                                     iv, ent_cnt_arr, ent_offsets_arr,
                                     ent_pstruct);
                                 auto& pe = ent_getter(
                                     0, particles::EntityTypes::ENTITY);
                                 pe.rdata(particles::EntityRealData::timestamp) =
-                                    sarr(iv, constants::LVT_IDX);
+                                    pe.rdata(
+                                        particles::EntityRealData::timestamp) >
+                                            pprd.rdata(
+                                                particles::MessageRealData::
+                                                    old_timestamp)
+                                        ? pprd.rdata(
+                                              particles::MessageRealData::
+                                                  old_timestamp)
+                                        : pe.rdata(particles::EntityRealData::
+                                                       timestamp);
+                                sarr(iv, constants::LVT_IDX) =
+                                    sarr(iv, constants::LVT_IDX) >
+                                            pe.rdata(particles::EntityRealData::
+                                                         timestamp)
+                                        ? pe.rdata(particles::EntityRealData::
+                                                       timestamp)
+                                        : sarr(iv, constants::LVT_IDX);
                             }
                         }
                     }
