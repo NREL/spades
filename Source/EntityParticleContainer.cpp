@@ -52,9 +52,8 @@ void EntityParticleContainer::initialize_entities()
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
 
-    const int np_per_cell = 100;
+    const int np_per_cell = 1;
     const int ent_per_cell = 1;
-    AMREX_ALWAYS_ASSERT(np_per_cell > ent_per_cell);
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
