@@ -9,9 +9,7 @@ MessageParticleContainer::MessageParticleContainer(
           MessageTypes,
           MessageRealData::ncomps,
           MessageIntData::ncomps>(par_gdb, ngrow)
-{
-    initialize_variable_names();
-}
+{}
 
 MessageParticleContainer::MessageParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
@@ -22,9 +20,7 @@ MessageParticleContainer::MessageParticleContainer(
           MessageTypes,
           MessageRealData::ncomps,
           MessageIntData::ncomps>(geom, dmap, ba, ngrow)
-{
-    initialize_variable_names();
-}
+{}
 
 void MessageParticleContainer::initialize_variable_names()
 {
