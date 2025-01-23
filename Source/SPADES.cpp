@@ -1002,7 +1002,6 @@ void SPADES::plot_file_mf()
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
             plt_mf_arrs[nbx](i, j, k, n + cnt) = ent_cnt_arrs[nbx](i, j, k, n);
         });
-    cnt += m_entity_pc->counts().nComp();
     amrex::Gpu::synchronize();
 }
 
