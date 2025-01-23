@@ -846,12 +846,14 @@ void SPADES::MakeNewLevelFromScratch(
 
     // Update message particle container
     m_message_pc->Define(Geom(LEV), dm, ba);
+    m_message_pc->initialize_variable_names();
     m_message_pc->initialize_messages(m_lookahead);
     m_message_pc->initialize_state();
     m_message_pc->sort();
 
     // Update entity particle container
     m_entity_pc->Define(Geom(LEV), dm, ba);
+    m_entity_pc->initialize_variable_names();
     m_entity_pc->initialize_entities();
     m_entity_pc->initialize_state();
     m_entity_pc->sort();
@@ -1002,7 +1004,6 @@ void SPADES::plot_file_mf()
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
             plt_mf_arrs[nbx](i, j, k, n + cnt) = ent_cnt_arrs[nbx](i, j, k, n);
         });
-    cnt += m_entity_pc->counts().nComp();
     amrex::Gpu::synchronize();
 }
 
@@ -1199,10 +1200,12 @@ void SPADES::read_checkpoint_file()
 
     init_particle_containers();
 
+    m_message_pc->initialize_variable_names();
     m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());
     m_message_pc->initialize_state();
     m_message_pc->sort();
 
+    m_entity_pc->initialize_variable_names();
     m_entity_pc->Restart(m_restart_chkfile, m_entity_pc->identifier());
     m_entity_pc->initialize_state();
     m_entity_pc->sort();

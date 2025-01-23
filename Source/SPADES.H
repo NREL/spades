@@ -360,7 +360,7 @@ private:
     int m_chk_int = -1;
 
     //! Number of plot and checkpoint data files per write
-    int m_nfiles = 256;
+    int m_nfiles{constants::TWO_TO_EIGHT};
 
     //! Digits used in the plotfile and checkpoint file names
     int m_file_name_digits{constants::FILE_NAME_DIGITS};

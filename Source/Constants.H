@@ -36,6 +36,8 @@ static constexpr amrex::Real LARGE_NUM =
 
 static constexpr amrex::Real HALF = 0.5;
 
+static constexpr int TWO_TO_EIGHT = 256;
+
 //! Number of digits to use in output file names
 static constexpr int FILE_NAME_DIGITS = 5;
 

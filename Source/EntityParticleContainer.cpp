@@ -9,9 +9,7 @@ EntityParticleContainer::EntityParticleContainer(
           EntityTypes,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(par_gdb, ngrow)
-{
-    initialize_variable_names();
-}
+{}
 
 EntityParticleContainer::EntityParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
@@ -22,9 +20,7 @@ EntityParticleContainer::EntityParticleContainer(
           EntityTypes,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(geom, dmap, ba, ngrow)
-{
-    initialize_variable_names();
-}
+{}
 
 void EntityParticleContainer::initialize_variable_names()
 {
