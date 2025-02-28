@@ -69,8 +69,10 @@ struct CreateMessage
        @param timestamp [in] time stamp
        @param pos [in] position
        @param iv [in] index
-       @param sender [in] sender id
-       @param receiver [in] receiver id
+       @param sender_lp [in] sender LP id
+       @param sender_entity [in] entity id
+       @param receiver_lp [in] receiver LP id
+       @param receiver_entity [in] entity id
      **/
     template <class P>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
@@ -78,8 +80,10 @@ struct CreateMessage
         const amrex::Real timestamp,
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         const amrex::IntVect& iv,
-        const int sender,
-        const int receiver) const
+        const int sender_lp,
+        const int sender_entity,
+        const int receiver_lp,
+        const int receiver_entity) const
     {
         AMREX_ASSERT(
             p.idata(MessageIntData::type_id) == MessageTypes::UNDEFINED);
@@ -91,8 +95,10 @@ struct CreateMessage
         AMREX_D_TERM(p.idata(MessageIntData::i) = iv[0];
                      , p.idata(MessageIntData::j) = iv[1];
                      , p.idata(MessageIntData::k) = iv[2];)
-        p.idata(MessageIntData::sender) = sender;
-        p.idata(MessageIntData::receiver) = receiver;
+        p.idata(MessageIntData::sender_lp) = sender_lp;
+        p.idata(MessageIntData::sender_entity) = sender_entity;
+        p.idata(MessageIntData::receiver_lp) = receiver_lp;
+        p.idata(MessageIntData::receiver_entity) = receiver_entity;
     }
 };
 

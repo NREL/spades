@@ -40,12 +40,16 @@ void MessageParticleContainer::initialize_variable_names()
 
     m_int_data_names[MessageIntData::type_id] = "type_id";
     m_writeflags_int[MessageIntData::type_id] = 1;
-    m_int_data_names[MessageIntData::sender] = "sender";
-    m_writeflags_int[MessageIntData::sender] = 1;
-    m_int_data_names[MessageIntData::receiver] = "receiver";
-    m_writeflags_int[MessageIntData::receiver] = 1;
-    m_int_data_names[MessageIntData::receiver] = "pair";
-    m_writeflags_int[MessageIntData::receiver] = 0;
+    m_int_data_names[MessageIntData::sender_lp] = "sender_lp";
+    m_writeflags_int[MessageIntData::sender_lp] = 1;
+    m_int_data_names[MessageIntData::sender_entity] = "sender_entity";
+    m_writeflags_int[MessageIntData::sender_entity] = 1;
+    m_int_data_names[MessageIntData::receiver_lp] = "receiver_lp";
+    m_writeflags_int[MessageIntData::receiver_lp] = 1;
+    m_int_data_names[MessageIntData::receiver_entity] = "receiver_entity";
+    m_writeflags_int[MessageIntData::receiver_entity] = 1;
+    m_int_data_names[MessageIntData::pair] = "pair";
+    m_writeflags_int[MessageIntData::pair] = 0;
 }
 
 void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
@@ -89,10 +93,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 
     //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::anti_message;
-    //                     p.idata(MessageIntData::sender) =
+    //                     p.idata(MessageIntData::sender_lp) =
     //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::receiver) =
+    //                     p.idata(MessageIntData::sender_entity) = 0;
+    //                     p.idata(MessageIntData::receiver_lp) =
     //                     dom.index(iv_dest);
+    //                     p.idata(MessageIntData::receiver_entity) = 0;
     //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead + 20;
 
@@ -120,10 +126,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 
     //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::message;
-    //                     p.idata(MessageIntData::sender) =
+    //                     p.idata(MessageIntData::sender_lp) =
     //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::receiver) =
+    //                     p.idata(MessageIntData::sender_entity) = 0;
+    //                     p.idata(MessageIntData::receiver_lp) =
     //                     dom.index(iv_dest2);
+    //                     p.idata(MessageIntData::receiver_entity) = 0;
     //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead;
 
@@ -153,10 +161,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 
     //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::message;
-    //                     p.idata(MessageIntData::sender) =
+    //                     p.idata(MessageIntData::sender_lp) =
     //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::receiver) =
+    //                     p.idata(MessageIntData::sender_entity) = 0;
+    //                     p.idata(MessageIntData::receiver_lp) =
     //                     dom.index(iv_dest);
+    //                     p.idata(MessageIntData::receiver_entity) = 0;
     //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead;
 
@@ -184,10 +194,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 
     //                     p.idata(MessageIntData::type_id) =
     //                         MessageTypes::undefined;
-    //                     p.idata(MessageIntData::sender) =
+    //                     p.idata(MessageIntData::sender_lp) =
     //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::receiver) =
+    //                     p.idata(MessageIntData::sender_entity) = 0;
+    //                     p.idata(MessageIntData::receiver_lp) =
     //                     dom.index(iv_dest2);
+    //                     p.idata(MessageIntData::receiver_entity) = 0;
     //                     p.rdata(MessageRealData::timestamp) =
     //                         random_exponential(1.0, engine) + lookahead;
 
@@ -261,10 +273,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     p.cpu() = my_proc;
 
                     MarkMessageUndefined()(p);
-                    p.idata(MessageIntData::sender) =
+                    p.idata(MessageIntData::sender_lp) =
                         static_cast<int>(dom.index(iv));
-                    p.idata(MessageIntData::receiver) =
+                    p.idata(MessageIntData::sender_entity) = 0;
+                    p.idata(MessageIntData::receiver_lp) =
                         static_cast<int>(dom.index(iv));
+                    p.idata(MessageIntData::receiver_entity) = 0;
 
                     AMREX_D_TERM(
                         p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
@@ -425,10 +439,12 @@ void MessageParticleContainer::update_undefined()
                 p.cpu() = my_proc;
 
                 MarkMessageUndefined()(p);
-                p.idata(MessageIntData::sender) =
+                p.idata(MessageIntData::sender_lp) =
                     static_cast<int>(dom.index(iv));
-                p.idata(MessageIntData::receiver) =
+                p.idata(MessageIntData::sender_entity) = 0;
+                p.idata(MessageIntData::receiver_lp) =
                     static_cast<int>(dom.index(iv));
+                p.idata(MessageIntData::receiver_entity) = 0;
 
                 AMREX_D_TERM(
                     p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
@@ -483,7 +499,8 @@ void MessageParticleContainer::resolve_pairs()
                     auto& pant = getter(n, MessageTypes::ANTI);
                     AMREX_ALWAYS_ASSERT(pant.idata(MessageIntData::pair) != -1);
                     AMREX_ALWAYS_ASSERT(
-                        pant.idata(MessageIntData::receiver) == dom.index(iv));
+                        pant.idata(MessageIntData::receiver_lp) ==
+                        dom.index(iv));
 
                     bool found_pair = false;
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
@@ -504,11 +521,17 @@ void MessageParticleContainer::resolve_pairs()
                                  pant.rdata(MessageRealData::timestamp)) <
                              constants::EPS)) {
                             AMREX_ALWAYS_ASSERT(
-                                pmsg.idata(MessageIntData::sender) ==
-                                pant.idata(MessageIntData::sender));
+                                pmsg.idata(MessageIntData::sender_lp) ==
+                                pant.idata(MessageIntData::sender_lp));
                             AMREX_ALWAYS_ASSERT(
-                                pmsg.idata(MessageIntData::receiver) ==
-                                pant.idata(MessageIntData::receiver));
+                                pmsg.idata(MessageIntData::sender_entity) ==
+                                pant.idata(MessageIntData::sender_entity));
+                            AMREX_ALWAYS_ASSERT(
+                                pmsg.idata(MessageIntData::receiver_lp) ==
+                                pant.idata(MessageIntData::receiver_lp));
+                            AMREX_ALWAYS_ASSERT(
+                                pmsg.idata(MessageIntData::receiver_entity) ==
+                                pant.idata(MessageIntData::receiver_entity));
                             AMREX_ALWAYS_ASSERT(
                                 std::abs(
                                     pmsg.rdata(MessageRealData::creation_time) -

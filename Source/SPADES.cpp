@@ -412,7 +412,7 @@ void SPADES::process_messages()
                     // process the event
                     AMREX_ALWAYS_ASSERT(
                         dom.atOffset(prcv.idata(
-                            particles::MessageIntData::receiver)) == iv);
+                            particles::MessageIntData::receiver_lp)) == iv);
                     prcv.rdata(particles::MessageRealData::old_timestamp) =
                         pe.rdata(particles::EntityRealData::timestamp);
                     pe.rdata(particles::EntityRealData::timestamp) = ts;
@@ -439,8 +439,8 @@ void SPADES::process_messages()
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::CreateMessage()(
                         psnd, next_ts, pos, iv_dest,
-                        static_cast<int>(dom.index(iv)),
-                        static_cast<int>(dom.index(iv_dest)));
+                        static_cast<int>(dom.index(iv)), 0,
+                        static_cast<int>(dom.index(iv_dest)), 0);
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
                     psnd.idata(particles::MessageIntData::pair) = pair;
@@ -453,7 +453,7 @@ void SPADES::process_messages()
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
-                    // position is iv but the receiver is
+                    // position is iv but the receiver_lp is
                     // still updated (we need to know who to
                     // send this to)
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> conj_pos = {
@@ -464,8 +464,8 @@ void SPADES::process_messages()
 
                     particles::CreateMessage()(
                         pcnj, next_ts, conj_pos, iv,
-                        static_cast<int>(dom.index(iv)),
-                        static_cast<int>(dom.index(iv_dest)));
+                        static_cast<int>(dom.index(iv)), 0,
+                        static_cast<int>(dom.index(iv_dest)), 0);
                     pcnj.idata(particles::MessageIntData::pair) = pair;
                     pcnj.rdata(particles::MessageRealData::creation_time) =
                         ent_lvt;
@@ -616,7 +616,7 @@ void SPADES::rollback()
                                         const auto piv =
                                             dom.atOffset(pcnj.idata(
                                                 particles::MessageIntData::
-                                                    receiver));
+                                                    receiver_lp));
                                         AMREX_D_TERM(
                                             pcnj.pos(0) =
                                                 plo[0] +
