@@ -30,6 +30,9 @@ SPADES::SPADES()
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
             !mm.empty(), "Message variable name needs to be specified");
     }
+    m_nmessages.resize(particles::MessageTypes::NTYPES);
+    m_min_messages.resize(particles::MessageTypes::NTYPES);
+    m_max_messages.resize(particles::MessageTypes::NTYPES);
 
     m_entity_counts_varnames.resize(particles::EntityTypes::NTYPES);
     m_entity_counts_varnames[particles::EntityTypes::ENTITY] = "entity";
@@ -306,7 +309,11 @@ void SPADES::summary()
     BL_PROFILE("spades::SPADES::summary()");
 
     m_ntotal_messages = m_message_pc->TotalNumberOfParticles(LEV != 0);
-    m_nmessages = m_message_pc->total_count(particles::MessageTypes::MESSAGE);
+    for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+        m_nmessages[typ] = m_message_pc->total_count(typ);
+        m_min_messages[typ] = m_message_pc->min_count(typ);
+        m_max_messages[typ] = m_message_pc->max_count(typ);
+    }
     m_ntotal_entities = m_entity_pc->TotalNumberOfParticles(LEV != 0);
     m_nentities = m_entity_pc->total_count(particles::EntityTypes::ENTITY);
     m_ncells = CountCells(LEV);
@@ -314,9 +321,15 @@ void SPADES::summary()
         amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
         amrex::Print() << "  " << m_ntotal_messages << " total messages"
                        << std::endl;
-        amrex::Print() << "  " << m_nmessages << " messages" << std::endl;
-        amrex::Print() << "  " << m_nprocessed_messages << " processed messages"
-                       << std::endl;
+        for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+            amrex::Print() << "  " << m_nmessages[typ] << " "
+                           << m_message_counts_varnames[typ]
+                           << "s (min: " << m_min_messages[typ]
+                           << ", max: " << m_max_messages[typ] << ")"
+                           << std::endl;
+        }
+        amrex::Print() << "  " << m_nprocessed_messages
+                       << " messages processed during this step" << std::endl;
         amrex::Print() << "  " << m_ntotal_entities << " total entities"
                        << std::endl;
         amrex::Print() << "  " << m_nentities << " entities" << std::endl;
@@ -329,7 +342,8 @@ void SPADES::summary()
             }
         }
     }
-    AMREX_ALWAYS_ASSERT(m_nmessages == m_ncells);
+    AMREX_ALWAYS_ASSERT(
+        m_nmessages[particles::MessageTypes::MESSAGE] == m_ncells);
 }
 
 void SPADES::post_time_step()
@@ -1324,10 +1338,17 @@ void SPADES::write_data_file(const bool is_init) const
         if (is_init) {
             std::ofstream fh(m_data_fname.c_str(), std::ios::out);
             fh.precision(m_data_precision);
-            fh << "step,gvt,lbts,lps,total_messages,messages,total_entities,"
+            fh << "step,gvt,lbts,lps,total_messages,";
+            for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+                fh << m_message_counts_varnames[typ] + "s,"
+                   << "min_" + m_message_counts_varnames[typ] + "s,"
+                   << "max_" + m_message_counts_varnames[typ] + "s,";
+            }
+            fh << "total_entities,"
                   "entities,"
-                  "processed_"
-                  "messages,min_time,avg_time,max_time,min_rate,avg_rate,"
+                  "processed_messages_per_step,"
+                  "min_time,avg_time,max_time,min_rate,avg_"
+                  "rate,"
                   "max_rate";
             for (int i = 0; i < m_nrollbacks.size(); i++) {
                 fh << ",rollback_" << i;
@@ -1344,8 +1365,12 @@ void SPADES::write_data_file(const bool is_init) const
 
         const auto n_processed_messages = m_nprocessed_messages;
         fh << m_t_new << "," << m_gvt << "," << m_lbts << "," << m_ncells << ","
-           << m_ntotal_messages << "," << m_nmessages << ","
-           << n_processed_messages << "," << m_ntotal_entities << ","
+           << m_ntotal_messages << ",";
+        for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+            fh << m_nmessages[typ] << "," << m_min_messages[typ] << ","
+               << m_max_messages[typ] << ",";
+        }
+        fh << n_processed_messages << "," << m_ntotal_entities << ","
            << m_nentities << "," << m_min_timings[0] << "," << m_avg_timings[0]
            << "," << m_max_timings[0] << "," << m_min_timings[1] << ","
            << m_avg_timings[1] << "," << m_max_timings[1];
