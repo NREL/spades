@@ -732,12 +732,16 @@ void SPADES::rollback_statistics()
         amrex::ParallelDescriptor::IOProcessorNumber());
 
     if (amrex::ParallelDescriptor::IOProcessor()) {
+        m_nrollbacks.assign(m_nrollbacks.size(), 0);
         for (int n = 0; n < nrlbks.size(); n++) {
             m_nrollbacks[n] = static_cast<int>(nrlbks[n]);
         }
-        const auto nt = static_cast<amrex::Long>(
+        const auto nta = static_cast<amrex::Long>(
             std::accumulate(nrlbks.begin(), nrlbks.end(), 0.0));
-        AMREX_ALWAYS_ASSERT(nt == boxArray(LEV).numPts());
+        const auto ntb = static_cast<amrex::Long>(
+            std::accumulate(m_nrollbacks.begin(), m_nrollbacks.end(), 0.0));
+        AMREX_ALWAYS_ASSERT(nta == boxArray(LEV).numPts());
+        AMREX_ALWAYS_ASSERT(nta == ntb);
     }
 }
 
