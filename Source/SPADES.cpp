@@ -150,6 +150,7 @@ void SPADES::read_parameters()
         pp.query("window_size", m_window_size);
         pp.query("messages_per_step", m_messages_per_step);
         pp.query("data_fname", m_data_fname);
+        pp.query("entities_per_lp", m_entities_per_lp);
     }
 
     // force periodic bcs
@@ -352,6 +353,7 @@ void SPADES::process_messages()
     const auto lookahead = m_lookahead;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
+    const auto entities_per_lp = m_entities_per_lp;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -400,9 +402,9 @@ void SPADES::process_messages()
 
                     AMREX_ALWAYS_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
 
-                    // FIXME: loop on entities and grab the one this message is
-                    // destined to
-                    auto& pe = ent_getter(0, particles::EntityTypes::ENTITY);
+                    const auto ent =
+                        prcv.idata(particles::MessageIntData::receiver_entity);
+                    auto& pe = ent_getter(ent, particles::EntityTypes::ENTITY);
                     AMREX_ALWAYS_ASSERT(
                         dom.atOffset(
                             pe.idata(particles::EntityIntData::owner)) == iv);
@@ -422,16 +424,18 @@ void SPADES::process_messages()
                     // Create a new message to send
                     const auto ent_lvt =
                         pe.rdata(particles::EntityRealData::timestamp);
-                    amrex::IntVect iv_dest(AMREX_D_DECL(
+                    const amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
                         amrex::Random_int(dhi[2] - dlo[2] + 1, engine) +
                             dlo[2]));
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
+                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
                         AMREX_D_DECL(
                             plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
                             plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
                             plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
+                    const int rcv_ent =
+                        amrex::Random_int(entities_per_lp, engine);
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
@@ -439,8 +443,8 @@ void SPADES::process_messages()
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::CreateMessage()(
                         psnd, next_ts, pos, iv_dest,
-                        static_cast<int>(dom.index(iv)), 0,
-                        static_cast<int>(dom.index(iv_dest)), 0);
+                        static_cast<int>(dom.index(iv)), ent,
+                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
                     psnd.idata(particles::MessageIntData::pair) = pair;
@@ -456,16 +460,16 @@ void SPADES::process_messages()
                     // position is iv but the receiver_lp is
                     // still updated (we need to know who to
                     // send this to)
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> conj_pos = {
-                        AMREX_D_DECL(
+                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+                        conj_pos = {AMREX_D_DECL(
                             plo[0] + (iv[0] + constants::HALF) * dx[0],
                             plo[1] + (iv[1] + constants::HALF) * dx[1],
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
                     particles::CreateMessage()(
                         pcnj, next_ts, conj_pos, iv,
-                        static_cast<int>(dom.index(iv)), 0,
-                        static_cast<int>(dom.index(iv_dest)), 0);
+                        static_cast<int>(dom.index(iv)), ent,
+                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     pcnj.idata(particles::MessageIntData::pair) = pair;
                     pcnj.rdata(particles::MessageRealData::creation_time) =
                         ent_lvt;
@@ -649,13 +653,13 @@ void SPADES::rollback()
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
-                                // FIXME: loop on entities and grab the one this
-                                // message is destined to
                                 const auto ent_getter = particles::Get(
                                     iv, ent_cnt_arr, ent_offsets_arr,
                                     ent_pstruct);
                                 auto& pe = ent_getter(
-                                    0, particles::EntityTypes::ENTITY);
+                                    pprd.idata(particles::MessageIntData::
+                                                   receiver_entity),
+                                    particles::EntityTypes::ENTITY);
                                 pe.rdata(particles::EntityRealData::timestamp) =
                                     pe.rdata(
                                         particles::EntityRealData::timestamp) >
