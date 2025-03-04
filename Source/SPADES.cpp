@@ -182,11 +182,11 @@ void SPADES::evolve()
         amrex::Print() << "\n==============================================="
                           "================================================="
                        << std::endl;
-        amrex::Print() << "Step: " << step << " dt : " << m_dt
-                       << " time: " << cur_time << " to " << cur_time + m_dt
+        amrex::Print() << "Starting from step " << step
+                       << ", advancing from time " << cur_time << " to time "
+                       << cur_time + m_dt << " (dt = " << m_dt << ")"
                        << std::endl;
 
-        // m_fillpatch_op->fillpatch(0, cur_time, m_f[0]);
         time_step(cur_time);
 
         post_time_step();
@@ -261,9 +261,9 @@ void SPADES::time_step(const amrex::Real time)
 {
     BL_PROFILE("spades::SPADES::time_step()");
 
-    amrex::Print() << "[Step " << m_istep + 1 << "] ";
-    amrex::Print() << "Advance with time = " << m_t_new << " dt = " << m_dt
-                   << " gvt = " << m_gvt << " lbts = " << m_lbts << std::endl;
+    amrex::Print() << "Performing step " << m_istep + 1;
+    amrex::Print() << " at time = " << m_t_new << ", dt = " << m_dt
+                   << ", gvt = " << m_gvt << ", lbts = " << m_lbts << std::endl;
 
     advance(time, m_dt);
 
@@ -318,7 +318,7 @@ void SPADES::summary()
     m_nentities = m_entity_pc->total_count(particles::EntityTypes::ENTITY);
     m_ncells = CountCells(LEV);
     if (Verbose() > 0) {
-        amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
+        amrex::Print() << "Step " << m_istep << " Summary:" << std::endl;
         amrex::Print() << "  " << m_ntotal_messages << " total messages"
                        << std::endl;
         for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
