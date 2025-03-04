@@ -473,7 +473,9 @@ void MessageParticleContainer::resolve_pairs()
 {
     BL_PROFILE("spades::MessageParticleContainer::resolve_pairs()");
 
+#ifdef AMREX_DEBUG
     const auto& dom = Geom(LEV).Domain();
+#endif
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -502,7 +504,9 @@ void MessageParticleContainer::resolve_pairs()
                         pant.idata(MessageIntData::receiver_lp) ==
                         dom.index(iv));
 
+#ifdef AMREX_DEBUG
                     bool found_pair = false;
+#endif
                     for (int m = 0; m < cnt_arr(iv, MessageTypes::MESSAGE);
                          m++) {
                         // This is a message that was already treated,
@@ -540,7 +544,9 @@ void MessageParticleContainer::resolve_pairs()
                                 constants::EPS);
                             MarkMessageUndefined()(pant);
                             MarkMessageUndefined()(pmsg);
+#ifdef AMREX_DEBUG
                             found_pair = true;
+#endif
                             break;
                         }
                     }

@@ -127,9 +127,13 @@ struct Get
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     assert_different(const int n, const int typ, const int expected_type) const
     {
+#ifdef AMREX_DEBUG
         const int idx = m_offsets(m_iv, typ) + n;
         P& p = m_pstruct[idx];
         AMREX_ASSERT(p.idata(CommonIntData::type_id) == expected_type);
+#else
+        amrex::ignore_unused(n, typ, expected_type);
+#endif
     }
 
     //! Cell index

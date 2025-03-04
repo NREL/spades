@@ -238,8 +238,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 
     const auto& plo = this->Geom(LEV).ProbLoArray();
     const auto& dx = this->Geom(LEV).CellSizeArray();
+#ifdef AMREX_DEBUG
     const auto& dxi = this->Geom(LEV).InvCellSizeArray();
     const auto& dom = this->Geom(LEV).Domain();
+#endif
     const int nbins = 500;
 
 #ifdef AMREX_USE_OMP
