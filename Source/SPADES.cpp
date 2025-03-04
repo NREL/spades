@@ -492,19 +492,19 @@ void SPADES::process_messages()
                 }
 
                 // Update LVT for the logical process
-                amrex::Real min_ent_lvt = constants::LARGE_NUM;
+                amrex::Real max_ent_lvt = constants::LOW_NUM;
                 for (int n = 0;
                      n < ent_cnt_arr(iv, particles::EntityTypes::ENTITY); n++) {
                     auto& pe = ent_getter(n, particles::EntityTypes::ENTITY);
                     const auto ent_lvt =
                         pe.rdata(particles::EntityRealData::timestamp);
-                    if (min_ent_lvt > ent_lvt) {
-                        min_ent_lvt = ent_lvt;
+                    if (ent_lvt > max_ent_lvt) {
+                        max_ent_lvt = ent_lvt;
                     }
                 }
                 AMREX_ALWAYS_ASSERT(
-                    sarr(iv, constants::LVT_IDX) <= min_ent_lvt);
-                sarr(iv, constants::LVT_IDX) = min_ent_lvt;
+                    sarr(iv, constants::LVT_IDX) <= max_ent_lvt);
+                sarr(iv, constants::LVT_IDX) = max_ent_lvt;
             });
     }
 }
