@@ -326,8 +326,8 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     break;
                 }
             }
-            AMREX_ALWAYS_ASSERT(valid_type);
-            AMREX_ALWAYS_ASSERT(p.id() >= 0);
+            AMREX_ASSERT(valid_type);
+            AMREX_ASSERT(p.id() >= 0);
         });
     }
 }
@@ -497,8 +497,8 @@ void MessageParticleContainer::resolve_pairs()
                 for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI); n++) {
 
                     auto& pant = getter(n, MessageTypes::ANTI);
-                    AMREX_ALWAYS_ASSERT(pant.idata(MessageIntData::pair) != -1);
-                    AMREX_ALWAYS_ASSERT(
+                    AMREX_ASSERT(pant.idata(MessageIntData::pair) != -1);
+                    AMREX_ASSERT(
                         pant.idata(MessageIntData::receiver_lp) ==
                         dom.index(iv));
 
@@ -520,19 +520,19 @@ void MessageParticleContainer::resolve_pairs()
                                  pmsg.rdata(MessageRealData::timestamp) -
                                  pant.rdata(MessageRealData::timestamp)) <
                              constants::EPS)) {
-                            AMREX_ALWAYS_ASSERT(
+                            AMREX_ASSERT(
                                 pmsg.idata(MessageIntData::sender_lp) ==
                                 pant.idata(MessageIntData::sender_lp));
-                            AMREX_ALWAYS_ASSERT(
+                            AMREX_ASSERT(
                                 pmsg.idata(MessageIntData::sender_entity) ==
                                 pant.idata(MessageIntData::sender_entity));
-                            AMREX_ALWAYS_ASSERT(
+                            AMREX_ASSERT(
                                 pmsg.idata(MessageIntData::receiver_lp) ==
                                 pant.idata(MessageIntData::receiver_lp));
-                            AMREX_ALWAYS_ASSERT(
+                            AMREX_ASSERT(
                                 pmsg.idata(MessageIntData::receiver_entity) ==
                                 pant.idata(MessageIntData::receiver_entity));
-                            AMREX_ALWAYS_ASSERT(
+                            AMREX_ASSERT(
                                 std::abs(
                                     pmsg.rdata(MessageRealData::creation_time) -
                                     pant.rdata(
@@ -544,7 +544,7 @@ void MessageParticleContainer::resolve_pairs()
                             break;
                         }
                     }
-                    AMREX_ALWAYS_ASSERT(found_pair);
+                    AMREX_ASSERT(found_pair);
                 }
             });
     }
@@ -575,7 +575,7 @@ void MessageParticleContainer::garbage_collect(const amrex::Real gvt)
                 ((p.idata(MessageIntData::type_id) ==
                   MessageTypes::CONJUGATE) &&
                  (p.rdata(MessageRealData::creation_time) < gvt))) {
-                AMREX_ALWAYS_ASSERT(
+                AMREX_ASSERT(
                     p.idata(MessageIntData::type_id) != MessageTypes::MESSAGE);
                 MarkMessageUndefined()(p);
             }

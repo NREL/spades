@@ -414,19 +414,19 @@ void SPADES::process_messages()
                         return;
                     }
 
-                    AMREX_ALWAYS_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
+                    AMREX_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
 
                     const auto ent =
                         prcv.idata(particles::MessageIntData::receiver_entity);
                     auto& pe = ent_getter(ent, particles::EntityTypes::ENTITY);
-                    AMREX_ALWAYS_ASSERT(
+                    AMREX_ASSERT(
                         dom.atOffset(
                             pe.idata(particles::EntityIntData::owner)) == iv);
-                    AMREX_ALWAYS_ASSERT(
+                    AMREX_ASSERT(
                         pe.rdata(particles::EntityRealData::timestamp) < ts);
 
                     // process the event
-                    AMREX_ALWAYS_ASSERT(
+                    AMREX_ASSERT(
                         dom.atOffset(prcv.idata(
                             particles::MessageIntData::receiver_lp)) == iv);
                     prcv.rdata(particles::MessageRealData::old_timestamp) =
@@ -502,8 +502,7 @@ void SPADES::process_messages()
                         max_ent_lvt = ent_lvt;
                     }
                 }
-                AMREX_ALWAYS_ASSERT(
-                    sarr(iv, constants::LVT_IDX) <= max_ent_lvt);
+                AMREX_ASSERT(sarr(iv, constants::LVT_IDX) <= max_ent_lvt);
                 sarr(iv, constants::LVT_IDX) = max_ent_lvt;
             });
     }
@@ -575,7 +574,7 @@ void SPADES::rollback()
 
                     rarr(iv) = 0;
                     if (rollback_timestamp <= sarr(iv, constants::LVT_IDX)) {
-                        AMREX_ALWAYS_ASSERT(
+                        AMREX_ASSERT(
                             msg_cnt_arr(
                                 iv, particles::MessageTypes::PROCESSED) > 0);
                         rarr(iv) = 1;
@@ -619,7 +618,7 @@ void SPADES::rollback()
                                     if (pair ==
                                         pcnj.idata(
                                             particles::MessageIntData::pair)) {
-                                        AMREX_ALWAYS_ASSERT(
+                                        AMREX_ASSERT(
                                             std::abs(
                                                 pprd.rdata(
                                                     particles::MessageRealData::

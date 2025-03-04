@@ -46,8 +46,8 @@ struct Copy
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     operator()(const P& p1, P& p2) const
     {
-        AMREX_ALWAYS_ASSERT(p1.NReal == p2.NReal);
-        AMREX_ALWAYS_ASSERT(p1.NInt == p2.NInt);
+        AMREX_ASSERT(p1.NReal == p2.NReal);
+        AMREX_ASSERT(p1.NInt == p2.NInt);
         for (int i = 0; i < p1.NReal; i++) {
             p2.rdata(i) = p1.rdata(i);
         }
@@ -86,13 +86,13 @@ struct Get
     operator()(const int n, const int typ) const
     {
 
-        AMREX_ALWAYS_ASSERT(m_counts(m_iv, typ) > n);
+        AMREX_ASSERT(m_counts(m_iv, typ) > n);
         const int idx = m_offsets(m_iv, typ) + n;
 
         P& p = m_pstruct[idx];
 
-        AMREX_ALWAYS_ASSERT(p.id() >= 0);
-        AMREX_ALWAYS_ASSERT(p.idata(CommonIntData::type_id) == typ);
+        AMREX_ASSERT(p.id() >= 0);
+        AMREX_ASSERT(p.idata(CommonIntData::type_id) == typ);
 
         return p;
     }
@@ -106,7 +106,7 @@ struct Get
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
     check(const int n, const int typ) const
     {
-        AMREX_ALWAYS_ASSERT(m_counts(m_iv, typ) > n);
+        AMREX_ASSERT(m_counts(m_iv, typ) > n);
         const int idx = m_offsets(m_iv, typ) + n;
         P& p = m_pstruct[idx];
         return p.idata(CommonIntData::type_id) == typ;
@@ -129,7 +129,7 @@ struct Get
     {
         const int idx = m_offsets(m_iv, typ) + n;
         P& p = m_pstruct[idx];
-        AMREX_ALWAYS_ASSERT(p.idata(CommonIntData::type_id) == expected_type);
+        AMREX_ASSERT(p.idata(CommonIntData::type_id) == expected_type);
     }
 
     //! Cell index

@@ -143,8 +143,8 @@ void EntityParticleContainer::initialize_entities()
                     break;
                 }
             }
-            AMREX_ALWAYS_ASSERT(valid_type);
-            AMREX_ALWAYS_ASSERT(p.id() >= 0);
+            AMREX_ASSERT(valid_type);
+            AMREX_ASSERT(p.id() >= 0);
         });
     }
 }
