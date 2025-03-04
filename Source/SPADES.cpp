@@ -448,8 +448,8 @@ void SPADES::process_messages()
                             plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
                             plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
                             plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
-                    const int rcv_ent =
-                        amrex::Random_int(entities_per_lp, engine);
+                    const int rcv_ent = static_cast<int>(
+                        amrex::Random_int(entities_per_lp, engine));
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
