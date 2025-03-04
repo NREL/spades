@@ -30,6 +30,9 @@ SPADES::SPADES()
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
             !mm.empty(), "Message variable name needs to be specified");
     }
+    m_nmessages.resize(particles::MessageTypes::NTYPES);
+    m_min_messages.resize(particles::MessageTypes::NTYPES);
+    m_max_messages.resize(particles::MessageTypes::NTYPES);
 
     m_entity_counts_varnames.resize(particles::EntityTypes::NTYPES);
     m_entity_counts_varnames[particles::EntityTypes::ENTITY] = "entity";
@@ -150,6 +153,7 @@ void SPADES::read_parameters()
         pp.query("window_size", m_window_size);
         pp.query("messages_per_step", m_messages_per_step);
         pp.query("data_fname", m_data_fname);
+        pp.query("entities_per_lp", m_entities_per_lp);
     }
 
     // force periodic bcs
@@ -178,11 +182,11 @@ void SPADES::evolve()
         amrex::Print() << "\n==============================================="
                           "================================================="
                        << std::endl;
-        amrex::Print() << "Step: " << step << " dt : " << m_dt
-                       << " time: " << cur_time << " to " << cur_time + m_dt
+        amrex::Print() << "Starting from step " << step
+                       << ", advancing from time " << cur_time << " to time "
+                       << cur_time + m_dt << " (dt = " << m_dt << ")"
                        << std::endl;
 
-        // m_fillpatch_op->fillpatch(0, cur_time, m_f[0]);
         time_step(cur_time);
 
         post_time_step();
@@ -257,9 +261,9 @@ void SPADES::time_step(const amrex::Real time)
 {
     BL_PROFILE("spades::SPADES::time_step()");
 
-    amrex::Print() << "[Step " << m_istep + 1 << "] ";
-    amrex::Print() << "Advance with time = " << m_t_new << " dt = " << m_dt
-                   << " gvt = " << m_gvt << " lbts = " << m_lbts << std::endl;
+    amrex::Print() << "Performing step " << m_istep + 1;
+    amrex::Print() << " at time = " << m_t_new << ", dt = " << m_dt
+                   << ", gvt = " << m_gvt << ", lbts = " << m_lbts << std::endl;
 
     advance(time, m_dt);
 
@@ -305,17 +309,27 @@ void SPADES::summary()
     BL_PROFILE("spades::SPADES::summary()");
 
     m_ntotal_messages = m_message_pc->TotalNumberOfParticles(LEV != 0);
-    m_nmessages = m_message_pc->total_count(particles::MessageTypes::MESSAGE);
+    for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+        m_nmessages[typ] = m_message_pc->total_count(typ);
+        m_min_messages[typ] = m_message_pc->min_count(typ);
+        m_max_messages[typ] = m_message_pc->max_count(typ);
+    }
     m_ntotal_entities = m_entity_pc->TotalNumberOfParticles(LEV != 0);
     m_nentities = m_entity_pc->total_count(particles::EntityTypes::ENTITY);
     m_ncells = CountCells(LEV);
     if (Verbose() > 0) {
-        amrex::Print() << "[Step " << m_istep << "] Summary:" << std::endl;
+        amrex::Print() << "Step " << m_istep << " Summary:" << std::endl;
         amrex::Print() << "  " << m_ntotal_messages << " total messages"
                        << std::endl;
-        amrex::Print() << "  " << m_nmessages << " messages" << std::endl;
-        amrex::Print() << "  " << m_nprocessed_messages << " processed messages"
-                       << std::endl;
+        for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+            amrex::Print() << "  " << m_nmessages[typ] << " "
+                           << m_message_counts_varnames[typ]
+                           << "s (min: " << m_min_messages[typ]
+                           << ", max: " << m_max_messages[typ] << ")"
+                           << std::endl;
+        }
+        amrex::Print() << "  " << m_nprocessed_messages
+                       << " messages processed during this step" << std::endl;
         amrex::Print() << "  " << m_ntotal_entities << " total entities"
                        << std::endl;
         amrex::Print() << "  " << m_nentities << " entities" << std::endl;
@@ -328,7 +342,8 @@ void SPADES::summary()
             }
         }
     }
-    AMREX_ALWAYS_ASSERT(m_nmessages == m_ncells);
+    AMREX_ALWAYS_ASSERT(
+        m_nmessages[particles::MessageTypes::MESSAGE] == m_ncells);
 }
 
 void SPADES::post_time_step()
@@ -352,6 +367,7 @@ void SPADES::process_messages()
     const auto lookahead = m_lookahead;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
+    const auto entities_per_lp = m_entities_per_lp;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -398,21 +414,21 @@ void SPADES::process_messages()
                         return;
                     }
 
-                    AMREX_ALWAYS_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
+                    AMREX_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
 
-                    // FIXME: loop on entities and grab the one this message is
-                    // destined to
-                    auto& pe = ent_getter(0, particles::EntityTypes::ENTITY);
-                    AMREX_ALWAYS_ASSERT(
+                    const auto ent =
+                        prcv.idata(particles::MessageIntData::receiver_entity);
+                    auto& pe = ent_getter(ent, particles::EntityTypes::ENTITY);
+                    AMREX_ASSERT(
                         dom.atOffset(
                             pe.idata(particles::EntityIntData::owner)) == iv);
-                    AMREX_ALWAYS_ASSERT(
+                    AMREX_ASSERT(
                         pe.rdata(particles::EntityRealData::timestamp) < ts);
 
                     // process the event
-                    AMREX_ALWAYS_ASSERT(
+                    AMREX_ASSERT(
                         dom.atOffset(prcv.idata(
-                            particles::MessageIntData::receiver)) == iv);
+                            particles::MessageIntData::receiver_lp)) == iv);
                     prcv.rdata(particles::MessageRealData::old_timestamp) =
                         pe.rdata(particles::EntityRealData::timestamp);
                     pe.rdata(particles::EntityRealData::timestamp) = ts;
@@ -422,16 +438,18 @@ void SPADES::process_messages()
                     // Create a new message to send
                     const auto ent_lvt =
                         pe.rdata(particles::EntityRealData::timestamp);
-                    amrex::IntVect iv_dest(AMREX_D_DECL(
+                    const amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
                         amrex::Random_int(dhi[2] - dlo[2] + 1, engine) +
                             dlo[2]));
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
+                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
                         AMREX_D_DECL(
                             plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
                             plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
                             plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
+                    const int rcv_ent = static_cast<int>(
+                        amrex::Random_int(entities_per_lp, engine));
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
@@ -439,8 +457,8 @@ void SPADES::process_messages()
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::CreateMessage()(
                         psnd, next_ts, pos, iv_dest,
-                        static_cast<int>(dom.index(iv)),
-                        static_cast<int>(dom.index(iv_dest)));
+                        static_cast<int>(dom.index(iv)), ent,
+                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
                     psnd.idata(particles::MessageIntData::pair) = pair;
@@ -453,19 +471,19 @@ void SPADES::process_messages()
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
-                    // position is iv but the receiver is
+                    // position is iv but the receiver_lp is
                     // still updated (we need to know who to
                     // send this to)
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> conj_pos = {
-                        AMREX_D_DECL(
+                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+                        conj_pos = {AMREX_D_DECL(
                             plo[0] + (iv[0] + constants::HALF) * dx[0],
                             plo[1] + (iv[1] + constants::HALF) * dx[1],
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
                     particles::CreateMessage()(
                         pcnj, next_ts, conj_pos, iv,
-                        static_cast<int>(dom.index(iv)),
-                        static_cast<int>(dom.index(iv_dest)));
+                        static_cast<int>(dom.index(iv)), ent,
+                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     pcnj.idata(particles::MessageIntData::pair) = pair;
                     pcnj.rdata(particles::MessageRealData::creation_time) =
                         ent_lvt;
@@ -474,19 +492,18 @@ void SPADES::process_messages()
                 }
 
                 // Update LVT for the logical process
-                amrex::Real min_ent_lvt = constants::LARGE_NUM;
+                amrex::Real max_ent_lvt = constants::LOW_NUM;
                 for (int n = 0;
                      n < ent_cnt_arr(iv, particles::EntityTypes::ENTITY); n++) {
                     auto& pe = ent_getter(n, particles::EntityTypes::ENTITY);
                     const auto ent_lvt =
                         pe.rdata(particles::EntityRealData::timestamp);
-                    if (min_ent_lvt > ent_lvt) {
-                        min_ent_lvt = ent_lvt;
+                    if (ent_lvt > max_ent_lvt) {
+                        max_ent_lvt = ent_lvt;
                     }
                 }
-                AMREX_ALWAYS_ASSERT(
-                    sarr(iv, constants::LVT_IDX) <= min_ent_lvt);
-                sarr(iv, constants::LVT_IDX) = min_ent_lvt;
+                AMREX_ASSERT(sarr(iv, constants::LVT_IDX) <= max_ent_lvt);
+                sarr(iv, constants::LVT_IDX) = max_ent_lvt;
             });
     }
 }
@@ -557,7 +574,7 @@ void SPADES::rollback()
 
                     rarr(iv) = 0;
                     if (rollback_timestamp <= sarr(iv, constants::LVT_IDX)) {
-                        AMREX_ALWAYS_ASSERT(
+                        AMREX_ASSERT(
                             msg_cnt_arr(
                                 iv, particles::MessageTypes::PROCESSED) > 0);
                         rarr(iv) = 1;
@@ -601,7 +618,7 @@ void SPADES::rollback()
                                     if (pair ==
                                         pcnj.idata(
                                             particles::MessageIntData::pair)) {
-                                        AMREX_ALWAYS_ASSERT(
+                                        AMREX_ASSERT(
                                             std::abs(
                                                 pprd.rdata(
                                                     particles::MessageRealData::
@@ -616,7 +633,7 @@ void SPADES::rollback()
                                         const auto piv =
                                             dom.atOffset(pcnj.idata(
                                                 particles::MessageIntData::
-                                                    receiver));
+                                                    receiver_lp));
                                         AMREX_D_TERM(
                                             pcnj.pos(0) =
                                                 plo[0] +
@@ -649,13 +666,13 @@ void SPADES::rollback()
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
-                                // FIXME: loop on entities and grab the one this
-                                // message is destined to
                                 const auto ent_getter = particles::Get(
                                     iv, ent_cnt_arr, ent_offsets_arr,
                                     ent_pstruct);
                                 auto& pe = ent_getter(
-                                    0, particles::EntityTypes::ENTITY);
+                                    pprd.idata(particles::MessageIntData::
+                                                   receiver_entity),
+                                    particles::EntityTypes::ENTITY);
                                 pe.rdata(particles::EntityRealData::timestamp) =
                                     pe.rdata(
                                         particles::EntityRealData::timestamp) >
@@ -1320,10 +1337,17 @@ void SPADES::write_data_file(const bool is_init) const
         if (is_init) {
             std::ofstream fh(m_data_fname.c_str(), std::ios::out);
             fh.precision(m_data_precision);
-            fh << "step,gvt,lbts,lps,total_messages,messages,total_entities,"
+            fh << "step,gvt,lbts,lps,total_messages,";
+            for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+                fh << m_message_counts_varnames[typ] + "s,"
+                   << "min_" + m_message_counts_varnames[typ] + "s,"
+                   << "max_" + m_message_counts_varnames[typ] + "s,";
+            }
+            fh << "total_entities,"
                   "entities,"
-                  "processed_"
-                  "messages,min_time,avg_time,max_time,min_rate,avg_rate,"
+                  "processed_messages_per_step,"
+                  "min_time,avg_time,max_time,min_rate,avg_"
+                  "rate,"
                   "max_rate";
             for (int i = 0; i < m_nrollbacks.size(); i++) {
                 fh << ",rollback_" << i;
@@ -1340,8 +1364,12 @@ void SPADES::write_data_file(const bool is_init) const
 
         const auto n_processed_messages = m_nprocessed_messages;
         fh << m_t_new << "," << m_gvt << "," << m_lbts << "," << m_ncells << ","
-           << m_ntotal_messages << "," << m_nmessages << ","
-           << n_processed_messages << "," << m_ntotal_entities << ","
+           << m_ntotal_messages << ",";
+        for (int typ = 0; typ < particles::MessageTypes::NTYPES; typ++) {
+            fh << m_nmessages[typ] << "," << m_min_messages[typ] << ","
+               << m_max_messages[typ] << ",";
+        }
+        fh << n_processed_messages << "," << m_ntotal_entities << ","
            << m_nentities << "," << m_min_timings[0] << "," << m_avg_timings[0]
            << "," << m_max_timings[0] << "," << m_min_timings[1] << ","
            << m_avg_timings[1] << "," << m_max_timings[1];

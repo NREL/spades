@@ -89,6 +89,28 @@ public:
         return m_counts.sum(typ);
     }
 
+    /**
+       @brief Get the minimum number of particles of \p typ
+       @param typ [in] particle type
+       @return particle counts min
+     **/
+    amrex::Long min_count(const int typ) const
+    {
+        BL_PROFILE("spades::SpadesParticleContainer::min_count()");
+        return m_counts.min(typ);
+    }
+
+    /**
+       @brief Get the maximum number of particles of \p typ
+       @param typ [in] particle type
+       @return particle counts min
+     **/
+    amrex::Long max_count(const int typ) const
+    {
+        BL_PROFILE("spades::SpadesParticleContainer::max_count()");
+        return m_counts.max(typ);
+    }
+
     //! Sort the particles
     virtual void sort() = 0;
 

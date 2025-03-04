@@ -23,8 +23,10 @@ struct MessageIntData
         AMREX_D_DECL(
             i = CommonIntData::i, j = CommonIntData::j, k = CommonIntData::k),
         type_id = CommonIntData::type_id,
-        sender,
-        receiver,
+        sender_lp,
+        receiver_lp,
+        sender_entity,
+        receiver_entity,
         pair,
         ncomps
     };

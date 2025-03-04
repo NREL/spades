@@ -293,8 +293,14 @@ private:
     //! Total message count
     amrex::Long m_ntotal_messages{0};
 
-    //! Message count
-    amrex::Long m_nmessages{0};
+    //! Message counts
+    amrex::Vector<amrex::Long> m_nmessages;
+
+    //! Min of message counts
+    amrex::Vector<amrex::Long> m_min_messages;
+
+    //! Max of message counts
+    amrex::Vector<amrex::Long> m_max_messages;
 
     //! Count of processed messages
     amrex::Long m_nprocessed_messages{0};
@@ -388,6 +394,9 @@ private:
 
     //! Number of messages to process in each step (optional user input)
     int m_messages_per_step{1};
+
+    //! Number of entities per logical process (optional user input)
+    int m_entities_per_lp{1};
 
     //! Random number generator seed (optional user input)
     int m_seed{0};

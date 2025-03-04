@@ -48,8 +48,11 @@ void EntityParticleContainer::initialize_entities()
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
 
-    const int np_per_cell = 1;
-    const int ent_per_cell = 1;
+    int entities_per_lp = 1;
+    {
+        amrex::ParmParse pp("spades");
+        pp.query("entities_per_lp", entities_per_lp);
+    }
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
@@ -57,7 +60,7 @@ void EntityParticleContainer::initialize_entities()
     amrex::iMultiFab init_offsets(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
         amrex::MFInfo());
-    num_particles.setVal(np_per_cell);
+    num_particles.setVal(entities_per_lp);
     init_offsets.setVal(0);
 
     for (amrex::MFIter mfi = MakeMFIter(LEV); mfi.isValid(); ++mfi) {
@@ -108,7 +111,7 @@ void EntityParticleContainer::initialize_entities()
                                  , p.idata(EntityIntData::k) = iv[2];)
                 }
 
-                for (int n = start; n < start + ent_per_cell; n++) {
+                for (int n = start; n < start + entities_per_lp; n++) {
                     auto& pent = aos[n];
                     const amrex::Real ts = 0.0;
 
@@ -140,8 +143,8 @@ void EntityParticleContainer::initialize_entities()
                     break;
                 }
             }
-            AMREX_ALWAYS_ASSERT(valid_type);
-            AMREX_ALWAYS_ASSERT(p.id() >= 0);
+            AMREX_ASSERT(valid_type);
+            AMREX_ASSERT(p.id() >= 0);
         });
     }
 }

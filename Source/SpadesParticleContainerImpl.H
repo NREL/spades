@@ -238,8 +238,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 
     const auto& plo = this->Geom(LEV).ProbLoArray();
     const auto& dx = this->Geom(LEV).CellSizeArray();
+#ifdef AMREX_DEBUG
     const auto& dxi = this->Geom(LEV).InvCellSizeArray();
     const auto& dom = this->Geom(LEV).Domain();
+#endif
     const int nbins = 500;
 
 #ifdef AMREX_USE_OMP
@@ -263,7 +265,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
 
                 for (int typ = 0; typ < PType::NTYPES; typ++) {
-                    AMREX_ALWAYS_ASSERT(cnt_arr(iv, typ) < nbins);
+                    AMREX_ASSERT(cnt_arr(iv, typ) < nbins);
                     for (int n = 0; n < cnt_arr(iv, typ); n++) {
                         auto& p = getter(n, typ);
 
@@ -271,7 +273,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                             p.idata(CommonIntData::i),
                             p.idata(CommonIntData::j),
                             p.idata(CommonIntData::k)));
-                        AMREX_ALWAYS_ASSERT(piv == iv);
+                        AMREX_ASSERT(piv == iv);
 
                         AMREX_D_TERM(
                             p.pos(0) = plo[0] + iv[0] * dx[0] +
@@ -282,8 +284,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                                   plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
                         // ensure the particle didn't change cells
-                        AMREX_ALWAYS_ASSERT(
-                            piv == getParticleCell(p, plo, dxi, dom));
+                        AMREX_ASSERT(piv == getParticleCell(p, plo, dxi, dom));
                     }
                 }
             });
