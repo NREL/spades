@@ -54,6 +54,7 @@ if __name__ == "__main__":
             
         for typ in types:
             plt.figure(f"{typ}s")
+            plt.plot(df.step, df[f"{typ}s"]/ df.lps)
             plt.fill_between(df.step, df[f"min_{typ}s"], df[f"max_{typ}s"], alpha=0.5)
 
     pname = "profile_data.pdf"
@@ -82,6 +83,6 @@ if __name__ == "__main__":
         for typ in types:
             plt.figure(f"{typ}s")
             plt.xlabel(r"$s~[-]$")
-            plt.ylabel(r"$m~[\#]$")
+            plt.ylabel(f"$m_{typ[0]}~[\#]$")
             plt.tight_layout()
             pdf.savefig(dpi=300)
