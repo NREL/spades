@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   Formatting:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Clone
       uses: actions/checkout@v4
@@ -32,21 +32,22 @@ jobs:
         build_type: [Release, Debug]
         include:
           - os: macos-latest
-            install_deps: brew install mpich ccache
+            install_deps: brew install open-mpi ccache
             comp: llvm
             procs: $(sysctl -n hw.ncpu)
             ccache_cache: /Users/runner/Library/Caches/ccache
           - os: ubuntu-24.04
-            install_deps: sudo apt-get install -y mpich libmpich-dev
+            # Note mpich on ubuntu-24.04 does not run mpiexec correctly so we are using openmpi
+            install_deps: sudo apt-get install -y libopenmpi-dev openmpi-bin
             comp: gnu
             procs: $(nproc)
             ccache_cache: ~/.cache/ccache
           - build_type: Release
             ctest_args: -LE no_ci
-            ccache_size: 150M
+            ccache_size: 100M
           - build_type: Debug
             ctest_args: -LE no_ci
-            ccache_size: 500M
+            ccache_size: 250M
         exclude:
           - os: macos-latest
             build_type: Debug
@@ -61,7 +62,7 @@ jobs:
       run: |
         echo "NPROCS=${{matrix.procs}}" >> $GITHUB_ENV
         echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
-        echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+        echo "CCACHE_COMPRESSLEVEL=10" >> $GITHUB_ENV
         echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
         echo "CCACHE_MAXSIZE=${{matrix.ccache_size}}" >> $GITHUB_ENV
     - name: Install Ccache
@@ -83,6 +84,8 @@ jobs:
         cmake -B ${{runner.workspace}}/build-ci-${{matrix.build_type}} \
           -DCMAKE_INSTALL_PREFIX:PATH=${{runner.workspace}}/install-${{matrix.build_type}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}} \
+          -DMPIEXEC_PREFLAGS:STRING=--oversubscribe \
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
           -DSPADES_ENABLE_MPI:BOOL=ON \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
@@ -111,7 +114,7 @@ jobs:
     - name: Test
       working-directory: ${{runner.workspace}}/build-ci-${{matrix.build_type}}
       run: |
-        ctest ${{matrix.ctest_args}} --output-on-failure
+        ctest ${{matrix.ctest_args}} -VV --output-on-failure
   GPU-Nvidia:
     name: GPU-CUDA
     needs: Formatting
@@ -125,9 +128,9 @@ jobs:
         run: |
           echo "NPROCS=$(nproc)" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
-          echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=10" >> $GITHUB_ENV
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
-          echo "CCACHE_MAXSIZE=200M" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
       - name: Install Ccache
         run: |
           wget https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-linux-x86_64.tar.xz
@@ -153,6 +156,7 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda-12.6/lib:${LD_LIBRARY_PATH}
           cmake -B build-cuda \
             -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
             -DSPADES_ENABLE_MPI:BOOL=OFF \
             -DSPADES_ENABLE_CUDA:BOOL=ON \
             -DAMReX_CUDA_ERROR_CAPTURE_THIS:BOOL=ON \
@@ -181,7 +185,7 @@ jobs:
         run: |
           echo "NPROCS=$(nproc)" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
-          echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=10" >> $GITHUB_ENV
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
       - name: Install Ccache
@@ -201,7 +205,7 @@ jobs:
           ${{github.workspace}}/Submodules/AMReX/.github/workflows/dependencies/ubuntu_free_disk_space.sh
           sudo mkdir --parents --mode=0755 /etc/apt/keyrings
           wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
-          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.2.1 noble main" | sudo tee --append /etc/apt/sources.list.d/rocm.list
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.3.3 noble main" | sudo tee --append /etc/apt/sources.list.d/rocm.list
           echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600
           echo 'export PATH=/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/rocm/profiler/bin:/opt/rocm/opencl/bin:$PATH' | sudo tee -a /etc/profile.d/rocm.sh
           sudo apt-get update
@@ -215,6 +219,7 @@ jobs:
           which clang++
           cmake -B build \
             -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
             -DSPADES_ENABLE_MPI:BOOL=OFF \
             -DSPADES_ENABLE_ROCM:BOOL=ON \
             -DCMAKE_CXX_COMPILER:STRING=$(which clang++) \
@@ -246,7 +251,7 @@ jobs:
         run: |
           echo "NPROCS=$(nproc)" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
-          echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=10" >> $GITHUB_ENV
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CCACHE_DEPEND=1" >> $GITHUB_ENV
@@ -278,6 +283,7 @@ jobs:
           set -e
           cmake -B build-SYCL \
             -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
             -DCMAKE_CXX_COMPILER:STRING=$(which icpx) \
             -DCMAKE_C_COMPILER:STRING=$(which icx) \
             -DSPADES_ENABLE_MPI:BOOL=OFF \
@@ -293,7 +299,7 @@ jobs:
           du -hs ~/.cache/ccache
   Lint-clang-tidy:
     needs: Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -303,7 +309,7 @@ jobs:
         run: |
           echo "NPROCS=$(sysctl -n hw.ncpu)" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
-          echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=10" >> $GITHUB_ENV
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_EXTRAFILES=${{github.workspace}}/.clang-tidy" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
@@ -328,6 +334,7 @@ jobs:
           cmake \
           -B ${{runner.workspace}}/build-clang-tidy \
           -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
           -DCMAKE_CXX_COMPILER:STRING=clang++ \
           -DCMAKE_C_COMPILER:STRING=clang \
           -DSPADES_ENABLE_MPI:BOOL=OFF \
@@ -344,11 +351,11 @@ jobs:
             awk 'BEGIN{i=0}{print $0}{i++}END{print "Warnings: "i}' > clang-tidy-ci-report.txt
       - name: Ccache Report
         run: |
-          ls ~/.cache
-          ls ~/.cache/ccache
-          du -hs ~/.cache/ccache
-          ls ~/.cache/ctcache
-          du -hs ~/.cache/ctcache
+          ls ~/.cache || true
+          ls ~/.cache/ccache || true
+          du -hs ~/.cache/ccache || true
+          ls ~/.cache/ctcache || true
+          du -hs ~/.cache/ctcache || true
           ccache -s
       - name: Full report
         working-directory: ${{runner.workspace}}/build-clang-tidy
@@ -361,7 +368,7 @@ jobs:
           exit $(tail -n 1 clang-tidy-ci-report.txt | awk '{print $2}')
   Lint-sanitizers:
     needs: Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         sanitizer: [asan, tsan]
@@ -383,7 +390,7 @@ jobs:
         run: |
           echo "NPROCS=$(nproc)" >> $GITHUB_ENV
           echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
-          echo "CCACHE_COMPRESSLEVEL=1" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESSLEVEL=10" >> $GITHUB_ENV
           echo "CCACHE_LOGFILE=${{github.workspace}}/ccache.log.txt" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=50M" >> $GITHUB_ENV
           echo "CTCACHE_DIR=~/.cache/ctcache" >> $GITHUB_ENV
@@ -457,7 +464,7 @@ jobs:
           ctest -LE no_ci --output-on-failure
   # Lint-codeql:
   #   needs: Formatting
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-24.04
   #   steps:
   #     - name: Clone
   #       uses: actions/checkout@v4
@@ -503,7 +510,7 @@ jobs:
   #         sarif_file: sarif-results/cpp.sarif
   Lint-codespell:
     needs: Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -522,7 +529,7 @@ jobs:
         run: codespell
   Save-PR-Number:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Save PR number
         env:
