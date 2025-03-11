@@ -368,7 +368,7 @@ jobs:
           exit $(tail -n 1 clang-tidy-ci-report.txt | awk '{print $2}')
   Lint-sanitizers:
     needs: Formatting
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         sanitizer: [asan, tsan]
