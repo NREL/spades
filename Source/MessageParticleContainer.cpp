@@ -375,7 +375,7 @@ void MessageParticleContainer::update_undefined()
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
             const int msg_count = cnt_arr(iv, MessageTypes::MESSAGE);
-            const int target_count = (msg_count > 2)? 2*msg_count : 2;
+            const int target_count = std::max(2 * msg_count, 2);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (current_count > target_count) {
                 p_removals[icell] = current_count - target_count;
@@ -407,7 +407,7 @@ void MessageParticleContainer::update_undefined()
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
             const int msg_count = cnt_arr(iv, MessageTypes::MESSAGE);
-            const int target_count = (msg_count > 2)? 2*msg_count : 2;
+            const int target_count = std::max(2 * msg_count, 2);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
             if (target_count > current_count) {
                 p_additions[icell] = target_count - current_count;
