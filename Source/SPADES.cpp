@@ -154,6 +154,7 @@ void SPADES::read_parameters()
         pp.query("messages_per_step", m_messages_per_step);
         pp.query("data_fname", m_data_fname);
         pp.query("entities_per_lp", m_entities_per_lp);
+        pp.query("messages_per_lp", m_messages_per_lp);
     }
 
     // force periodic bcs
@@ -343,7 +344,7 @@ void SPADES::summary()
         }
     }
     AMREX_ALWAYS_ASSERT(
-        m_nmessages[particles::MessageTypes::MESSAGE] == m_ncells);
+        m_nmessages[particles::MessageTypes::MESSAGE] == m_nentities);
 }
 
 void SPADES::post_time_step()

@@ -225,9 +225,13 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //         }
     //     }
 
-    const int np_per_cell = 100;
-    const int msg_per_cell = 1;
-    AMREX_ALWAYS_ASSERT(np_per_cell > msg_per_cell);
+    int messages_per_lp = 1;
+    {
+        amrex::ParmParse pp("spades");
+        pp.query("messages_per_lp", messages_per_lp);
+    }
+    const int total_messages_per_lp = 3 * messages_per_lp;
+    AMREX_ALWAYS_ASSERT(total_messages_per_lp > messages_per_lp);
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
@@ -235,7 +239,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     amrex::iMultiFab init_offsets(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
         amrex::MFInfo());
-    num_particles.setVal(np_per_cell);
+    num_particles.setVal(total_messages_per_lp);
     init_offsets.setVal(0);
 
     for (amrex::MFIter mfi = MakeMFIter(LEV); mfi.isValid(); ++mfi) {
@@ -291,7 +295,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                                  , p.idata(MessageIntData::k) = iv[2];)
                 }
 
-                for (int n = start; n < start + msg_per_cell; n++) {
+                for (int n = start; n < start + messages_per_lp; n++) {
                     auto& pmsg = aos[n];
                     const amrex::Real ts =
                         random_exponential(1.0, engine) + lookahead;
@@ -374,9 +378,11 @@ void MessageParticleContainer::update_undefined()
         auto* p_removals = removals.data();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
+            const int msg_count = cnt_arr(iv, MessageTypes::MESSAGE);
+            const int target_count = std::max(2 * msg_count, 2);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
-            if (current_count > upper_count) {
-                p_removals[icell] = current_count - reset_count;
+            if (current_count > target_count) {
+                p_removals[icell] = current_count - target_count;
             }
         });
 
@@ -404,9 +410,11 @@ void MessageParticleContainer::update_undefined()
         auto* p_additions = additions.data();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const auto iv = box.atOffset(icell);
+            const int msg_count = cnt_arr(iv, MessageTypes::MESSAGE);
+            const int target_count = std::max(2 * msg_count, 2);
             const int current_count = cnt_arr(iv, MessageTypes::UNDEFINED);
-            if (lower_count > current_count) {
-                p_additions[icell] = reset_count - current_count;
+            if (target_count > current_count) {
+                p_additions[icell] = target_count - current_count;
             }
         });
 
