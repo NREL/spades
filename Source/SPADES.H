@@ -398,6 +398,9 @@ private:
     //! Number of entities per logical process (optional user input)
     int m_entities_per_lp{1};
 
+    //! Number of messages per logical process (optional user input)
+    int m_messages_per_lp{1};
+
     //! Random number generator seed (optional user input)
     int m_seed{0};
 

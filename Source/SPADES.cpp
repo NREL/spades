@@ -154,6 +154,7 @@ void SPADES::read_parameters()
         pp.query("messages_per_step", m_messages_per_step);
         pp.query("data_fname", m_data_fname);
         pp.query("entities_per_lp", m_entities_per_lp);
+        pp.query("messages_per_lp", m_messages_per_lp);
     }
 
     // force periodic bcs
