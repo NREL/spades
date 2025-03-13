@@ -344,7 +344,7 @@ void SPADES::summary()
         }
     }
     AMREX_ALWAYS_ASSERT(
-        m_nmessages[particles::MessageTypes::MESSAGE] == m_ncells);
+        m_nmessages[particles::MessageTypes::MESSAGE] == m_nentities);
 }
 
 void SPADES::post_time_step()

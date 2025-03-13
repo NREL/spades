@@ -225,12 +225,12 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //         }
     //     }
 
-    const int total_messages_per_lp = 3;
     int messages_per_lp = 1;
     {
         amrex::ParmParse pp("spades");
         pp.query("messages_per_lp", messages_per_lp);
     }
+    const int total_messages_per_lp = 3 * messages_per_lp;
     AMREX_ALWAYS_ASSERT(total_messages_per_lp > messages_per_lp);
 
     amrex::iMultiFab num_particles(
