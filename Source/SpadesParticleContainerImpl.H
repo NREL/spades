@@ -420,26 +420,24 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
             sort);
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
-        thrust::sort(
-            thrust::device, cell_list.begin(), cell_list.end(),
-            [=] AMREX_GPU_DEVICE(
-                const amrex::Long xi, const amrex::Long yi) noexcept {
-                const auto& p1 = pstruct[xi];
-                const auto& p2 = pstruct[yi];
-                return compare(p1, p2);
-            });
+        thrust::sort_by_key(
+          thrust::device, cell_list.begin(), cell_list.end(), encode.begin());
 #else
         // Perform sort on CPU, then copy back to device (not good)
         amrex::Vector<amrex::Long> h_cell_list(np, 0);
+        amrex::Vector<amrex::Long> h_encode(np, 0);
         amrex::Gpu::copy(
             amrex::Gpu::deviceToHost, cell_list.begin(), cell_list.end(),
             h_cell_list.begin());
+        amrex::Gpu::copy(
+            amrex::Gpu::deviceToHost, encode.begin(), encode.end(),
+            h_encode.begin());
         std::sort(
             h_cell_list.begin(), h_cell_list.end(),
             [=](const amrex::Long xi, const amrex::Long yi) {
-                const auto& p1 = pstruct[xi];
-                const auto& p2 = pstruct[yi];
-                return compare(p1, p2);
+                const auto& p1 = p_encode[xi];
+                const auto& p2 = p_encode[yi];
+                return p1 < p2;
             });
         amrex::Gpu::copy(
             amrex::Gpu::hostToDevice, h_cell_list.begin(), h_cell_list.end(),
