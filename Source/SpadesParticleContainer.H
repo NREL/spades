@@ -122,6 +122,9 @@ public:
     template <typename CompareFunctor>
     void sort_impl(const CompareFunctor& compare);
 
+    template <typename CompareFunctor>
+    void sort_impl2(const CompareFunctor& compare);
+  
     //! Reposition the particles inside a cell for visualization
     void reposition_particles();
 

@@ -1,4 +1,3 @@
-
 template <typename PType, int NStructReal, int NStructInt>
 SpadesParticleContainer<PType, NStructReal, NStructInt>::
     SpadesParticleContainer(amrex::AmrParGDB* par_gdb, int ngrow)
@@ -162,21 +161,21 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
             continue;
         }
 
-        // BL_PROFILE_VAR(
-        //     "spades::SpadesParticleContainer::sort::sort_prep",
-        //     prep);
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort::sort_prep",
+            prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             p_cell_list[pindex] = pindex;
         });
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(prep);
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(prep);
 
         // Sort particle indices based on the cell index
-        // BL_PROFILE_VAR(
-        //     "spades::SpadesParticleContainer::sort::sort",
-        //     sort);
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort::sort",
+            sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
 #ifdef AMREX_USE_GPU
@@ -215,17 +214,17 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
                 return compare(p1, p2);
             });
 #endif
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(sort);
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(sort);
 
         // Reorder the particles in memory
-        // BL_PROFILE_VAR(
-        //     "spades::SpadesParticleContainer::sort::"
-        //     "ReorderParticles",
-        //     reorder);
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort::"
+            "ReorderParticles",
+            reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
-        // amrex::Gpu::Device::synchronize();
-        // BL_PROFILE_VAR_STOP(reorder);
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(reorder);
     }
     update_counts();
 }
@@ -289,6 +288,190 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 }
             });
     }
+}
+
+template <typename PType, int NStructReal, int NStructInt>
+template <typename CompareFunc>
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
+    const CompareFunc& compare)
+{
+    // Taking inspiration from AMReX's SortParticlesByBin
+    BL_PROFILE("spades::SpadesParticleContainer::sort_impl2()");
+
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+    for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+        auto& particle_tile = this->ParticlesAt(LEV, mfi);
+        const size_t np = particle_tile.numParticles();
+
+        if (np == 0) {
+            continue;
+        }
+
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort2::sort_prep",
+            prep);
+        amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
+        auto* p_cell_list = cell_list.data();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            p_cell_list[pindex] = pindex;
+        });
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(prep);
+
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort2::bounds",
+            bounds);
+        const auto& particles = particle_tile.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+        const int ntypes = 5; //fixme
+        amrex::Vector<amrex::Real> ts_min(5,0.0);
+        amrex::Vector<amrex::Real> ts_max(5,0.0);
+        for(int typ = 0; typ < ntypes; typ++){
+          amrex::Gpu::DeviceVector<amrex::Real> ts_mins(np, constants::LARGE_NUM);
+          amrex::Gpu::DeviceVector<amrex::Real> ts_maxs(np, 0.0);
+          auto* p_ts_mins = ts_mins.data();
+          auto* p_ts_maxs = ts_maxs.data();
+          amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            if (p.idata(CommonIntData::type_id) == typ) {
+                p_ts_mins[pindex] = p.rdata(CommonRealData::timestamp);
+                p_ts_maxs[pindex] = p.rdata(CommonRealData::timestamp);
+            }
+          });
+          ts_min[typ] = amrex::Reduce::Min(np, ts_mins.data());
+          ts_max[typ] = amrex::Reduce::Max(np, ts_maxs.data());
+          if (ts_min[typ] > 1e-1 * constants::LARGE_NUM){
+            ts_min[typ] = 0;
+          }
+          if(amrex::Math::abs(ts_min[typ] - ts_max[typ]) < constants::EPS){
+            ts_max[typ] = ts_min[typ] + 1.0;
+          }
+          AMREX_ASSERT(ts_min[typ] < ts_max[typ]);
+        }
+        amrex::Gpu::DeviceVector<amrex::Real> d_ts_min(ntypes);
+        amrex::Gpu::DeviceVector<amrex::Real> d_ts_max(ntypes);
+        amrex::Gpu::copy(
+          amrex::Gpu::hostToDevice, ts_min.begin(), ts_min.end(),
+          d_ts_min.begin());
+        amrex::Gpu::copy(
+          amrex::Gpu::hostToDevice, ts_max.begin(), ts_max.end(),
+          d_ts_max.begin());
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(bounds);
+
+
+        // for (int typ = 0; typ < ntypes; typ++) {
+        //   amrex::Print() << "min/max of ts to type: " << typ << " " << d_ts_min[typ] << " / " << d_ts_max[typ] << std::endl;
+        // }
+
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort2::encode",
+            encode);
+        amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
+        auto* p_encode = encode.data();
+        const auto* p_ts_min = d_ts_min.data();
+        const auto* p_ts_max = d_ts_max.data();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+          const auto& p = pstruct[pindex];
+          // const amrex::IntVect piv(AMREX_D_DECL(
+          //                            p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+          //                            p.idata(CommonIntData::k)));
+          AMREX_D_EXPR(AMREX_ASSERT(p.idata(CommonIntData::i) >= 0),
+                       p.idata(CommonIntData::j) >= 0,
+                       p.idata(CommonIntData::k) >= 0);
+          AMREX_ASSERT(p.idata(CommonIntData::type_id) >= 0);
+          AMREX_ASSERT(p.rdata(CommonRealData::timestamp) >= (0.0 - constants::SMALL_NUM));
+
+          // const auto i = static_cast<std::uint16_t>(p.idata(CommonIntData::i));
+          // const auto j = static_cast<std::uint16_t>(p.idata(CommonIntData::j));
+          // const auto m = static_cast<std::uint8_t>(p.idata(CommonIntData::type_id));
+          
+          // const auto t = p.rdata(CommonRealData::timestamp);
+          // const amrex::IntVect iv0(0,1);
+          // const amrex::IntVect iv1(1,0);
+          // if(iv0 < iv1){
+          //   amrex::Print() <<"(0,1) < (1,0)" << std::endl;
+          // }
+          // else{
+          //   amrex::Print() <<"(0,1) > (1,0)" << std::endl;
+          // }
+          //p_encode[pindex] = static_cast<std::uint64_t>(piv[0] + (1LL << 31));
+          //p_encode[pindex] = (static_cast<std::uint64_t>(p.idata(CommonIntData::i)) << 48) | (static_cast<std::uint64_t>(p.idata(CommonIntData::j)) << 32) | (static_cast<std::uint64_t>(p.idata(CommonIntData::type_id)) << 24);
+          // So (0,1) > (1,0), which means it sorts by the last index first, which is the opposite of first i, then j. Let's keep the iv order for now.
+          const std::uint64_t j = static_cast<std::uint64_t>(p.idata(CommonIntData::j) & 0xFFFF) << 48;
+          const std::uint64_t i = static_cast<std::uint64_t>(p.idata(CommonIntData::i) & 0xFFFF) << 32;
+          const std::uint64_t m = static_cast<std::uint64_t>(p.idata(CommonIntData::type_id) & 0xFF) << 24;
+          const amrex::Real min_t = p_ts_min[p.idata(CommonIntData::type_id)];
+          const amrex::Real max_t = p_ts_max[p.idata(CommonIntData::type_id)];
+          const auto normalized = (p.rdata(CommonRealData::timestamp) - min_t) / (max_t - min_t);
+          const std::uint64_t t = static_cast<std::uint64_t>((normalized * ((1<<24)-1))) & 0xFFFFFF;
+          
+          p_encode[pindex] = j | i | m | t;
+          // amrex::Print() << "encode at " << pindex << " is " << p_encode[pindex] << " with iv: " << piv << ", type: " << p.idata(CommonIntData::type_id) << ", time: " << p.rdata(CommonRealData::timestamp) << std::endl;
+        });
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(encode);
+
+        // Sort particle indices based on the cell index
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort2::sort",
+            sort);
+#ifdef AMREX_USE_GPU
+#if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+        thrust::sort(
+            thrust::device, cell_list.begin(), cell_list.end(),
+            [=] AMREX_GPU_DEVICE(
+                const amrex::Long xi, const amrex::Long yi) noexcept {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
+                return compare(p1, p2);
+            });
+#else
+        // Perform sort on CPU, then copy back to device (not good)
+        amrex::Vector<amrex::Long> h_cell_list(np, 0);
+        amrex::Gpu::copy(
+            amrex::Gpu::deviceToHost, cell_list.begin(), cell_list.end(),
+            h_cell_list.begin());
+        std::sort(
+            h_cell_list.begin(), h_cell_list.end(),
+            [=](const amrex::Long xi, const amrex::Long yi) {
+                const auto& p1 = pstruct[xi];
+                const auto& p2 = pstruct[yi];
+                return compare(p1, p2);
+            });
+        amrex::Gpu::copy(
+            amrex::Gpu::hostToDevice, h_cell_list.begin(), h_cell_list.end(),
+            cell_list.begin());
+#endif
+#else
+        std::sort(
+            cell_list.begin(), cell_list.end(),
+            [=](const amrex::Long xi, const amrex::Long yi) {
+                const auto& p1 = p_encode[xi];
+                const auto& p2 = p_encode[yi];
+                return p1 < p2;
+            });
+        // std::sort(
+        //     cell_list.begin(), cell_list.end(),
+        //     [=](const amrex::Long xi, const amrex::Long yi) {
+        //       return p_encode[xi] < p_encode[yi];
+        //     });
+#endif
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(sort);
+
+        // Reorder the particles in memory
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::sort2::"
+            "ReorderParticles",
+            reorder);
+        this->ReorderParticles(LEV, mfi, cell_list.data());
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(reorder);
+    }
+    update_counts();
 }
 
 template <typename PType, int NStructReal, int NStructInt>

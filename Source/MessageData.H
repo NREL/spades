@@ -47,6 +47,8 @@ struct MessageTypes
     static constexpr int UNDEFINED = 4;
     //! Number of different message types
     static constexpr int NTYPES = 5;
+
+  // ADD static assert on NTYPES and uint8 max
 };
 } // namespace spades::particles
 #endif

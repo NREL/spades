@@ -339,7 +339,8 @@ void MessageParticleContainer::sort()
 {
     BL_PROFILE("spades::MessageParticleContainer::sort()");
 
-    sort_impl(CompareMessage());
+    // sort_impl(CompareMessage());
+    sort_impl2(CompareMessage());
 }
 
 void MessageParticleContainer::update_undefined()
