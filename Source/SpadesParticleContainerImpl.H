@@ -437,11 +437,11 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
         thrust::sort_by_key(
-            thrust::device, cell_list.begin(), cell_list.end(), encode.begin());
+            thrust::device, encode.begin(), encode.end(), cell_list.begin());
 #else
         // Perform sort on CPU, then copy back to device (not good)
         amrex::Vector<amrex::Long> h_cell_list(np, 0);
-        amrex::Vector<amrex::Long> h_encode(np, 0);
+        amrex::Vector<std::uint64_t> h_encode(np, 0);
         amrex::Gpu::copy(
             amrex::Gpu::deviceToHost, cell_list.begin(), cell_list.end(),
             h_cell_list.begin());
