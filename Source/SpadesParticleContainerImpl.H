@@ -320,10 +320,9 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
             "spades::SpadesParticleContainer::sort2::bounds", bounds);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
-        const int ntypes = 5; // fixme
-        amrex::Vector<amrex::Real> ts_min(5, 0.0);
-        amrex::Vector<amrex::Real> ts_max(5, 0.0);
-        for (int typ = 0; typ < ntypes; typ++) {
+        amrex::Vector<amrex::Real> ts_min(PType::NTYPES, 0.0);
+        amrex::Vector<amrex::Real> ts_max(PType::NTYPES, 0.0);
+        for (int typ = 0; typ < PType::NTYPES; typ++) {
             amrex::Gpu::DeviceVector<amrex::Real> ts_mins(
                 np, constants::LARGE_NUM);
             amrex::Gpu::DeviceVector<amrex::Real> ts_maxs(np, 0.0);
@@ -346,8 +345,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
             }
             AMREX_ASSERT(ts_min[typ] < ts_max[typ]);
         }
-        amrex::Gpu::DeviceVector<amrex::Real> d_ts_min(ntypes);
-        amrex::Gpu::DeviceVector<amrex::Real> d_ts_max(ntypes);
+        amrex::Gpu::DeviceVector<amrex::Real> d_ts_min(PType::NTYPES);
+        amrex::Gpu::DeviceVector<amrex::Real> d_ts_max(PType::NTYPES);
         amrex::Gpu::copy(
             amrex::Gpu::hostToDevice, ts_min.begin(), ts_min.end(),
             d_ts_min.begin());
@@ -356,11 +355,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
             d_ts_max.begin());
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(bounds);
-
-        // for (int typ = 0; typ < ntypes; typ++) {
-        //   amrex::Print() << "min/max of ts to type: " << typ << " " <<
-        //   d_ts_min[typ] << " / " << d_ts_max[typ] << std::endl;
-        // }
 
         BL_PROFILE_VAR(
             "spades::SpadesParticleContainer::sort2::encode", encode);
@@ -467,11 +461,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
                 const auto& p2 = p_encode[yi];
                 return p1 < p2;
             });
-        // std::sort(
-        //     cell_list.begin(), cell_list.end(),
-        //     [=](const amrex::Long xi, const amrex::Long yi) {
-        //       return p_encode[xi] < p_encode[yi];
-        //     });
 #endif
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(sort);
