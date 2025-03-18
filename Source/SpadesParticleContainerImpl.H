@@ -288,12 +288,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 }
 
 template <typename PType, int NStructReal, int NStructInt>
-template <typename CompareFunc>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
-    const CompareFunc& compare)
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::SpadesParticleContainer::sort_impl2()");
+    BL_PROFILE("spades::SpadesParticleContainer::radix_sort_impl()");
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -307,7 +305,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
         }
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::sort2::sort_prep", prep);
+            "spades::SpadesParticleContainer::radix_sort::sort_prep", prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
@@ -317,7 +315,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
         BL_PROFILE_VAR_STOP(prep);
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::sort2::bounds", bounds);
+            "spades::SpadesParticleContainer::radix_sort::bounds", bounds);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
         amrex::Vector<amrex::Real> ts_min(PType::NTYPES, 0.0);
@@ -357,7 +355,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
         BL_PROFILE_VAR_STOP(bounds);
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::sort2::encode", encode);
+            "spades::SpadesParticleContainer::radix_sort::encode", encode);
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
         auto* p_encode = encode.data();
         const auto* p_ts_min = d_ts_min.data();
@@ -427,7 +425,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
         BL_PROFILE_VAR_STOP(encode);
 
         // Sort particle indices based on the cell index
-        BL_PROFILE_VAR("spades::SpadesParticleContainer::sort2::sort", sort);
+        BL_PROFILE_VAR("spades::SpadesParticleContainer::radix_sort::sort", sort);
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
         thrust::sort_by_key(
@@ -467,7 +465,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl2(
 
         // Reorder the particles in memory
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::sort2::"
+            "spades::SpadesParticleContainer::radix_sort::"
             "ReorderParticles",
             reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
