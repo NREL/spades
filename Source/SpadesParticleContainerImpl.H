@@ -348,6 +348,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         auto* p_encode = encode.data();
         const auto* p_ts_min = d_ts_min.data();
         const auto* p_ts_max = d_ts_max.data();
+        AMREX_ASSERT(
+            PType::NTYPES <= max_representation(constants::TYPE_NBITS));
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             // const amrex::IntVect piv(AMREX_D_DECL(
@@ -356,7 +358,18 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             //                            p.idata(CommonIntData::k)));
             AMREX_D_EXPR(
                 AMREX_ASSERT(p.idata(CommonIntData::i) >= 0),
-                p.idata(CommonIntData::j) >= 0, p.idata(CommonIntData::k) >= 0);
+                AMREX_ASSERT(p.idata(CommonIntData::j) >= 0),
+                AMREX_ASSERT(p.idata(CommonIntData::k) >= 0));
+            AMREX_D_EXPR(
+                AMREX_ASSERT(
+                    p.idata(CommonIntData::i) <=
+                    max_representation(constants::I_NBITS)),
+                AMREX_ASSERT(
+                    p.idata(CommonIntData::j) <=
+                    max_representation(constants::J_NBITS)),
+                AMREX_ASSERT(
+                    p.idata(CommonIntData::k) <=
+                    max_representation(constants::K_NBITS)));
             AMREX_ASSERT(p.idata(CommonIntData::type_id) >= 0);
             AMREX_ASSERT(
                 p.rdata(CommonRealData::timestamp) >=
@@ -386,22 +399,27 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             // So (0,1) > (1,0), which means it sorts by the last index first,
             // which is the opposite of first i, then j. Let's keep the iv order
             // for now.
+            int shift = constants::TOTAL_NBITS;
+            shift -= constants::J_NBITS;
             const std::uint64_t j =
                 static_cast<std::uint64_t>(p.idata(CommonIntData::j) & 0xFFFF)
-                << 48;
+                << shift;
+            shift -= constants::I_NBITS;
             const std::uint64_t i =
                 static_cast<std::uint64_t>(p.idata(CommonIntData::i) & 0xFFFF)
-                << 32;
+                << shift;
+            shift -= constants::TYPE_NBITS;
             const std::uint64_t m = static_cast<std::uint64_t>(
                                         p.idata(CommonIntData::type_id) & 0xFF)
-                                    << 24;
+                                    << shift;
             const amrex::Real min_t = p_ts_min[p.idata(CommonIntData::type_id)];
             const amrex::Real max_t = p_ts_max[p.idata(CommonIntData::type_id)];
             const auto normalized =
                 (p.rdata(CommonRealData::timestamp) - min_t) / (max_t - min_t);
             const std::uint64_t t =
-                static_cast<std::uint64_t>((normalized * ((1 << 24) - 1))) &
+                static_cast<std::uint64_t>((normalized * ((1 << shift) - 1))) &
                 0xFFFFFF;
+            AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = j | i | m | t;
             // amrex::Print() << "encode at " << pindex << " is " <<

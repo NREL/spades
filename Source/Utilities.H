@@ -41,6 +41,22 @@ random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
 amrex::Real random_exponential(const amrex::Real lambda);
 
 /**
+   @brief Maximum unsigned integer representation given a number of bits
+   @param nbits [in] number of bits
+   @return maximum integer representation
+ **/
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE std::uint64_t
+max_representation(const int nbits)
+{
+    AMREX_ASSERT(nbits < 64);
+    std::uint64_t result = 2;
+    for (int i = 0; i < nbits; i++) {
+        result *= 2;
+    }
+    return result;
+}
+
+/**
    @brief Skip to the next line in stream
    @param is [in, out] stream
  **/
