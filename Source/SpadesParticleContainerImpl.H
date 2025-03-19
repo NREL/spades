@@ -238,6 +238,39 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
         this->ReorderParticles(LEV, mfi, cell_list.data());
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(reorder);
+
+#ifdef AMREX_DEBUG
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::merge_sort::check", check);
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            if (pindex > 0) {
+                const auto& pm = pstruct[pindex - 1];
+                const auto& p = pstruct[pindex];
+                const amrex::IntVect pivm(AMREX_D_DECL(
+                    pm.idata(CommonIntData::i), pm.idata(CommonIntData::j),
+                    pm.idata(CommonIntData::k)));
+                const amrex::IntVect piv(AMREX_D_DECL(
+                    p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                    p.idata(CommonIntData::k)));
+                if ((pm.idata(CommonIntData::type_id) ==
+                     p.idata(CommonIntData::type_id)) &&
+                    (pivm == piv)) {
+                  AMREX_ASSERT(pm.rdata(CommonRealData::timestamp) <=
+                               p.rdata(CommonRealData::timestamp));
+                    // if (pm.rdata(CommonRealData::timestamp) >
+                    //     p.rdata(CommonRealData::timestamp)) {
+                    //   amrex::Abort();
+                    //     printf(
+                    //         "OOPS %f > %f\n",
+                    //         pm.rdata(CommonRealData::timestamp),
+                    //         p.rdata(CommonRealData::timestamp));
+                    // }
+                }
+            }
+        });
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(check);
+#endif
     }
     update_counts();
 }
@@ -443,15 +476,15 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 if ((pm.idata(CommonIntData::type_id) ==
                      p.idata(CommonIntData::type_id)) &&
                     (pivm == piv)) {
-                    if (pm.rdata(CommonRealData::timestamp) >
-                        p.rdata(CommonRealData::timestamp)) {
-                        printf(
-                            "OOPS %f > %f\n",
-                            pm.rdata(CommonRealData::timestamp),
-                            p.rdata(CommonRealData::timestamp));
-                    }
-                    // AMREX_ASSERT(pm.rdata(CommonRealData::timestamp) <=
-                    // p.rdata(CommonRealData::timestamp));
+                  AMREX_ASSERT(pm.rdata(CommonRealData::timestamp) <=
+                               p.rdata(CommonRealData::timestamp));
+                    // if (pm.rdata(CommonRealData::timestamp) >
+                    //     p.rdata(CommonRealData::timestamp)) {
+                    //     printf(
+                    //         "OOPS %f > %f\n",
+                    //         pm.rdata(CommonRealData::timestamp),
+                    //         p.rdata(CommonRealData::timestamp));
+                    // }
                 }
             }
         });

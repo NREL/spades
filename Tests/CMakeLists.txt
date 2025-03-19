@@ -127,6 +127,10 @@ add_test_r(phold)
 add_test_r(phold-greedy)
 add_test_r(phold-conservative)
 add_test_r(phold-multi-entity)
+add_test_r(phold-radix)
+add_test_r(phold-greedy-radix)
+add_test_r(phold-conservative-radix)
+add_test_r(phold-multi-entity-radix)
 
 #=============================================================================
 # Seed test
