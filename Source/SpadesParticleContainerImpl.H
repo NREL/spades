@@ -255,8 +255,9 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
                 if ((pm.idata(CommonIntData::type_id) ==
                      p.idata(CommonIntData::type_id)) &&
                     (pivm == piv)) {
-                  AMREX_ASSERT(pm.rdata(CommonRealData::timestamp) <=
-                               p.rdata(CommonRealData::timestamp));
+                    AMREX_ASSERT(
+                        pm.rdata(CommonRealData::timestamp) <=
+                        p.rdata(CommonRealData::timestamp));
                     // if (pm.rdata(CommonRealData::timestamp) >
                     //     p.rdata(CommonRealData::timestamp)) {
                     //   amrex::Abort();
@@ -476,8 +477,9 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 if ((pm.idata(CommonIntData::type_id) ==
                      p.idata(CommonIntData::type_id)) &&
                     (pivm == piv)) {
-                  AMREX_ASSERT(pm.rdata(CommonRealData::timestamp) <=
-                               p.rdata(CommonRealData::timestamp));
+                    AMREX_ASSERT(
+                        pm.rdata(CommonRealData::timestamp) <=
+                        p.rdata(CommonRealData::timestamp));
                     // if (pm.rdata(CommonRealData::timestamp) >
                     //     p.rdata(CommonRealData::timestamp)) {
                     //     printf(
