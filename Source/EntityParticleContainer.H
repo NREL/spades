@@ -59,8 +59,18 @@ public:
         write_plot_file_impl(plt_filename, identifier());
     };
 
+    //! Read user parameters
+    void read_parameters() override;
+
     //! Initialize variable names
     void initialize_variable_names() override;
+
+private:
+    //! Initial entities per LP
+    int m_entities_per_lp{1};
+
+    //! Sort type
+    std::string m_sort_type{"merge"};
 };
 } // namespace spades::particles
 #endif

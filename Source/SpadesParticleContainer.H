@@ -118,10 +118,17 @@ public:
       @brief Sort the particles implementation
       @param compare [in] comparison functor
     **/
-    //!
     template <typename CompareFunctor>
-    void sort_impl(const CompareFunctor& compare);
+    void sort_impl(const std::string& sort_type, const CompareFunctor& compare);
 
+    /**
+      @brief Merge sort the particles implementation
+      @param compare [in] comparison functor
+    **/
+    template <typename CompareFunctor>
+    void merge_sort_impl(const CompareFunctor& compare);
+
+    //! Radix sort the particles implementation
     void radix_sort_impl();
 
     //! Reposition the particles inside a cell for visualization
@@ -139,6 +146,9 @@ public:
     //! Level index
     static constexpr int LEV{0};
 
+    //! Read user parameters
+    virtual void read_parameters() = 0;
+
     //! Initialize variable names
     virtual void initialize_variable_names() = 0;
 
@@ -149,6 +159,16 @@ public:
     **/
     void write_plot_file_impl(
         const std::string& plt_filename, const std::string& name);
+
+    //! Check valid sort type
+    void check_sort_type(const std::string& sort_type)
+    {
+        const amrex::Vector<std::string> valid_types = {"merge", "radix"};
+        if (std::find(valid_types.cbegin(), valid_types.cend(), sort_type) ==
+            valid_types.cend()) {
+            amrex::Abort("Invalid sort type. Must be merge or radix");
+        }
+    }
 
 protected:
     //! Number of grow cells

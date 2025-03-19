@@ -145,10 +145,25 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::update_counts()
 template <typename PType, int NStructReal, int NStructInt>
 template <typename CompareFunc>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
+    const std::string& sort_type, const CompareFunc& compare)
+{
+    BL_PROFILE("spades::SpadesParticleContainer::sort_impl()");
+    if (sort_type == "merge") {
+        merge_sort_impl(compare);
+    } else if (sort_type == "radix") {
+        radix_sort_impl();
+    } else {
+        amrex::Abort("Invalid sort type. Must be merge or radix");
+    }
+}
+
+template <typename PType, int NStructReal, int NStructInt>
+template <typename CompareFunc>
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
     const CompareFunc& compare)
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::SpadesParticleContainer::sort_impl()");
+    BL_PROFILE("spades::SpadesParticleContainer::merge_sort_impl()");
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -162,7 +177,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
         }
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::sort::sort_prep", prep);
+            "spades::SpadesParticleContainer::merge_sort::sort_prep", prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
@@ -172,7 +187,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
         BL_PROFILE_VAR_STOP(prep);
 
         // Sort particle indices based on the cell index
-        BL_PROFILE_VAR("spades::SpadesParticleContainer::sort::sort", sort);
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::merge_sort::sort", sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
 #ifdef AMREX_USE_GPU
@@ -216,7 +232,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
 
         // Reorder the particles in memory
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::sort::"
+            "spades::SpadesParticleContainer::merge_sort::"
             "ReorderParticles",
             reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
@@ -225,68 +241,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
     }
     update_counts();
 }
-
-template <typename PType, int NStructReal, int NStructInt>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::
-    reposition_particles()
-{
-    BL_PROFILE("spades::SpadesParticleContainer::reposition_particles()");
-
-    const auto& plo = this->Geom(LEV).ProbLoArray();
-    const auto& dx = this->Geom(LEV).CellSizeArray();
-#ifdef AMREX_DEBUG
-    const auto& dxi = this->Geom(LEV).InvCellSizeArray();
-    const auto& dom = this->Geom(LEV).Domain();
-#endif
-    const int nbins = 500;
-
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
-#endif
-    for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
-        const amrex::Box& box = mfi.tilebox();
-        const int gid = mfi.index();
-        const int tid = mfi.LocalTileIndex();
-        const auto& cnt_arr = m_counts.const_array(mfi);
-        const auto& offsets_arr = m_offsets.const_array(mfi);
-        const auto index = std::make_pair(gid, tid);
-        auto& pti = this->GetParticles(LEV)[index];
-        auto& particles = pti.GetArrayOfStructs();
-        auto* pstruct = particles().dataPtr();
-
-        amrex::ParallelFor(
-            box, [=] AMREX_GPU_DEVICE(
-                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
-                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
-
-                for (int typ = 0; typ < PType::NTYPES; typ++) {
-                    AMREX_ASSERT(cnt_arr(iv, typ) < nbins);
-                    for (int n = 0; n < cnt_arr(iv, typ); n++) {
-                        auto& p = getter(n, typ);
-
-                        const amrex::IntVect piv(AMREX_D_DECL(
-                            p.idata(CommonIntData::i),
-                            p.idata(CommonIntData::j),
-                            p.idata(CommonIntData::k)));
-                        AMREX_ASSERT(piv == iv);
-
-                        AMREX_D_TERM(
-                            p.pos(0) = plo[0] + iv[0] * dx[0] +
-                                       (typ + 1) * dx[0] / (PType::NTYPES + 1);
-                            , p.pos(1) = plo[1] + iv[1] * dx[1] +
-                                         (n + 1) * dx[1] / nbins;
-                            , p.pos(2) =
-                                  plo[2] + (iv[2] + constants::HALF) * dx[2];)
-
-                        // ensure the particle didn't change cells
-                        AMREX_ASSERT(piv == getParticleCell(p, plo, dxi, dom));
-                    }
-                }
-            });
-    }
-}
-
 template <typename PType, int NStructReal, int NStructInt>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
 {
@@ -425,7 +379,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         BL_PROFILE_VAR_STOP(encode);
 
         // Sort particle indices based on the cell index
-        BL_PROFILE_VAR("spades::SpadesParticleContainer::radix_sort::sort", sort);
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::radix_sort::sort", sort);
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
         thrust::sort_by_key(
@@ -471,8 +426,101 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         this->ReorderParticles(LEV, mfi, cell_list.data());
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(reorder);
+
+#ifdef AMREX_DEBUG
+        BL_PROFILE_VAR(
+            "spades::SpadesParticleContainer::radix_sort::check", check);
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            if (pindex > 0) {
+                const auto& pm = pstruct[pindex - 1];
+                const auto& p = pstruct[pindex];
+                const amrex::IntVect pivm(AMREX_D_DECL(
+                    pm.idata(CommonIntData::i), pm.idata(CommonIntData::j),
+                    pm.idata(CommonIntData::k)));
+                const amrex::IntVect piv(AMREX_D_DECL(
+                    p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                    p.idata(CommonIntData::k)));
+                if ((pm.idata(CommonIntData::type_id) ==
+                     p.idata(CommonIntData::type_id)) &&
+                    (pivm == piv)) {
+                    if (pm.rdata(CommonRealData::timestamp) >
+                        p.rdata(CommonRealData::timestamp)) {
+                        printf(
+                            "OOPS %f > %f\n",
+                            pm.rdata(CommonRealData::timestamp),
+                            p.rdata(CommonRealData::timestamp));
+                    }
+                    // AMREX_ASSERT(pm.rdata(CommonRealData::timestamp) <=
+                    // p.rdata(CommonRealData::timestamp));
+                }
+            }
+        });
+        amrex::Gpu::Device::synchronize();
+        BL_PROFILE_VAR_STOP(check);
+#endif
     }
     update_counts();
+}
+
+template <typename PType, int NStructReal, int NStructInt>
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::
+    reposition_particles()
+{
+    BL_PROFILE("spades::SpadesParticleContainer::reposition_particles()");
+
+    const auto& plo = this->Geom(LEV).ProbLoArray();
+    const auto& dx = this->Geom(LEV).CellSizeArray();
+#ifdef AMREX_DEBUG
+    const auto& dxi = this->Geom(LEV).InvCellSizeArray();
+    const auto& dom = this->Geom(LEV).Domain();
+#endif
+    const int nbins = 500;
+
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+    for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto& cnt_arr = m_counts.const_array(mfi);
+        const auto& offsets_arr = m_offsets.const_array(mfi);
+        const auto index = std::make_pair(gid, tid);
+        auto& pti = this->GetParticles(LEV)[index];
+        auto& particles = pti.GetArrayOfStructs();
+        auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelFor(
+            box, [=] AMREX_GPU_DEVICE(
+                     int i, int j, int AMREX_D_PICK(, , k)) noexcept {
+                const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto getter = Get(iv, cnt_arr, offsets_arr, pstruct);
+
+                for (int typ = 0; typ < PType::NTYPES; typ++) {
+                    AMREX_ASSERT(cnt_arr(iv, typ) < nbins);
+                    for (int n = 0; n < cnt_arr(iv, typ); n++) {
+                        auto& p = getter(n, typ);
+
+                        const amrex::IntVect piv(AMREX_D_DECL(
+                            p.idata(CommonIntData::i),
+                            p.idata(CommonIntData::j),
+                            p.idata(CommonIntData::k)));
+                        AMREX_ASSERT(piv == iv);
+
+                        AMREX_D_TERM(
+                            p.pos(0) = plo[0] + iv[0] * dx[0] +
+                                       (typ + 1) * dx[0] / (PType::NTYPES + 1);
+                            , p.pos(1) = plo[1] + iv[1] * dx[1] +
+                                         (n + 1) * dx[1] / nbins;
+                            , p.pos(2) =
+                                  plo[2] + (iv[2] + constants::HALF) * dx[2];)
+
+                        // ensure the particle didn't change cells
+                        AMREX_ASSERT(piv == getParticleCell(p, plo, dxi, dom));
+                    }
+                }
+            });
+    }
 }
 
 template <typename PType, int NStructReal, int NStructInt>

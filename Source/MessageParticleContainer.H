@@ -77,18 +77,18 @@ public:
         write_plot_file_impl(plt_filename, identifier());
     };
 
+    //! Read user parameters
+    void read_parameters() override;
+
     //! Initialize variable names
     void initialize_variable_names() override;
 
 private:
-    //! Lower bound for undefined message counts
-    const int m_lower_undefined_count{40};
+    //! Initial messages per LP
+    int m_messages_per_lp{1};
 
-    //! Reset value for undefined message counts
-    const int m_reset_undefined_count{50};
-
-    //! Upper bound for undefined message counts
-    const int m_upper_undefined_count{100};
+    //! Sort type
+    std::string m_sort_type{"merge"};
 };
 } // namespace spades::particles
 #endif

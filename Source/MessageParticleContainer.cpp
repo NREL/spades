@@ -9,7 +9,9 @@ MessageParticleContainer::MessageParticleContainer(
           MessageTypes,
           MessageRealData::ncomps,
           MessageIntData::ncomps>(par_gdb, ngrow)
-{}
+{
+    read_parameters();
+}
 
 MessageParticleContainer::MessageParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
@@ -20,7 +22,19 @@ MessageParticleContainer::MessageParticleContainer(
           MessageTypes,
           MessageRealData::ncomps,
           MessageIntData::ncomps>(geom, dmap, ba, ngrow)
-{}
+{
+    read_parameters();
+}
+
+void MessageParticleContainer::read_parameters()
+{
+    {
+        amrex::ParmParse pp("spades");
+        pp.query("messages_per_lp", m_messages_per_lp);
+        pp.query("sort_type", m_sort_type);
+        check_sort_type(m_sort_type);
+    }
+}
 
 void MessageParticleContainer::initialize_variable_names()
 {
@@ -225,11 +239,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     //         }
     //     }
 
-    int messages_per_lp = 1;
-    {
-        amrex::ParmParse pp("spades");
-        pp.query("messages_per_lp", messages_per_lp);
-    }
+    const auto messages_per_lp = m_messages_per_lp;
     const int total_messages_per_lp = 3 * messages_per_lp;
     AMREX_ALWAYS_ASSERT(total_messages_per_lp > messages_per_lp);
 
@@ -339,8 +349,7 @@ void MessageParticleContainer::sort()
 {
     BL_PROFILE("spades::MessageParticleContainer::sort()");
 
-    // sort_impl(CompareMessage());
-    radix_sort_impl(CompareMessage());
+    sort_impl(m_sort_type, CompareMessage());
 }
 
 void MessageParticleContainer::update_undefined()
@@ -350,11 +359,6 @@ void MessageParticleContainer::update_undefined()
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
-    const int lower_count = m_lower_undefined_count;
-    const int upper_count = m_upper_undefined_count;
-    const int reset_count = m_reset_undefined_count;
-    AMREX_ALWAYS_ASSERT(reset_count < upper_count);
-    AMREX_ALWAYS_ASSERT(lower_count < reset_count);
     int n_removals = 0;
 
     MessageParticleContainer pc_adds(
