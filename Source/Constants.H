@@ -48,7 +48,7 @@ static constexpr int RNG_FILE_NAME_DIGITS = 10;
 static constexpr int HEADER_FILE_PRECISION = 17;
 
 //! Maximum number of rollback iterations allowed
-static constexpr int MAX_ROLLBACK_ITERS = 10;
+static constexpr int MAX_ROLLBACK_ITERS = 20;
 
 #if (AMREX_SPACEDIM == 1)
 //! Bits to encode the cell i value
