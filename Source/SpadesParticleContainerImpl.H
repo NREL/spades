@@ -385,15 +385,18 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             int shift = constants::TOTAL_NBITS;
             shift -= constants::J_NBITS;
             const std::uint64_t j =
-                static_cast<std::uint64_t>(p.idata(CommonIntData::j) & 0xFFFF)
+                static_cast<std::uint64_t>(
+                    p.idata(CommonIntData::j) & bitmask(constants::J_NBITS))
                 << shift;
             shift -= constants::I_NBITS;
             const std::uint64_t i =
-                static_cast<std::uint64_t>(p.idata(CommonIntData::i) & 0xFFFF)
+                static_cast<std::uint64_t>(
+                    p.idata(CommonIntData::i) & bitmask(constants::I_NBITS))
                 << shift;
             shift -= constants::TYPE_NBITS;
             const std::uint64_t m = static_cast<std::uint64_t>(
-                                        p.idata(CommonIntData::type_id) & 0xF)
+                                        p.idata(CommonIntData::type_id) &
+                                        bitmask(constants::TYPE_NBITS))
                                     << shift;
             const amrex::Real min_t = p_ts_min[p.idata(CommonIntData::type_id)];
             const amrex::Real max_t = p_ts_max[p.idata(CommonIntData::type_id)];
@@ -401,7 +404,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 (p.rdata(CommonRealData::timestamp) - min_t) / (max_t - min_t);
             const std::uint64_t t =
                 static_cast<std::uint64_t>((normalized * ((1 << shift) - 1))) &
-                0xFFFFFFF;
+                bitmask(constants::TIMESTAMP_NBITS);
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = j | i | m | t;

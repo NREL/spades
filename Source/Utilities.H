@@ -57,6 +57,20 @@ max_representation(const int nbits)
 }
 
 /**
+   @brief bitmask given a number of bits
+   @param nbits [in] number of bits
+   @return bitmask
+ **/
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE std::uint64_t bitmask(const int nbits)
+{
+    AMREX_ASSERT(nbits < 64);
+    // Shift 1 by nbits (create power of 2)
+    // Subtract 1 to fill all lower nbits with 1s
+    // bitmask(16): 0xFFFF
+    return (1ULL << nbits) - 1;
+}
+
+/**
    @brief Skip to the next line in stream
    @param is [in, out] stream
  **/
