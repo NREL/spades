@@ -434,8 +434,14 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             "spades::SpadesParticleContainer::radix_sort::sort", sort);
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
-        thrust::sort_by_key(
-            thrust::device, encode.begin(), encode.end(), cell_list.begin());
+        thrust::sort(
+            thrust::device, cell_list.begin(), cell_list.end(),
+            [=] AMREX_GPU_DEVICE(
+                const amrex::Long xi, const amrex::Long yi) noexcept {
+                return p_encode[xi] < p_encode[yi];
+            });
+        // thrust::sort_by_key(
+        //     thrust::device, encode.begin(), encode.end(), cell_list.begin());
 #else
         // Perform sort on CPU, then copy back to device (not good)
         amrex::Vector<amrex::Long> h_cell_list(np, 0);
