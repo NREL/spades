@@ -383,11 +383,20 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 (0.0 - constants::SMALL_NUM));
 
             int shift = constants::TOTAL_NBITS;
+#if AMREX_SPACEDIM == 3
+            shift -= constants::K_NBITS;
+            const std::uint64_t k =
+                static_cast<std::uint64_t>(
+                    p.idata(CommonIntData::k) & bitmask(constants::K_NBITS))
+                << shift;
+#endif
+#if AMREX_SPACEDIM >= 2
             shift -= constants::J_NBITS;
             const std::uint64_t j =
                 static_cast<std::uint64_t>(
                     p.idata(CommonIntData::j) & bitmask(constants::J_NBITS))
                 << shift;
+#endif
             shift -= constants::I_NBITS;
             const std::uint64_t i =
                 static_cast<std::uint64_t>(

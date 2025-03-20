@@ -50,7 +50,17 @@ static constexpr int HEADER_FILE_PRECISION = 17;
 //! Maximum number of rollback iterations allowed
 static constexpr int MAX_ROLLBACK_ITERS = 10;
 
-#if (AMREX_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 1)
+//! Bits to encode the cell i value
+static constexpr int I_NBITS = 32;
+
+//! Bits to encode the cell j value
+static constexpr int J_NBITS = 0;
+
+//! Bits to encode the cell k value
+static constexpr int K_NBITS = 0;
+
+#elif (AMREX_SPACEDIM == 2)
 //! Bits to encode the cell i value
 static constexpr int I_NBITS = 16;
 
@@ -60,14 +70,24 @@ static constexpr int J_NBITS = 16;
 //! Bits to encode the cell k value
 static constexpr int K_NBITS = 0;
 
+#elif (AMREX_SPACEDIM == 3)
+//! Bits to encode the cell i value
+static constexpr int I_NBITS = 11;
+
+//! Bits to encode the cell j value
+static constexpr int J_NBITS = 11;
+
+//! Bits to encode the cell k value
+static constexpr int K_NBITS = 10;
+#endif
+
 //! Bits to encode the type
 static constexpr int TYPE_NBITS = 4;
 
 //! Bits to encode the timestamp
 static constexpr int TIMESTAMP_NBITS = 28;
-#endif
 
-//! Bits to encode the timestamp
+//! Bits to encode the full representation
 static constexpr int TOTAL_NBITS = 64;
 
 } // namespace spades::constants
