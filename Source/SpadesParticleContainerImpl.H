@@ -416,7 +416,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 bitmask(constants::TIMESTAMP_NBITS);
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
-            p_encode[pindex] = j | i | m | t;
+            p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | m | t;
             // const amrex::IntVect piv(AMREX_D_DECL(
             //                            p.idata(CommonIntData::i),
             //                            p.idata(CommonIntData::j),
