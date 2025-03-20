@@ -90,5 +90,50 @@ void read_file(
     amrex::Vector<char>& charBuf,
     bool bExitOnError);
 
+template <typename T, size_t NC, typename N, typename F>
+amrex::GpuArray<T, 2 * NC> MultiMinMax(N n, F const& f)
+{
+    if constexpr (NC == 5) {
+        amrex::ReduceOps<
+            amrex::ReduceOpMin, amrex::ReduceOpMax, amrex::ReduceOpMin,
+            amrex::ReduceOpMax, amrex::ReduceOpMin, amrex::ReduceOpMax,
+            amrex::ReduceOpMin, amrex::ReduceOpMax, amrex::ReduceOpMin,
+            amrex::ReduceOpMax>
+            reduce_op;
+        amrex::ReduceData<T, T, T, T, T, T, T, T, T, T> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+        reduce_op.eval(
+            n, reduce_data, [=] AMREX_GPU_DEVICE(N i) -> ReduceTuple {
+                amrex::GpuArray<T, 2 * NC> tmp = f(i);
+                return {tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                        tmp[5], tmp[6], tmp[7], tmp[8], tmp[9]};
+            });
+        auto hv = reduce_data.value(reduce_op);
+        return {amrex::get<0>(hv), amrex::get<1>(hv), amrex::get<2>(hv),
+                amrex::get<3>(hv), amrex::get<4>(hv), amrex::get<5>(hv),
+                amrex::get<6>(hv), amrex::get<7>(hv), amrex::get<8>(hv),
+                amrex::get<9>(hv)};
+    } else if constexpr (NC == 3) {
+        amrex::ReduceOps<
+            amrex::ReduceOpMin, amrex::ReduceOpMax, amrex::ReduceOpMin,
+            amrex::ReduceOpMax, amrex::ReduceOpMin, amrex::ReduceOpMax>
+            reduce_op;
+        amrex::ReduceData<T, T, T, T, T, T> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+        reduce_op.eval(
+            n, reduce_data, [=] AMREX_GPU_DEVICE(N i) -> ReduceTuple {
+                amrex::GpuArray<T, 2 * NC> tmp = f(i);
+                return {tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5]};
+            });
+        auto hv = reduce_data.value(reduce_op);
+        return {amrex::get<0>(hv), amrex::get<1>(hv), amrex::get<2>(hv),
+                amrex::get<3>(hv), amrex::get<4>(hv), amrex::get<5>(hv)};
+    } else {
+        static_assert(
+            NC == 5 || NC == 3,
+            "Invalid template parameter. Only NTYPES for entities and messages "
+            "allowed.");
+    }
+}
 } // namespace spades
 #endif
