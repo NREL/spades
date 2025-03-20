@@ -155,6 +155,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
     } else {
         amrex::Abort("Invalid sort type. Must be merge or radix");
     }
+    update_counts();
 }
 
 template <typename PType, int NStructReal, int NStructInt>
@@ -273,8 +274,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
         BL_PROFILE_VAR_STOP(check);
 #endif
     }
-    update_counts();
 }
+
 template <typename PType, int NStructReal, int NStructInt>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
 {
@@ -513,7 +514,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         BL_PROFILE_VAR_STOP(check);
 #endif
     }
-    update_counts();
 }
 
 template <typename PType, int NStructReal, int NStructInt>
