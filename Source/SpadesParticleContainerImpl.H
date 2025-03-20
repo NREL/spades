@@ -449,9 +449,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         std::sort(
             h_cell_list.begin(), h_cell_list.end(),
             [=](const amrex::Long xi, const amrex::Long yi) {
-                const auto& p1 = p_encode[xi];
-                const auto& p2 = p_encode[yi];
-                return p1 < p2;
+                return h_encode[xi] < h_encode[yi];
             });
         amrex::Gpu::copy(
             amrex::Gpu::hostToDevice, h_cell_list.begin(), h_cell_list.end(),
@@ -461,9 +459,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         std::sort(
             cell_list.begin(), cell_list.end(),
             [=](const amrex::Long xi, const amrex::Long yi) {
-                const auto& p1 = p_encode[xi];
-                const auto& p2 = p_encode[yi];
-                return p1 < p2;
+                return p_encode[xi] < p_encode[yi];
             });
 #endif
         amrex::Gpu::Device::synchronize();
