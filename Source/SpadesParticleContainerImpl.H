@@ -281,6 +281,19 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
     // Taking inspiration from AMReX's SortParticlesByBin
     BL_PROFILE("spades::SpadesParticleContainer::radix_sort_impl()");
 
+    const auto& dom = this->Geom(LEV).Domain();
+    const auto& dlo = dom.smallEnd();
+    const auto& dhi = dom.bigEnd();
+    AMREX_D_EXPR(
+        AMREX_ALWAYS_ASSERT(dlo[0] >= 0), AMREX_ALWAYS_ASSERT(dlo[1] >= 0),
+        AMREX_ALWAYS_ASSERT(dlo[2] >= 0));
+    AMREX_D_EXPR(
+        AMREX_ALWAYS_ASSERT(dhi[0] <= max_representation(constants::I_NBITS)),
+        AMREX_ALWAYS_ASSERT(dhi[1] <= max_representation(constants::J_NBITS)),
+        AMREX_ALWAYS_ASSERT(dhi[2] <= max_representation(constants::K_NBITS)));
+    AMREX_ALWAYS_ASSERT(
+        PType::NTYPES <= max_representation(constants::TYPE_NBITS));
+
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
@@ -348,8 +361,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         auto* p_encode = encode.data();
         const auto* p_ts_min = d_ts_min.data();
         const auto* p_ts_max = d_ts_max.data();
-        AMREX_ASSERT(
-            PType::NTYPES <= max_representation(constants::TYPE_NBITS));
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             // const amrex::IntVect piv(AMREX_D_DECL(
@@ -410,7 +421,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 << shift;
             shift -= constants::TYPE_NBITS;
             const std::uint64_t m = static_cast<std::uint64_t>(
-                                        p.idata(CommonIntData::type_id) & 0xFF)
+                                        p.idata(CommonIntData::type_id) & 0xF)
                                     << shift;
             const amrex::Real min_t = p_ts_min[p.idata(CommonIntData::type_id)];
             const amrex::Real max_t = p_ts_max[p.idata(CommonIntData::type_id)];
@@ -418,7 +429,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 (p.rdata(CommonRealData::timestamp) - min_t) / (max_t - min_t);
             const std::uint64_t t =
                 static_cast<std::uint64_t>((normalized * ((1 << shift) - 1))) &
-                0xFFFFFF;
+                0xFFFFFFF;
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = j | i | m | t;

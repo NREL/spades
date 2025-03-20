@@ -61,10 +61,10 @@ static constexpr int J_NBITS = 16;
 static constexpr int K_NBITS = 0;
 
 //! Bits to encode the type
-static constexpr int TYPE_NBITS = 8;
+static constexpr int TYPE_NBITS = 4;
 
 //! Bits to encode the timestamp
-static constexpr int TIMESTAMP_NBITS = 24;
+static constexpr int TIMESTAMP_NBITS = 28;
 #endif
 
 //! Bits to encode the timestamp
