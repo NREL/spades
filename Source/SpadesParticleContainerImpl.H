@@ -363,10 +363,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         const auto* p_ts_max = d_ts_max.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
-            // const amrex::IntVect piv(AMREX_D_DECL(
-            //                            p.idata(CommonIntData::i),
-            //                            p.idata(CommonIntData::j),
-            //                            p.idata(CommonIntData::k)));
             AMREX_D_EXPR(
                 AMREX_ASSERT(p.idata(CommonIntData::i) >= 0),
                 AMREX_ASSERT(p.idata(CommonIntData::j) >= 0),
@@ -386,30 +382,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 p.rdata(CommonRealData::timestamp) >=
                 (0.0 - constants::SMALL_NUM));
 
-            // const auto i =
-            // static_cast<std::uint16_t>(p.idata(CommonIntData::i)); const auto
-            // j = static_cast<std::uint16_t>(p.idata(CommonIntData::j)); const
-            // auto m =
-            // static_cast<std::uint8_t>(p.idata(CommonIntData::type_id));
-
-            // const auto t = p.rdata(CommonRealData::timestamp);
-            // const amrex::IntVect iv0(0,1);
-            // const amrex::IntVect iv1(1,0);
-            // if(iv0 < iv1){
-            //   amrex::Print() <<"(0,1) < (1,0)" << std::endl;
-            // }
-            // else{
-            //   amrex::Print() <<"(0,1) > (1,0)" << std::endl;
-            // }
-            // p_encode[pindex] = static_cast<std::uint64_t>(piv[0] + (1LL <<
-            // 31)); p_encode[pindex] =
-            // (static_cast<std::uint64_t>(p.idata(CommonIntData::i)) << 48) |
-            // (static_cast<std::uint64_t>(p.idata(CommonIntData::j)) << 32) |
-            // (static_cast<std::uint64_t>(p.idata(CommonIntData::type_id)) <<
-            // 24);
-            // So (0,1) > (1,0), which means it sorts by the last index first,
-            // which is the opposite of first i, then j. Let's keep the iv order
-            // for now.
             int shift = constants::TOTAL_NBITS;
             shift -= constants::J_NBITS;
             const std::uint64_t j =
@@ -433,6 +405,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = j | i | m | t;
+            // const amrex::IntVect piv(AMREX_D_DECL(
+            //                            p.idata(CommonIntData::i),
+            //                            p.idata(CommonIntData::j),
+            //                            p.idata(CommonIntData::k)));
             // amrex::Print() << "encode at " << pindex << " is " <<
             // p_encode[pindex] << " with iv: " << piv << ", type: " <<
             // p.idata(CommonIntData::type_id) << ", time: " <<
