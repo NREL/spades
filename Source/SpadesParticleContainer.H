@@ -111,6 +111,9 @@ public:
         return m_counts.max(typ);
     }
 
+    //! Check the result of the sort operation
+    void check_sort(const amrex::MFIter& mfi);
+
     //! Sort the particles
     virtual void sort() = 0;
 

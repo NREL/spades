@@ -143,6 +143,49 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::update_counts()
 }
 
 template <typename PType, int NStructReal, int NStructInt>
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::check_sort(
+    const amrex::MFIter& mfi)
+{
+    BL_PROFILE("spades::SpadesParticleContainer::check_sort()");
+    auto& particle_tile = this->ParticlesAt(LEV, mfi);
+    const size_t np = particle_tile.numParticles();
+    const auto& particles = particle_tile.GetArrayOfStructs();
+    const auto* pstruct = particles().dataPtr();
+    amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+        if (pindex > 0) {
+            const auto& pm = pstruct[pindex - 1];
+            const auto& p = pstruct[pindex];
+            const amrex::IntVect pivm(AMREX_D_DECL(
+                pm.idata(CommonIntData::i), pm.idata(CommonIntData::j),
+                pm.idata(CommonIntData::k)));
+            const amrex::IntVect piv(AMREX_D_DECL(
+                p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                p.idata(CommonIntData::k)));
+            if ((pm.idata(CommonIntData::type_id) ==
+                 p.idata(CommonIntData::type_id)) &&
+                (pivm == piv)) {
+                if (pm.rdata(CommonRealData::timestamp) >
+                    p.rdata(CommonRealData::timestamp)) {
+                    printf(
+                        "Unsorted time stamp %f > %f in ivm: (%d, %d) of type "
+                        "%d, iv: (%d,%d) of type %d\n",
+                        pm.rdata(CommonRealData::timestamp),
+                        p.rdata(CommonRealData::timestamp),
+                        pm.idata(CommonIntData::i), pm.idata(CommonIntData::j),
+                        pm.idata(CommonIntData::type_id),
+                        p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                        p.idata(CommonIntData::type_id));
+                }
+                AMREX_ASSERT(
+                    pm.rdata(CommonRealData::timestamp) <=
+                    p.rdata(CommonRealData::timestamp));
+            }
+        }
+    });
+    amrex::Gpu::Device::synchronize();
+}
+
+template <typename PType, int NStructReal, int NStructInt>
 template <typename CompareFunc>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
     const std::string& sort_type, const CompareFunc& compare)
@@ -241,37 +284,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
         BL_PROFILE_VAR_STOP(reorder);
 
 #ifdef AMREX_DEBUG
-        BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::merge_sort::check", check);
-        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
-            if (pindex > 0) {
-                const auto& pm = pstruct[pindex - 1];
-                const auto& p = pstruct[pindex];
-                const amrex::IntVect pivm(AMREX_D_DECL(
-                    pm.idata(CommonIntData::i), pm.idata(CommonIntData::j),
-                    pm.idata(CommonIntData::k)));
-                const amrex::IntVect piv(AMREX_D_DECL(
-                    p.idata(CommonIntData::i), p.idata(CommonIntData::j),
-                    p.idata(CommonIntData::k)));
-                if ((pm.idata(CommonIntData::type_id) ==
-                     p.idata(CommonIntData::type_id)) &&
-                    (pivm == piv)) {
-                    AMREX_ASSERT(
-                        pm.rdata(CommonRealData::timestamp) <=
-                        p.rdata(CommonRealData::timestamp));
-                    // if (pm.rdata(CommonRealData::timestamp) >
-                    //     p.rdata(CommonRealData::timestamp)) {
-                    //   amrex::Abort();
-                    //     printf(
-                    //         "OOPS %f > %f\n",
-                    //         pm.rdata(CommonRealData::timestamp),
-                    //         p.rdata(CommonRealData::timestamp));
-                    // }
-                }
-            }
-        });
-        amrex::Gpu::Device::synchronize();
-        BL_PROFILE_VAR_STOP(check);
+        check_sort(mfi);
 #endif
     }
 }
@@ -282,16 +295,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
     // Taking inspiration from AMReX's SortParticlesByBin
     BL_PROFILE("spades::SpadesParticleContainer::radix_sort_impl()");
 
-    const auto& dom = this->Geom(LEV).Domain();
-    const auto& dlo = dom.smallEnd();
-    const auto& dhi = dom.bigEnd();
-    AMREX_D_EXPR(
-        AMREX_ALWAYS_ASSERT(dlo[0] >= 0), AMREX_ALWAYS_ASSERT(dlo[1] >= 0),
-        AMREX_ALWAYS_ASSERT(dlo[2] >= 0));
-    AMREX_D_EXPR(
-        AMREX_ALWAYS_ASSERT(dhi[0] <= max_representation(constants::I_NBITS)),
-        AMREX_ALWAYS_ASSERT(dhi[1] <= max_representation(constants::J_NBITS)),
-        AMREX_ALWAYS_ASSERT(dhi[2] <= max_representation(constants::K_NBITS)));
     AMREX_ALWAYS_ASSERT(
         PType::NTYPES <= max_representation(constants::TYPE_NBITS));
 
@@ -404,24 +407,28 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             "spades::SpadesParticleContainer::radix_sort::encode", encode);
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
         auto* p_encode = encode.data();
+        const amrex::Box& box = mfi.tilebox();
+        const auto box_lo = box.smallEnd();
+        const auto box_hi = box.bigEnd();
         // const auto* p_ts_min = d_ts_min.data();
         // const auto* p_ts_max = d_ts_max.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
+            AMREX_D_TERM(
+                const auto pi = p.idata(CommonIntData::i) - box_lo[0];
+                , const auto pj = p.idata(CommonIntData::j) - box_lo[1];
+                , const auto pk = p.idata(CommonIntData::k) - box_lo[2];);
+
             AMREX_D_EXPR(
-                AMREX_ASSERT(p.idata(CommonIntData::i) >= 0),
-                AMREX_ASSERT(p.idata(CommonIntData::j) >= 0),
-                AMREX_ASSERT(p.idata(CommonIntData::k) >= 0));
+                AMREX_ALWAYS_ASSERT(pi >= 0), AMREX_ALWAYS_ASSERT(pj >= 0),
+                AMREX_ALWAYS_ASSERT(pk >= 0));
             AMREX_D_EXPR(
-                AMREX_ASSERT(
-                    p.idata(CommonIntData::i) <=
-                    max_representation(constants::I_NBITS)),
-                AMREX_ASSERT(
-                    p.idata(CommonIntData::j) <=
-                    max_representation(constants::J_NBITS)),
-                AMREX_ASSERT(
-                    p.idata(CommonIntData::k) <=
-                    max_representation(constants::K_NBITS)));
+                AMREX_ALWAYS_ASSERT(
+                    pi <= max_representation(constants::I_NBITS)),
+                AMREX_ALWAYS_ASSERT(
+                    pj <= max_representation(constants::J_NBITS)),
+                AMREX_ALWAYS_ASSERT(
+                    pk <= max_representation(constants::K_NBITS)));
             AMREX_ASSERT(p.idata(CommonIntData::type_id) >= 0);
             AMREX_ASSERT(
                 p.rdata(CommonRealData::timestamp) >=
@@ -431,21 +438,18 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
 #if AMREX_SPACEDIM == 3
             shift -= constants::K_NBITS;
             const std::uint64_t k =
-                static_cast<std::uint64_t>(
-                    p.idata(CommonIntData::k) & bitmask(constants::K_NBITS))
+                static_cast<std::uint64_t>(pk & bitmask(constants::K_NBITS))
                 << shift;
 #endif
 #if AMREX_SPACEDIM >= 2
             shift -= constants::J_NBITS;
             const std::uint64_t j =
-                static_cast<std::uint64_t>(
-                    p.idata(CommonIntData::j) & bitmask(constants::J_NBITS))
+                static_cast<std::uint64_t>(pj & bitmask(constants::J_NBITS))
                 << shift;
 #endif
             shift -= constants::I_NBITS;
             const std::uint64_t i =
-                static_cast<std::uint64_t>(
-                    p.idata(CommonIntData::i) & bitmask(constants::I_NBITS))
+                static_cast<std::uint64_t>(pi & bitmask(constants::I_NBITS))
                 << shift;
             shift -= constants::TYPE_NBITS;
             const std::uint64_t m = static_cast<std::uint64_t>(
@@ -456,22 +460,23 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
                 minmaxs[p.idata(CommonIntData::type_id) * 2];
             const amrex::Real max_t =
                 minmaxs[p.idata(CommonIntData::type_id) * 2 + 1];
-            const auto normalized =
+            const amrex::Real normalized =
                 (p.rdata(CommonRealData::timestamp) - min_t) / (max_t - min_t);
-            const std::uint64_t t =
-                static_cast<std::uint64_t>((normalized * ((1 << shift) - 1))) &
-                bitmask(constants::TIMESTAMP_NBITS);
+            const amrex::Real scaled = normalized * ((1ULL << shift) - 1);
+            const std::uint64_t t = static_cast<std::uint64_t>(
+                static_cast<std::uint32_t>(scaled) &
+                bitmask(constants::TIMESTAMP_NBITS));
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | m | t;
-            // const amrex::IntVect piv(AMREX_D_DECL(
-            //                            p.idata(CommonIntData::i),
-            //                            p.idata(CommonIntData::j),
-            //                            p.idata(CommonIntData::k)));
+            const amrex::IntVect piv(AMREX_D_DECL(
+                p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                p.idata(CommonIntData::k)));
             // amrex::Print() << "encode at " << pindex << " is " <<
             // p_encode[pindex] << " with iv: " << piv << ", type: " <<
             // p.idata(CommonIntData::type_id) << ", time: " <<
-            // p.rdata(CommonRealData::timestamp) << std::endl;
+            //   p.rdata(CommonRealData::timestamp) << " (encoded: " << t <<
+            //   ")"<< std::endl;
         });
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(encode);
@@ -528,36 +533,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         BL_PROFILE_VAR_STOP(reorder);
 
 #ifdef AMREX_DEBUG
-        BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::radix_sort::check", check);
-        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
-            if (pindex > 0) {
-                const auto& pm = pstruct[pindex - 1];
-                const auto& p = pstruct[pindex];
-                const amrex::IntVect pivm(AMREX_D_DECL(
-                    pm.idata(CommonIntData::i), pm.idata(CommonIntData::j),
-                    pm.idata(CommonIntData::k)));
-                const amrex::IntVect piv(AMREX_D_DECL(
-                    p.idata(CommonIntData::i), p.idata(CommonIntData::j),
-                    p.idata(CommonIntData::k)));
-                if ((pm.idata(CommonIntData::type_id) ==
-                     p.idata(CommonIntData::type_id)) &&
-                    (pivm == piv)) {
-                    AMREX_ASSERT(
-                        pm.rdata(CommonRealData::timestamp) <=
-                        p.rdata(CommonRealData::timestamp));
-                    // if (pm.rdata(CommonRealData::timestamp) >
-                    //     p.rdata(CommonRealData::timestamp)) {
-                    //     printf(
-                    //         "OOPS %f > %f\n",
-                    //         pm.rdata(CommonRealData::timestamp),
-                    //         p.rdata(CommonRealData::timestamp));
-                    // }
-                }
-            }
-        });
-        amrex::Gpu::Device::synchronize();
-        BL_PROFILE_VAR_STOP(check);
+        check_sort(mfi);
 #endif
     }
 }
