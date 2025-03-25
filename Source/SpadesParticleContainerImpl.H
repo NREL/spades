@@ -167,7 +167,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::check_sort(
                 if (pm.rdata(CommonRealData::timestamp) >
                     p.rdata(CommonRealData::timestamp)) {
                     printf(
-                        "Unsorted time stamp %f > %f in ivm: (%d, %d) of type "
+                        "Unsorted time stamp %.16f > %.16f in ivm: (%d, %d) of "
+                        "type "
                         "%d, iv: (%d,%d) of type %d\n",
                         pm.rdata(CommonRealData::timestamp),
                         p.rdata(CommonRealData::timestamp),
@@ -345,8 +346,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             }
         }
         // for (int typ = 0; typ < PType::NTYPES; typ++) {
-        //   amrex::Print() << "multi min/max of ts to type: " << typ << " " <<
-        //   minmaxs[typ*2] << " / " << minmaxs[typ*2+1] << std::endl;
+        //     amrex::Print() << "multi min/max of ts to type: "
+        //                    << std::setprecision(16) << typ << " "
+        //                    << minmaxs[typ * 2] << " / " << minmaxs[typ * 2 + 1]
+        //                    << std::endl;
         // }
         // for (int typ = 0; typ < PType::NTYPES; typ++) {
         //     const amrex::GpuArray<amrex::Real, 4> minmaxs =
@@ -469,14 +472,15 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | m | t;
-            const amrex::IntVect piv(AMREX_D_DECL(
-                p.idata(CommonIntData::i), p.idata(CommonIntData::j),
-                p.idata(CommonIntData::k)));
-            // amrex::Print() << "encode at " << pindex << " is " <<
-            // p_encode[pindex] << " with iv: " << piv << ", type: " <<
-            // p.idata(CommonIntData::type_id) << ", time: " <<
-            //   p.rdata(CommonRealData::timestamp) << " (encoded: " << t <<
-            //   ")"<< std::endl;
+            // const amrex::IntVect piv(AMREX_D_DECL(
+            //     p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+            //     p.idata(CommonIntData::k)));
+            // printf(
+            //     "encode at %ld is %lu with iv: (%d, %d), type: %d, time: "
+            //     "%.16f, (normalized: %.16f, scaled: %.16f, encoded: %lu)\n",
+            //     pindex, p_encode[pindex], piv[0], piv[1],
+            //     p.idata(CommonIntData::type_id),
+            //     p.rdata(CommonRealData::timestamp), normalized, scaled, t);
         });
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(encode);
