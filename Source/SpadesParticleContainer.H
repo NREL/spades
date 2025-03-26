@@ -131,8 +131,8 @@ public:
     template <typename CompareFunctor>
     void merge_sort_impl(const CompareFunctor& compare);
 
-    //! Radix sort the particles implementation
-    void radix_sort_impl();
+    //! Encoded sort the particles implementation
+    void encoded_sort_impl();
 
     //! Reposition the particles inside a cell for visualization
     void reposition_particles();
@@ -166,10 +166,10 @@ public:
     //! Check valid sort type
     void check_sort_type(const std::string& sort_type)
     {
-        const amrex::Vector<std::string> valid_types = {"merge", "radix"};
+        const amrex::Vector<std::string> valid_types = {"merge", "encoded"};
         if (std::find(valid_types.cbegin(), valid_types.cend(), sort_type) ==
             valid_types.cend()) {
-            amrex::Abort("Invalid sort type. Must be merge or radix");
+            amrex::Abort("Invalid sort type. Must be merge or encoded");
         }
     }
 

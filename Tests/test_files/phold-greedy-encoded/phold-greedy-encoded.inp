@@ -6,7 +6,7 @@ geometry.prob_hi     =   1.0  1.0  1.0
 geometry.is_periodic = 1 1 1
 
 # timestepping
-amr.n_cell  = 2 2 2
+amr.n_cell  = 16 16 16
 amr.max_level = 0
 amr.max_grid_size = 8
 amr.blocking_factor = 2
@@ -17,9 +17,9 @@ amr.v = 1
 spades.ic_type = "constant"
 spades.write_messages = t
 spades.write_entities = t
-spades.seed = 10
-spades.window_size = 0
-spades.sort_type = "radix"
+spades.seed = 42
+spades.messages_per_step = 1000
+spades.sort_type = "encoded"
 
 amrex.fpe_trap_invalid = 1
 amrex.fpe_trap_zero = 1

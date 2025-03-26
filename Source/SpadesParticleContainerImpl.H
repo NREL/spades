@@ -194,10 +194,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
     BL_PROFILE("spades::SpadesParticleContainer::sort_impl()");
     if (sort_type == "merge") {
         merge_sort_impl(compare);
-    } else if (sort_type == "radix") {
-        radix_sort_impl();
+    } else if (sort_type == "encoded") {
+        encoded_sort_impl();
     } else {
-        amrex::Abort("Invalid sort type. Must be merge or radix");
+        amrex::Abort("Invalid sort type. Must be merge or encoded");
     }
     update_counts();
 }
@@ -291,10 +291,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
 }
 
 template <typename PType, int NStructReal, int NStructInt>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::SpadesParticleContainer::radix_sort_impl()");
+    BL_PROFILE("spades::SpadesParticleContainer::encoded_sort_impl()");
 
     AMREX_ALWAYS_ASSERT(
         PType::NTYPES <= max_representation(constants::TYPE_NBITS));
@@ -311,7 +311,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         }
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::radix_sort::sort_prep", prep);
+            "spades::SpadesParticleContainer::encoded_sort::sort_prep", prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
@@ -321,7 +321,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         BL_PROFILE_VAR_STOP(prep);
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::radix_sort::bounds", bounds);
+            "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
         auto minmaxs = MultiMinMax<amrex::Real, PType::NTYPES>(
@@ -407,7 +407,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
         // }
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::radix_sort::encode", encode);
+            "spades::SpadesParticleContainer::encoded_sort::encode", encode);
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
         auto* p_encode = encode.data();
         const amrex::Box& box = mfi.tilebox();
@@ -487,7 +487,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
 
         // Sort particle indices based on the cell index
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::radix_sort::sort", sort);
+            "spades::SpadesParticleContainer::encoded_sort::sort", sort);
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
         thrust::sort(
@@ -529,7 +529,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::radix_sort_impl()
 
         // Reorder the particles in memory
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::radix_sort::"
+            "spades::SpadesParticleContainer::encoded_sort::"
             "ReorderParticles",
             reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
