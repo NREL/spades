@@ -194,6 +194,12 @@ protected:
 
     //! Offsets of particles in each cell
     amrex::iMultiFab m_offsets;
+
+    //! Minimum timestamp in each cell for each type
+    amrex::MultiFab m_min_timestamp;
+
+    //! Maximum timestamp in each cell for each type
+    amrex::MultiFab m_max_timestamp;
 };
 
 #include "SpadesParticleContainerImpl.H"
