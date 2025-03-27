@@ -432,10 +432,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 static_cast<std::uint64_t>(pi & bitmask(constants::I_NBITS))
                 << shift;
             shift -= constants::TYPE_NBITS;
-            const std::uint64_t m = static_cast<std::uint64_t>(
-                                        p.idata(CommonIntData::type_id) &
-                                        bitmask(constants::TYPE_NBITS))
-                                    << shift;
+            const std::uint64_t typ = static_cast<std::uint64_t>(
+                                          p.idata(CommonIntData::type_id) &
+                                          bitmask(constants::TYPE_NBITS))
+                                      << shift;
 
             const amrex::IntVect piv(AMREX_D_DECL(
                 p.idata(CommonIntData::i), p.idata(CommonIntData::j),
@@ -453,12 +453,12 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
             const amrex::Real normalized =
                 (p.rdata(CommonRealData::timestamp) - min_t) / delta;
             const amrex::Real scaled = normalized * ((1ULL << shift) - 1);
-            const std::uint64_t t = static_cast<std::uint64_t>(
+            const auto ts = static_cast<std::uint64_t>(
                 static_cast<std::uint32_t>(scaled) &
                 bitmask(constants::TIMESTAMP_NBITS));
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
-            p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | m | t;
+            p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | typ | ts;
             // printf(
             //     "encode at %ld is %lu with iv: (%d, %d), type: %d, time: "
             //     "%.16f, (normalized: %.16f, scaled: %.16f, encoded: %lu)\n",
