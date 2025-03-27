@@ -9,9 +9,7 @@ MessageParticleContainer::MessageParticleContainer(
           MessageTypes,
           MessageRealData::ncomps,
           MessageIntData::ncomps>(par_gdb, ngrow)
-{
-    read_parameters();
-}
+{}
 
 MessageParticleContainer::MessageParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
@@ -22,9 +20,7 @@ MessageParticleContainer::MessageParticleContainer(
           MessageTypes,
           MessageRealData::ncomps,
           MessageIntData::ncomps>(geom, dmap, ba, ngrow)
-{
-    read_parameters();
-}
+{}
 
 void MessageParticleContainer::read_parameters()
 {
