@@ -38,6 +38,10 @@ if __name__ == "__main__":
         raise AssertionError("Need same number of labels and file names")
 
     df_lst = []
+    renames = {
+        "::encoded_sort": "::sort",
+        "::nonencoded_sort": "::sort",
+    }
     for fname in args.fnames:
         lst = []
         with open(fname, "r") as f:
@@ -59,7 +63,11 @@ if __name__ == "__main__":
                         }
                     )
 
-        df_lst.append(pd.DataFrame(lst))
+        df = pd.DataFrame(lst)
+        df.function = df.function.apply(
+            lambda x: reduce(lambda s, kv: s.replace(*kv), renames.items(), x)
+        )
+        df_lst.append(df)
     df = reduce(
         lambda left, right: pd.merge(left, right, on=["function"], how="outer"), df_lst
     )
