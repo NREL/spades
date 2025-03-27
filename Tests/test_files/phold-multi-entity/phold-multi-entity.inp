@@ -20,6 +20,7 @@ spades.write_entities = t
 spades.seed = 10
 spades.entities_per_lp = 16
 spades.messages_per_lp = 16
+spades.sort_type = "nonencoded"
 
 amrex.fpe_trap_invalid = 1
 amrex.fpe_trap_zero = 1
