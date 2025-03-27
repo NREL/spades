@@ -125,11 +125,11 @@ public:
     void sort_impl(const CompareFunctor& compare);
 
     /**
-      @brief Merge sort the particles implementation
+      @brief Non-encoded sort the particles implementation
       @param compare [in] comparison functor
     **/
     template <typename CompareFunctor>
-    void merge_sort_impl(const CompareFunctor& compare);
+    void nonencoded_sort_impl(const CompareFunctor& compare);
 
     //! Encoded sort the particles implementation
     void encoded_sort_impl();
@@ -173,10 +173,11 @@ public:
     //! Check valid sort type
     void check_sort_type(const std::string& sort_type)
     {
-        const amrex::Vector<std::string> valid_types = {"merge", "encoded"};
+        const amrex::Vector<std::string> valid_types = {
+            "nonencoded", "encoded"};
         if (std::find(valid_types.cbegin(), valid_types.cend(), sort_type) ==
             valid_types.cend()) {
-            amrex::Abort("Invalid sort type. Must be merge or encoded");
+            amrex::Abort("Invalid sort type. Must be nonencoded or encoded");
         }
     }
 
@@ -197,7 +198,7 @@ protected:
     amrex::Vector<std::string> m_int_data_names;
 
     //! Sort type
-    std::string m_sort_type{"merge"};
+    std::string m_sort_type{"nonencoded"};
 
     //! Count of particles in each cell
     amrex::iMultiFab m_counts;

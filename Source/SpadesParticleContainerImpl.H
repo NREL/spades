@@ -204,23 +204,23 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
     const CompareFunc& compare)
 {
     BL_PROFILE("spades::SpadesParticleContainer::sort_impl()");
-    if (m_sort_type == "merge") {
-        merge_sort_impl(compare);
+    if (m_sort_type == "nonencoded") {
+        nonencoded_sort_impl(compare);
     } else if (m_sort_type == "encoded") {
         encoded_sort_impl();
     } else {
-        amrex::Abort("Invalid sort type. Must be merge or encoded");
+        amrex::Abort("Invalid sort type. Must be nonencoded or encoded");
     }
     update_counts();
 }
 
 template <typename PType, int NStructReal, int NStructInt>
 template <typename CompareFunc>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
-    const CompareFunc& compare)
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::
+    nonencoded_sort_impl(const CompareFunc& compare)
 {
     // Taking inspiration from AMReX's SortParticlesByBin
-    BL_PROFILE("spades::SpadesParticleContainer::merge_sort_impl()");
+    BL_PROFILE("spades::SpadesParticleContainer::nonencoded_sort_impl()");
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -234,7 +234,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
         }
 
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::merge_sort::sort_prep", prep);
+            "spades::SpadesParticleContainer::nonencoded_sort::sort_prep",
+            prep);
         amrex::Gpu::DeviceVector<amrex::Long> cell_list(np);
         auto* p_cell_list = cell_list.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
@@ -245,7 +246,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
 
         // Sort particle indices based on the cell index
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::merge_sort::sort", sort);
+            "spades::SpadesParticleContainer::nonencoded_sort::sort", sort);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
 #ifdef AMREX_USE_GPU
@@ -289,7 +290,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
 
         // Reorder the particles in memory
         BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::merge_sort::"
+            "spades::SpadesParticleContainer::nonencoded_sort::"
             "ReorderParticles",
             reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
