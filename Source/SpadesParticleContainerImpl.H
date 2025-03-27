@@ -323,7 +323,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 #endif
     for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
 
-        const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         auto& particle_tile = this->GetParticles(LEV)[std::make_pair(gid, tid)];
@@ -336,6 +335,9 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
         const auto& max_ts_arr = m_max_timestamp.array(mfi);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
+#ifdef AMREX_DEBUG
+        const amrex::Box& box = mfi.tilebox();
+#endif
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             const amrex::IntVect piv(AMREX_D_DECL(
