@@ -28,11 +28,10 @@ EntityParticleContainer::EntityParticleContainer(
 
 void EntityParticleContainer::read_parameters()
 {
+    SpadesParticleContainer::read_parameters();
     {
         amrex::ParmParse pp("spades");
         pp.query("entities_per_lp", m_entities_per_lp);
-        pp.query("sort_type", m_sort_type);
-        check_sort_type(m_sort_type);
     }
 }
 
@@ -162,7 +161,7 @@ void EntityParticleContainer::sort()
 {
     BL_PROFILE("spades::EntityParticleContainer::sort()");
 
-    sort_impl(m_sort_type, CompareEntity());
+    sort_impl(CompareEntity());
 }
 
 } // namespace spades::particles

@@ -28,11 +28,10 @@ MessageParticleContainer::MessageParticleContainer(
 
 void MessageParticleContainer::read_parameters()
 {
+    SpadesParticleContainer::read_parameters();
     {
         amrex::ParmParse pp("spades");
         pp.query("messages_per_lp", m_messages_per_lp);
-        pp.query("sort_type", m_sort_type);
-        check_sort_type(m_sort_type);
     }
 }
 
@@ -349,7 +348,7 @@ void MessageParticleContainer::sort()
 {
     BL_PROFILE("spades::MessageParticleContainer::sort()");
 
-    sort_impl(m_sort_type, CompareMessage());
+    sort_impl(CompareMessage());
 }
 
 void MessageParticleContainer::update_undefined()

@@ -122,7 +122,7 @@ public:
       @param compare [in] comparison functor
     **/
     template <typename CompareFunctor>
-    void sort_impl(const std::string& sort_type, const CompareFunctor& compare);
+    void sort_impl(const CompareFunctor& compare);
 
     /**
       @brief Merge sort the particles implementation
@@ -149,9 +149,6 @@ public:
     //! Level index
     static constexpr int LEV{0};
 
-    //! Read user parameters
-    virtual void read_parameters() = 0;
-
     //! Initialize variable names
     virtual void initialize_variable_names() = 0;
 
@@ -162,6 +159,16 @@ public:
     **/
     void write_plot_file_impl(
         const std::string& plt_filename, const std::string& name);
+
+    //! Read user parameters
+    virtual void read_parameters()
+    {
+        {
+            amrex::ParmParse pp("spades");
+            pp.query("sort_type", m_sort_type);
+            check_sort_type(m_sort_type);
+        }
+    }
 
     //! Check valid sort type
     void check_sort_type(const std::string& sort_type)
@@ -188,6 +195,9 @@ protected:
 
     //! Names for int data to write to file
     amrex::Vector<std::string> m_int_data_names;
+
+    //! Sort type
+    std::string m_sort_type{"merge"};
 
     //! Count of particles in each cell
     amrex::iMultiFab m_counts;

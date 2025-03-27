@@ -68,9 +68,6 @@ public:
 private:
     //! Initial entities per LP
     int m_entities_per_lp{1};
-
-    //! Sort type
-    std::string m_sort_type{"merge"};
 };
 } // namespace spades::particles
 #endif

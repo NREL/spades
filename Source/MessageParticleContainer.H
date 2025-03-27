@@ -86,9 +86,6 @@ public:
 private:
     //! Initial messages per LP
     int m_messages_per_lp{1};
-
-    //! Sort type
-    std::string m_sort_type{"merge"};
 };
 } // namespace spades::particles
 #endif

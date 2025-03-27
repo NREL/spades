@@ -49,15 +49,17 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::initialize_state()
     m_counts.setVal(0);
     m_offsets.setVal(0);
 
-    m_min_timestamp.define(
-        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
-        PType::NTYPES, m_ngrow, amrex::MFInfo());
+    if (m_sort_type == "encoded") {
+        m_min_timestamp.define(
+            this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
+            PType::NTYPES, m_ngrow, amrex::MFInfo());
+        m_max_timestamp.define(
+            this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
+            PType::NTYPES, m_ngrow, amrex::MFInfo());
 
-    m_max_timestamp.define(
-        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
-        PType::NTYPES, m_ngrow, amrex::MFInfo());
-    m_min_timestamp.setVal(constants::LARGE_NUM);
-    m_max_timestamp.setVal(0.0);
+        m_min_timestamp.setVal(constants::LARGE_NUM);
+        m_max_timestamp.setVal(0.0);
+    }
 }
 
 template <typename PType, int NStructReal, int NStructInt>
@@ -199,12 +201,12 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::check_sort(
 template <typename PType, int NStructReal, int NStructInt>
 template <typename CompareFunc>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::sort_impl(
-    const std::string& sort_type, const CompareFunc& compare)
+    const CompareFunc& compare)
 {
     BL_PROFILE("spades::SpadesParticleContainer::sort_impl()");
-    if (sort_type == "merge") {
+    if (m_sort_type == "merge") {
         merge_sort_impl(compare);
-    } else if (sort_type == "encoded") {
+    } else if (m_sort_type == "encoded") {
         encoded_sort_impl();
     } else {
         amrex::Abort("Invalid sort type. Must be merge or encoded");
