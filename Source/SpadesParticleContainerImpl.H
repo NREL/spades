@@ -452,7 +452,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 
             const amrex::Real normalized =
                 (p.rdata(CommonRealData::timestamp) - min_t) / delta;
-            const amrex::Real scaled = normalized * ((1ULL << shift) - 1);
+            const amrex::Real scaled =
+                normalized * static_cast<amrex::Real>((1ULL << shift) - 1);
             const auto ts = static_cast<std::uint64_t>(
                 static_cast<std::uint32_t>(scaled) &
                 bitmask(constants::TIMESTAMP_NBITS));
