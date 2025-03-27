@@ -389,7 +389,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
         auto* p_encode = encode.data();
         const auto box_lo = box.smallEnd();
-        const auto box_hi = box.bigEnd();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             AMREX_D_TERM(
