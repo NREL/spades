@@ -48,6 +48,16 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::initialize_state()
 
     m_counts.setVal(0);
     m_offsets.setVal(0);
+
+    m_min_timestamp.define(
+        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
+        PType::NTYPES, m_ngrow, amrex::MFInfo());
+
+    m_max_timestamp.define(
+        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
+        PType::NTYPES, m_ngrow, amrex::MFInfo());
+    m_min_timestamp.setVal(constants::LARGE_NUM);
+    m_max_timestamp.setVal(0.0);
 }
 
 template <typename PType, int NStructReal, int NStructInt>
@@ -291,7 +301,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::merge_sort_impl(
 }
 
 template <typename PType, int NStructReal, int NStructInt>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl()
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::
+    encoded_sort_impl()
 {
     // Taking inspiration from AMReX's SortParticlesByBin
     BL_PROFILE("spades::SpadesParticleContainer::encoded_sort_impl()");
@@ -299,11 +310,55 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl(
     AMREX_ALWAYS_ASSERT(
         PType::NTYPES <= max_representation(constants::TYPE_NBITS));
 
+    BL_PROFILE_VAR(
+        "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
+    m_min_timestamp.setVal(constants::LARGE_NUM);
+    m_max_timestamp.setVal(0.0);
+
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
-        auto& particle_tile = this->ParticlesAt(LEV, mfi);
+
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        auto& particle_tile = this->GetParticles(LEV)[std::make_pair(gid, tid)];
+        const size_t np = particle_tile.numParticles();
+
+        if (np == 0) {
+            continue;
+        }
+        const auto& min_ts_arr = m_min_timestamp.array(mfi);
+        const auto& max_ts_arr = m_max_timestamp.array(mfi);
+        const auto& particles = particle_tile.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            const amrex::IntVect piv(AMREX_D_DECL(
+                p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                p.idata(CommonIntData::k)));
+
+            AMREX_ASSERT(box.contains(piv));
+            amrex::Gpu::Atomic::Min(
+                &min_ts_arr(piv, p.idata(CommonIntData::type_id)),
+                p.rdata(CommonRealData::timestamp));
+            amrex::Gpu::Atomic::Max(
+                &max_ts_arr(piv, p.idata(CommonIntData::type_id)),
+                p.rdata(CommonRealData::timestamp));
+        });
+    }
+    BL_PROFILE_VAR_STOP(bounds);
+
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+    for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+
+        const amrex::Box& box = mfi.tilebox();
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        auto& particle_tile = this->GetParticles(LEV)[std::make_pair(gid, tid)];
         const size_t np = particle_tile.numParticles();
 
         if (np == 0) {
@@ -320,49 +375,37 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl(
         amrex::Gpu::Device::synchronize();
         BL_PROFILE_VAR_STOP(prep);
 
-        BL_PROFILE_VAR(
-            "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
-        const auto& particles = particle_tile.GetArrayOfStructs();
-        const auto* pstruct = particles().dataPtr();
-        auto minmaxs = MultiMinMax<amrex::Real, PType::NTYPES>(
-            np, [=] AMREX_GPU_DEVICE(const long pindex) noexcept {
-                const auto& p = pstruct[pindex];
-                const amrex::Real ts = p.rdata(CommonRealData::timestamp);
-                amrex::GpuArray<amrex::Real, 2 * PType::NTYPES> tss = {0.0};
-                for (int typ = 0; typ < PType::NTYPES; typ++) {
-                    tss[typ * 2] = constants::LARGE_NUM;
-                }
-                tss[p.idata(CommonIntData::type_id) * 2] = ts;
-                tss[p.idata(CommonIntData::type_id) * 2 + 1] = ts;
-                return tss;
-            });
-        for (int typ = 0; typ < PType::NTYPES; typ++) {
-            if (minmaxs[typ * 2] > 1e-1 * constants::LARGE_NUM) {
-                minmaxs[typ * 2] = 0;
-            }
-            if (amrex::Math::abs(minmaxs[typ * 2] - minmaxs[typ * 2 + 1]) <
-                constants::EPS) {
-                minmaxs[typ * 2 + 1] = minmaxs[typ * 2] + 1.0;
-            }
-        }
+        // v1
+        // auto minmaxs = MultiMinMax<amrex::Real, PType::NTYPES>(
+        //     np, [=] AMREX_GPU_DEVICE(const long pindex) noexcept {
+        //         const auto& p = pstruct[pindex];
+        //         const amrex::Real ts = p.rdata(CommonRealData::timestamp);
+        //         amrex::GpuArray<amrex::Real, 2 * PType::NTYPES> tss = {0.0};
+        //         for (int typ = 0; typ < PType::NTYPES; typ++) {
+        //             tss[typ * 2] = constants::LARGE_NUM;
+        //         }
+        //         tss[p.idata(CommonIntData::type_id) * 2] = ts;
+        //         tss[p.idata(CommonIntData::type_id) * 2 + 1] = ts;
+        //         return tss;
+        //     });
+        // for (int typ = 0; typ < PType::NTYPES; typ++) {
+        //     if (minmaxs[typ * 2] > 1e-1 * constants::LARGE_NUM) {
+        //         minmaxs[typ * 2] = 0;
+        //     }
+        //     if (amrex::Math::abs(minmaxs[typ * 2] - minmaxs[typ * 2 + 1]) <
+        //         constants::EPS) {
+        //         minmaxs[typ * 2 + 1] = minmaxs[typ * 2] + 1.0;
+        //     }
+        // }
         // for (int typ = 0; typ < PType::NTYPES; typ++) {
         //     amrex::Print() << "multi min/max of ts to type: "
         //                    << std::setprecision(16) << typ << " "
-        //                    << minmaxs[typ * 2] << " / " << minmaxs[typ * 2 + 1]
+        //                    << minmaxs[typ * 2] << " / " << minmaxs[typ * 2 +
+        //                    1]
         //                    << std::endl;
         // }
-        // for (int typ = 0; typ < PType::NTYPES; typ++) {
-        //     const amrex::GpuArray<amrex::Real, 4> minmaxs =
-        //         MultiMinMax<amrex::Real>(
-        //             np, [=] AMREX_GPU_DEVICE(const long pindex) noexcept {
-        //                 const auto& p = pstruct[pindex];
-        //                 const amrex::Real ts =
-        //                 p.rdata(CommonRealData::timestamp); return ts;
-        //             });
-        //     amrex::Print() << "min/max: " << minmaxs[0] << " " << minmaxs[1]
-        //     <<" "  << minmaxs[2] << " " << minmaxs[3]
-        //                    << std::endl;
-        // }
+
+        // v0
         // amrex::Vector<amrex::Real> ts_min(PType::NTYPES, 0.0);
         // amrex::Vector<amrex::Real> ts_max(PType::NTYPES, 0.0);
         // for (int typ = 0; typ < PType::NTYPES; typ++) {
@@ -398,8 +441,9 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl(
         // amrex::Gpu::copy(
         //     amrex::Gpu::hostToDevice, ts_max.begin(), ts_max.end(),
         //     d_ts_max.begin());
-        amrex::Gpu::Device::synchronize();
-        BL_PROFILE_VAR_STOP(bounds);
+        // amrex::Gpu::Device::synchronize();
+        // BL_PROFILE_VAR_STOP(bounds);
+
         // amrex::Print() << "--------------------------------------------" <<
         // std::endl; for (int typ = 0; typ < PType::NTYPES; typ++) {
         //   amrex::Print() << "min/max of ts to type: " << typ << " " <<
@@ -408,9 +452,12 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl(
 
         BL_PROFILE_VAR(
             "spades::SpadesParticleContainer::encoded_sort::encode", encode);
+        const auto& particles = particle_tile.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+        const auto& min_ts_arr = m_min_timestamp.array(mfi);
+        const auto& max_ts_arr = m_max_timestamp.array(mfi);
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
         auto* p_encode = encode.data();
-        const amrex::Box& box = mfi.tilebox();
         const auto box_lo = box.smallEnd();
         const auto box_hi = box.bigEnd();
         // const auto* p_ts_min = d_ts_min.data();
@@ -459,12 +506,22 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl(
                                         p.idata(CommonIntData::type_id) &
                                         bitmask(constants::TYPE_NBITS))
                                     << shift;
+
+            const amrex::IntVect piv(AMREX_D_DECL(
+                p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                p.idata(CommonIntData::k)));
             const amrex::Real min_t =
-                minmaxs[p.idata(CommonIntData::type_id) * 2];
+                min_ts_arr(piv, p.idata(CommonIntData::type_id));
             const amrex::Real max_t =
-                minmaxs[p.idata(CommonIntData::type_id) * 2 + 1];
+                max_ts_arr(piv, p.idata(CommonIntData::type_id));
+            AMREX_ASSERT(min_t <= max_t);
+            const amrex::Real delta =
+                (amrex::Math::abs(max_t - min_t) > constants::EPS)
+                    ? max_t - min_t
+                    : 1.0;
+
             const amrex::Real normalized =
-                (p.rdata(CommonRealData::timestamp) - min_t) / (max_t - min_t);
+                (p.rdata(CommonRealData::timestamp) - min_t) / delta;
             const amrex::Real scaled = normalized * ((1ULL << shift) - 1);
             const std::uint64_t t = static_cast<std::uint64_t>(
                 static_cast<std::uint32_t>(scaled) &
@@ -472,9 +529,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::encoded_sort_impl(
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
             p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | m | t;
-            // const amrex::IntVect piv(AMREX_D_DECL(
-            //     p.idata(CommonIntData::i), p.idata(CommonIntData::j),
-            //     p.idata(CommonIntData::k)));
             // printf(
             //     "encode at %ld is %lu with iv: (%d, %d), type: %d, time: "
             //     "%.16f, (normalized: %.16f, scaled: %.16f, encoded: %lu)\n",
