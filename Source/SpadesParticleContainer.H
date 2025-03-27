@@ -111,6 +111,9 @@ public:
         return m_counts.max(typ);
     }
 
+    //! Check the result of the sort operation
+    void check_sort(const amrex::MFIter& mfi);
+
     //! Sort the particles
     virtual void sort() = 0;
 
@@ -118,9 +121,18 @@ public:
       @brief Sort the particles implementation
       @param compare [in] comparison functor
     **/
-    //!
     template <typename CompareFunctor>
     void sort_impl(const CompareFunctor& compare);
+
+    /**
+      @brief Non-encoded sort the particles implementation
+      @param compare [in] comparison functor
+    **/
+    template <typename CompareFunctor>
+    void nonencoded_sort_impl(const CompareFunctor& compare);
+
+    //! Encoded sort the particles implementation
+    void encoded_sort_impl();
 
     //! Reposition the particles inside a cell for visualization
     void reposition_particles();
@@ -148,6 +160,27 @@ public:
     void write_plot_file_impl(
         const std::string& plt_filename, const std::string& name);
 
+    //! Read user parameters
+    virtual void read_parameters()
+    {
+        {
+            amrex::ParmParse pp("spades");
+            pp.query("sort_type", m_sort_type);
+            check_sort_type(m_sort_type);
+        }
+    }
+
+    //! Check valid sort type
+    void check_sort_type(const std::string& sort_type)
+    {
+        const amrex::Vector<std::string> valid_types = {
+            "nonencoded", "encoded"};
+        if (std::find(valid_types.cbegin(), valid_types.cend(), sort_type) ==
+            valid_types.cend()) {
+            amrex::Abort("Invalid sort type. Must be nonencoded or encoded");
+        }
+    }
+
 protected:
     //! Number of grow cells
     int m_ngrow;
@@ -164,11 +197,20 @@ protected:
     //! Names for int data to write to file
     amrex::Vector<std::string> m_int_data_names;
 
+    //! Sort type
+    std::string m_sort_type{"nonencoded"};
+
     //! Count of particles in each cell
     amrex::iMultiFab m_counts;
 
     //! Offsets of particles in each cell
     amrex::iMultiFab m_offsets;
+
+    //! Minimum timestamp in each cell for each type
+    amrex::MultiFab m_min_timestamp;
+
+    //! Maximum timestamp in each cell for each type
+    amrex::MultiFab m_max_timestamp;
 };
 
 #include "SpadesParticleContainerImpl.H"

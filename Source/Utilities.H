@@ -41,6 +41,36 @@ random_exponential(const amrex::Real lambda, amrex::RandomEngine const& engine)
 amrex::Real random_exponential(const amrex::Real lambda);
 
 /**
+   @brief Maximum unsigned integer representation given a number of bits
+   @param nbits [in] number of bits
+   @return maximum integer representation
+ **/
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE std::uint64_t
+max_representation(const int nbits)
+{
+    AMREX_ASSERT(nbits < 64);
+    std::uint64_t result = 2;
+    for (int i = 0; i < nbits; i++) {
+        result *= 2;
+    }
+    return result;
+}
+
+/**
+   @brief bitmask given a number of bits
+   @param nbits [in] number of bits
+   @return bitmask
+ **/
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE std::uint64_t bitmask(const int nbits)
+{
+    AMREX_ASSERT(nbits < 64);
+    // Shift 1 by nbits (create power of 2)
+    // Subtract 1 to fill all lower nbits with 1s
+    // bitmask(16): 0xFFFF
+    return (1ULL << nbits) - 1;
+}
+
+/**
    @brief Skip to the next line in stream
    @param is [in, out] stream
  **/
@@ -60,5 +90,50 @@ void read_file(
     amrex::Vector<char>& charBuf,
     bool bExitOnError);
 
+template <typename T, size_t NC, typename N, typename F>
+amrex::GpuArray<T, 2 * NC> MultiMinMax(N n, F const& f)
+{
+    if constexpr (NC == 5) {
+        amrex::ReduceOps<
+            amrex::ReduceOpMin, amrex::ReduceOpMax, amrex::ReduceOpMin,
+            amrex::ReduceOpMax, amrex::ReduceOpMin, amrex::ReduceOpMax,
+            amrex::ReduceOpMin, amrex::ReduceOpMax, amrex::ReduceOpMin,
+            amrex::ReduceOpMax>
+            reduce_op;
+        amrex::ReduceData<T, T, T, T, T, T, T, T, T, T> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+        reduce_op.eval(
+            n, reduce_data, [=] AMREX_GPU_DEVICE(N i) -> ReduceTuple {
+                amrex::GpuArray<T, 2 * NC> tmp = f(i);
+                return {tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                        tmp[5], tmp[6], tmp[7], tmp[8], tmp[9]};
+            });
+        auto hv = reduce_data.value(reduce_op);
+        return {amrex::get<0>(hv), amrex::get<1>(hv), amrex::get<2>(hv),
+                amrex::get<3>(hv), amrex::get<4>(hv), amrex::get<5>(hv),
+                amrex::get<6>(hv), amrex::get<7>(hv), amrex::get<8>(hv),
+                amrex::get<9>(hv)};
+    } else if constexpr (NC == 3) {
+        amrex::ReduceOps<
+            amrex::ReduceOpMin, amrex::ReduceOpMax, amrex::ReduceOpMin,
+            amrex::ReduceOpMax, amrex::ReduceOpMin, amrex::ReduceOpMax>
+            reduce_op;
+        amrex::ReduceData<T, T, T, T, T, T> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+        reduce_op.eval(
+            n, reduce_data, [=] AMREX_GPU_DEVICE(N i) -> ReduceTuple {
+                amrex::GpuArray<T, 2 * NC> tmp = f(i);
+                return {tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5]};
+            });
+        auto hv = reduce_data.value(reduce_op);
+        return {amrex::get<0>(hv), amrex::get<1>(hv), amrex::get<2>(hv),
+                amrex::get<3>(hv), amrex::get<4>(hv), amrex::get<5>(hv)};
+    } else {
+        static_assert(
+            NC == 5 || NC == 3,
+            "Invalid template parameter. Only NTYPES for entities and messages "
+            "allowed.");
+    }
+}
 } // namespace spades
 #endif

@@ -18,6 +18,7 @@ spades.ic_type = "constant"
 spades.write_messages = t
 spades.write_entities = t
 spades.seed = 10
+spades.sort_type = "nonencoded"
 
 amrex.fpe_trap_invalid = 1
 amrex.fpe_trap_zero = 1

@@ -9,7 +9,9 @@ EntityParticleContainer::EntityParticleContainer(
           EntityTypes,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(par_gdb, ngrow)
-{}
+{
+    read_parameters();
+}
 
 EntityParticleContainer::EntityParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
@@ -20,7 +22,18 @@ EntityParticleContainer::EntityParticleContainer(
           EntityTypes,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(geom, dmap, ba, ngrow)
-{}
+{
+    read_parameters();
+}
+
+void EntityParticleContainer::read_parameters()
+{
+    SpadesParticleContainer::read_parameters();
+    {
+        amrex::ParmParse pp("spades");
+        pp.query("entities_per_lp", m_entities_per_lp);
+    }
+}
 
 void EntityParticleContainer::initialize_variable_names()
 {
@@ -47,12 +60,7 @@ void EntityParticleContainer::initialize_entities()
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
-
-    int entities_per_lp = 1;
-    {
-        amrex::ParmParse pp("spades");
-        pp.query("entities_per_lp", entities_per_lp);
-    }
+    const auto entities_per_lp = m_entities_per_lp;
 
     amrex::iMultiFab num_particles(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
