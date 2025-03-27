@@ -116,6 +116,8 @@ void SPADES::init_particle_containers()
         std::make_unique<particles::MessageParticleContainer>(GetParGDB());
     m_entity_pc =
         std::make_unique<particles::EntityParticleContainer>(GetParGDB());
+    m_message_pc->read_parameters();
+    m_entity_pc->read_parameters();
 }
 
 void SPADES::read_parameters()

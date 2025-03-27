@@ -13,9 +13,7 @@ plt.style.use(pathlib.Path(__file__).parent.resolve() / "project.mplstyle")
 
 if __name__ == "__main__":
     # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Plot simulation data output"
-    )
+    parser = argparse.ArgumentParser(description="Plot simulation data output")
     parser.add_argument(
         "-f",
         "--fnames",
@@ -42,19 +40,19 @@ if __name__ == "__main__":
         df = pd.read_csv(fname)
 
         plt.figure("gvt")
-        plt.plot(df.step, df.gvt,label=lbl)
+        plt.plot(df.step, df.gvt, label=lbl)
 
         plt.figure("rate")
-        plt.plot(df.step, df.avg_rate,label=lbl)
+        plt.plot(df.step, df.avg_rate, label=lbl)
 
         plt.figure(f"rlbk")
         for nrlbk in range(1, 20):
             if df[f"rollback_{nrlbk}"].sum() > 0:
-                plt.semilogy(df.step, df[f"rollback_{nrlbk}"], label = f"nrlbk = {nrlbk}")
-            
+                plt.semilogy(df.step, df[f"rollback_{nrlbk}"], label=f"nrlbk = {nrlbk}")
+
         for typ in types:
             plt.figure(f"{typ}s")
-            plt.plot(df.step, df[f"{typ}s"]/ df.lps)
+            plt.plot(df.step, df[f"{typ}s"] / df.lps)
             plt.fill_between(df.step, df[f"min_{typ}s"], df[f"max_{typ}s"], alpha=0.5)
 
     pname = "profile_data.pdf"
@@ -70,13 +68,14 @@ if __name__ == "__main__":
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$r~[\#/s]$")
         legend = plt.legend(loc="lower right")
+        plt.ylim([0, 3e6])
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure(f"rlbk")
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$n~[\#]$")
-        legend = plt.legend(loc="lower right")
+        legend = plt.legend(loc="upper right")
         plt.tight_layout()
         pdf.savefig(dpi=300)
 

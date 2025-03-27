@@ -90,6 +90,5 @@ void read_file(
     amrex::Vector<char>& charBuf,
     bool bExitOnError);
 
-}
 } // namespace spades
 #endif

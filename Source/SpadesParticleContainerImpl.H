@@ -323,7 +323,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 #endif
     for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
 
-        const amrex::Box& box = mfi.tilebox();
         const int gid = mfi.index();
         const int tid = mfi.LocalTileIndex();
         auto& particle_tile = this->GetParticles(LEV)[std::make_pair(gid, tid)];
@@ -336,6 +335,9 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
         const auto& max_ts_arr = m_max_timestamp.array(mfi);
         const auto& particles = particle_tile.GetArrayOfStructs();
         const auto* pstruct = particles().dataPtr();
+#ifdef AMREX_DEBUG
+        const amrex::Box& box = mfi.tilebox();
+#endif
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             const amrex::IntVect piv(AMREX_D_DECL(
@@ -387,7 +389,6 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
         auto* p_encode = encode.data();
         const auto box_lo = box.smallEnd();
-        const auto box_hi = box.bigEnd();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
             AMREX_D_TERM(
@@ -400,11 +401,14 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 AMREX_ALWAYS_ASSERT(pk >= 0));
             AMREX_D_EXPR(
                 AMREX_ALWAYS_ASSERT(
-                    pi <= max_representation(constants::I_NBITS)),
+                    static_cast<std::uint64_t>(pi) <=
+                    max_representation(constants::I_NBITS)),
                 AMREX_ALWAYS_ASSERT(
-                    pj <= max_representation(constants::J_NBITS)),
+                    static_cast<std::uint64_t>(pj) <=
+                    max_representation(constants::J_NBITS)),
                 AMREX_ALWAYS_ASSERT(
-                    pk <= max_representation(constants::K_NBITS)));
+                    static_cast<std::uint64_t>(pk) <=
+                    max_representation(constants::K_NBITS)));
             AMREX_ASSERT(p.idata(CommonIntData::type_id) >= 0);
             AMREX_ASSERT(
                 p.rdata(CommonRealData::timestamp) >=
@@ -428,10 +432,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 static_cast<std::uint64_t>(pi & bitmask(constants::I_NBITS))
                 << shift;
             shift -= constants::TYPE_NBITS;
-            const std::uint64_t m = static_cast<std::uint64_t>(
-                                        p.idata(CommonIntData::type_id) &
-                                        bitmask(constants::TYPE_NBITS))
-                                    << shift;
+            const std::uint64_t typ = static_cast<std::uint64_t>(
+                                          p.idata(CommonIntData::type_id) &
+                                          bitmask(constants::TYPE_NBITS))
+                                      << shift;
 
             const amrex::IntVect piv(AMREX_D_DECL(
                 p.idata(CommonIntData::i), p.idata(CommonIntData::j),
@@ -448,13 +452,14 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 
             const amrex::Real normalized =
                 (p.rdata(CommonRealData::timestamp) - min_t) / delta;
-            const amrex::Real scaled = normalized * ((1ULL << shift) - 1);
-            const std::uint64_t t = static_cast<std::uint64_t>(
+            const amrex::Real scaled =
+                normalized * static_cast<amrex::Real>((1ULL << shift) - 1);
+            const auto ts = static_cast<std::uint64_t>(
                 static_cast<std::uint32_t>(scaled) &
                 bitmask(constants::TIMESTAMP_NBITS));
             AMREX_ASSERT((shift - constants::TIMESTAMP_NBITS) == 0);
 
-            p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | m | t;
+            p_encode[pindex] = AMREX_D_PICK(i, j | i, k | j | i) | typ | ts;
             // printf(
             //     "encode at %ld is %lu with iv: (%d, %d), type: %d, time: "
             //     "%.16f, (normalized: %.16f, scaled: %.16f, encoded: %lu)\n",

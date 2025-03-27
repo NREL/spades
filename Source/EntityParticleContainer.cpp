@@ -9,9 +9,7 @@ EntityParticleContainer::EntityParticleContainer(
           EntityTypes,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(par_gdb, ngrow)
-{
-    read_parameters();
-}
+{}
 
 EntityParticleContainer::EntityParticleContainer(
     const amrex::Vector<amrex::Geometry>& geom,
@@ -22,9 +20,7 @@ EntityParticleContainer::EntityParticleContainer(
           EntityTypes,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(geom, dmap, ba, ngrow)
-{
-    read_parameters();
-}
+{}
 
 void EntityParticleContainer::read_parameters()
 {
