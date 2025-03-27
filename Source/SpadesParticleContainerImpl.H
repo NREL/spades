@@ -401,11 +401,14 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 AMREX_ALWAYS_ASSERT(pk >= 0));
             AMREX_D_EXPR(
                 AMREX_ALWAYS_ASSERT(
-                    pi <= max_representation(constants::I_NBITS)),
+                    static_cast<std::uint64_t>(pi) <=
+                    max_representation(constants::I_NBITS)),
                 AMREX_ALWAYS_ASSERT(
-                    pj <= max_representation(constants::J_NBITS)),
+                    static_cast<std::uint64_t>(pj) <=
+                    max_representation(constants::J_NBITS)),
                 AMREX_ALWAYS_ASSERT(
-                    pk <= max_representation(constants::K_NBITS)));
+                    static_cast<std::uint64_t>(pk) <=
+                    max_representation(constants::K_NBITS)));
             AMREX_ASSERT(p.idata(CommonIntData::type_id) >= 0);
             AMREX_ASSERT(
                 p.rdata(CommonRealData::timestamp) >=
