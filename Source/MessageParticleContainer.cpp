@@ -416,6 +416,14 @@ void MessageParticleContainer::update_undefined()
             if (target_count > current_count) {
                 p_additions[icell] = target_count - current_count;
             }
+#ifdef AMREX_DEBUG
+            if(p_removals[icell]>0){
+              AMREX_ASSERT(p_additions[icell] == 0);
+            }
+            if (p_additions[icell] > 0) {
+              AMREX_ASSERT(p_removals[icell] == 0);
+            }
+#endif            
         });
 
         amrex::Gpu::DeviceVector<int> update_offsets(ncells, 0);
