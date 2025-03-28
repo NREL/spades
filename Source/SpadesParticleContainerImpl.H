@@ -529,6 +529,33 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 
 template <typename PType, int NStructReal, int NStructInt>
 void SpadesParticleContainer<PType, NStructReal, NStructInt>::
+print_particles(const std::string& header)
+{
+    BL_PROFILE("spades::SpadesParticleContainer::print_particles()");
+
+    amrex::Print() << header << " -----------------------------" << std::endl;
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+    for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto index = std::make_pair(gid, tid);
+        const auto& particle_tile = this->GetParticles(LEV)[index];
+        const size_t np = particle_tile.numParticles();
+        const auto& particles = particle_tile.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            DevicePrint()(p);
+        });
+    }
+    amrex::Print() << "End " << header << "-----------------------------" << std::endl;
+}
+
+template <typename PType, int NStructReal, int NStructInt>
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::
     reposition_particles()
 {
     BL_PROFILE("spades::SpadesParticleContainer::reposition_particles()");

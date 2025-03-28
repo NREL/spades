@@ -8,7 +8,7 @@
 
 namespace spades::particles {
 
-//! Functor for printing particle data
+//! Functor for printing particle data on host
 struct Print
 {
     /**
@@ -33,6 +33,22 @@ struct Print
         }
     }
 };
+
+//! Functor for printing particle data on device
+#ifdef AMREX_USE_GPU
+struct DevicePrint
+{
+    /**
+       @brief Print particle data to screen
+       @param p [in] particle whose data is printed
+     **/
+    template <class P>
+    AMREX_GPU_DEVICE void operator()(P& p) const
+    {
+      printf("Particle data: id = %ld, cpu = %ld, type = %d, timestamp = %.8e\n", static_cast<amrex::Long>(p.id()), static_cast<amrex::Long>(p.cpu()), p.idata(CommonIntData::type_id), p.rdata(CommonRealData::timestamp));
+    }
+};
+#endif
 
 //! Functor for copying a particle's data to another
 struct Copy
