@@ -528,10 +528,10 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 }
 
 template <typename PType, int NStructReal, int NStructInt>
-void SpadesParticleContainer<PType, NStructReal, NStructInt>::print_particles(
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::print_messages(
     const std::string& header)
 {
-    BL_PROFILE("spades::SpadesParticleContainer::print_particles()");
+    BL_PROFILE("spades::SpadesParticleContainer::print_messages()");
 
     amrex::Print() << header << " -----------------------------" << std::endl;
 #ifdef AMREX_USE_OMP

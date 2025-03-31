@@ -68,172 +68,6 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
-    // const auto& dlo = dom.smallEnd();
-    // const auto& dhi = dom.bigEnd();
-
-    // // Some test particles
-    // #ifdef AMREX_USE_OMP
-    // #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
-    // #endif
-    //     for (amrex::MFIter mfi = MakeMFIter(LEV); mfi.isValid(); ++mfi) {
-    //         const amrex::Box& box = mfi.tilebox();
-    //         const int gid = mfi.index();
-    //         const int tid = mfi.LocalTileIndex();
-    //         auto& pti = GetParticles(LEV)[std::make_pair(gid, tid)];
-
-    //         for (amrex::IntVect iv = box.smallEnd(); iv <= box.bigEnd();
-    //              box.next(iv)) {
-    //             const auto test = amrex::Random_int(dhi[0] - dlo[0] + 1) +
-    //             dlo[0]; amrex::IntVect iv_src(AMREX_D_DECL(0, 0, 0));
-    //             amrex::IntVect iv_dest(AMREX_D_DECL(
-    //                 amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
-    //                 amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
-    //                 amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
-    //             amrex::IntVect iv_dest2(AMREX_D_DECL(
-    //                 amrex::Random_int(dhi[0] - dlo[0] + 1) + dlo[0],
-    //                 amrex::Random_int(dhi[1] - dlo[1] + 1) + dlo[1],
-    //                 amrex::Random_int(dhi[2] - dlo[2] + 1) + dlo[2]));
-    //             if (iv == iv_src) {
-    //                 {
-    //                     ParticleType
-    //                     p; p.id() =
-    //                         ParticleType::NextID();
-    //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-    //                     p.idata(MessageIntData::type_id) =
-    //                         MessageTypes::anti_message;
-    //                     p.idata(MessageIntData::sender_lp) =
-    //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::sender_entity) = 0;
-    //                     p.idata(MessageIntData::receiver_lp) =
-    //                     dom.index(iv_dest);
-    //                     p.idata(MessageIntData::receiver_entity) = 0;
-    //                     p.rdata(MessageRealData::timestamp) =
-    //                         random_exponential(1.0, engine) + lookahead + 20;
-
-    //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest[0] +
-    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
-    //                         (iv_dest[1] + constants::HALF) * dx[1]; ,
-    //                         p.pos(2) = plo[2] + (iv_dest[2] +
-    //                         constants::HALF) * dx[2];)
-
-    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
-    //                     iv_dest[0];
-    //                                  , p.idata(MessageIntData::j) =
-    //                                  iv_dest[1]; ,
-    //                                  p.idata(MessageIntData::k) =
-    //                                  iv_dest[2];)
-
-    //                     pti.push_back(p);
-    //                 }
-    //                 {
-    //                     ParticleType
-    //                     p; p.id() =
-    //                         ParticleType::NextID();
-    //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-    //                     p.idata(MessageIntData::type_id) =
-    //                         MessageTypes::message;
-    //                     p.idata(MessageIntData::sender_lp) =
-    //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::sender_entity) = 0;
-    //                     p.idata(MessageIntData::receiver_lp) =
-    //                     dom.index(iv_dest2);
-    //                     p.idata(MessageIntData::receiver_entity) = 0;
-    //                     p.rdata(MessageRealData::timestamp) =
-    //                         random_exponential(1.0, engine) + lookahead;
-
-    //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest2[0] +
-    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
-    //                         (iv_dest2[1] + constants::HALF) * dx[1]; ,
-    //                         p.pos(2) = plo[2] + (iv_dest2[2] +
-    //                         constants::HALF)
-    //                         * dx[2];)
-
-    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
-    //                     iv_dest2[0];
-    //                                  , p.idata(MessageIntData::j) =
-    //                                  iv_dest2[1];
-    //                                  ,
-    //                                  p.idata(MessageIntData::k) =
-    //                                  iv_dest2[2];)
-
-    //                     pti.push_back(p);
-    //                 }
-    //                 { // creating another particle
-    //                     ParticleType
-    //                     p; p.id() =
-    //                         ParticleType::NextID();
-    //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-    //                     p.idata(MessageIntData::type_id) =
-    //                         MessageTypes::message;
-    //                     p.idata(MessageIntData::sender_lp) =
-    //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::sender_entity) = 0;
-    //                     p.idata(MessageIntData::receiver_lp) =
-    //                     dom.index(iv_dest);
-    //                     p.idata(MessageIntData::receiver_entity) = 0;
-    //                     p.rdata(MessageRealData::timestamp) =
-    //                         random_exponential(1.0, engine) + lookahead;
-
-    //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest[0] +
-    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
-    //                         (iv_dest[1] + constants::HALF) * dx[1]; ,
-    //                         p.pos(2) = plo[2] + (iv_dest[2] +
-    //                         constants::HALF) * dx[2];)
-
-    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
-    //                     iv_dest[0];
-    //                                  , p.idata(MessageIntData::j) =
-    //                                  iv_dest[1]; ,
-    //                                  p.idata(MessageIntData::k) =
-    //                                  iv_dest[2];)
-
-    //                     pti.push_back(p);
-    //                 }
-    //                 { // creating another particle
-    //                     ParticleType
-    //                     p; p.id() =
-    //                         ParticleType::NextID();
-    //                     p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-    //                     p.idata(MessageIntData::type_id) =
-    //                         MessageTypes::undefined;
-    //                     p.idata(MessageIntData::sender_lp) =
-    //                     dom.index(iv_src);
-    //                     p.idata(MessageIntData::sender_entity) = 0;
-    //                     p.idata(MessageIntData::receiver_lp) =
-    //                     dom.index(iv_dest2);
-    //                     p.idata(MessageIntData::receiver_entity) = 0;
-    //                     p.rdata(MessageRealData::timestamp) =
-    //                         random_exponential(1.0, engine) + lookahead;
-
-    //                     AMREX_D_TERM(
-    //                         p.pos(0) = plo[0] + (iv_dest2[0] +
-    //                         constants::HALF) * dx[0]; , p.pos(1) = plo[1] +
-    //                         (iv_dest2[1] + constants::HALF) * dx[1]; ,
-    //                         p.pos(2) = plo[2] + (iv_dest2[2] +
-    //                         constants::HALF)
-    //                         * dx[2];)
-
-    //                     AMREX_D_TERM(p.idata(MessageIntData::i) =
-    //                     iv_dest2[0];
-    //                                  , p.idata(MessageIntData::j) =
-    //                                  iv_dest2[1];
-    //                                  ,
-    //                                  p.idata(MessageIntData::k) =
-    //                                  iv_dest2[2];)
-
-    //                     pti.push_back(p);
-    //                 }
-    //             }
-    //         }
-    //     }
-
     const auto messages_per_lp = m_messages_per_lp;
     const int total_messages_per_lp = 3 * messages_per_lp;
     AMREX_ALWAYS_ASSERT(total_messages_per_lp > messages_per_lp);
@@ -311,6 +145,9 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     pmsg.idata(MessageIntData::pair) = -1;
                 }
             });
+
+        // This is necessary
+        amrex::Gpu::streamSynchronize();
     }
     Redistribute();
 
@@ -400,7 +237,7 @@ void MessageParticleContainer::update_undefined()
                     p.id() = -1;
                 }
             });
-        // amrex::Gpu::Device::synchronize();
+        // amrex::Gpu::streamSynchronize();
         // BL_PROFILE_VAR_STOP(remove);
 
         // BL_PROFILE_VAR(
@@ -417,13 +254,13 @@ void MessageParticleContainer::update_undefined()
                 p_additions[icell] = target_count - current_count;
             }
 #ifdef AMREX_DEBUG
-            if(p_removals[icell]>0){
-              AMREX_ASSERT(p_additions[icell] == 0);
+            if (p_removals[icell] > 0) {
+                AMREX_ASSERT(p_additions[icell] == 0);
             }
             if (p_additions[icell] > 0) {
-              AMREX_ASSERT(p_removals[icell] == 0);
+                AMREX_ASSERT(p_removals[icell] == 0);
             }
-#endif            
+#endif
         });
 
         amrex::Gpu::DeviceVector<int> update_offsets(ncells, 0);
@@ -472,8 +309,11 @@ void MessageParticleContainer::update_undefined()
                              , p.idata(MessageIntData::k) = iv[2];)
             }
         });
-        // amrex::Gpu::Device::synchronize();
+        // amrex::Gpu::streamSynchronize();
         // BL_PROFILE_VAR_STOP(compute_add);
+
+        // This is necessary
+        amrex::Gpu::streamSynchronize();
     }
 
     addParticles(pc_adds, true);
