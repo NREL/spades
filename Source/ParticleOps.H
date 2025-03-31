@@ -45,7 +45,11 @@ struct DevicePrint
     template <class P>
     AMREX_GPU_DEVICE void operator()(P& p) const
     {
-      printf("Particle data: id = %ld, cpu = %ld, type = %d, timestamp = %.8e\n", static_cast<amrex::Long>(p.id()), static_cast<amrex::Long>(p.cpu()), p.idata(CommonIntData::type_id), p.rdata(CommonRealData::timestamp));
+        printf(
+            "Particle data: id = %ld, cpu = %ld, type = %d, timestamp = %.8e\n",
+            static_cast<amrex::Long>(p.id()), static_cast<amrex::Long>(p.cpu()),
+            p.idata(CommonIntData::type_id),
+            p.rdata(CommonRealData::timestamp));
     }
 };
 #endif

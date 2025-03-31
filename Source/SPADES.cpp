@@ -973,7 +973,6 @@ SPADES::get_field(const std::string& name, const int ngrow)
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
             });
-        amrex::Gpu::synchronize();
     }
     const int srccomp_eid = get_field_component(name, m_entity_counts_varnames);
     if (srccomp_eid != -1) {
@@ -984,8 +983,8 @@ SPADES::get_field(const std::string& name, const int ngrow)
             [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
                 mf_arrs[nbx](i, j, k, n) = msg_cnt_arrs[nbx](i, j, k, n);
             });
-        amrex::Gpu::synchronize();
     }
+    amrex::Gpu::streamSynchronize();
     return mf;
 }
 
@@ -1028,7 +1027,7 @@ void SPADES::plot_file_mf()
         [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
             plt_mf_arrs[nbx](i, j, k, n + cnt) = ent_cnt_arrs[nbx](i, j, k, n);
         });
-    amrex::Gpu::synchronize();
+    amrex::Gpu::streamSynchronize();
 }
 
 void SPADES::write_plot_file()
