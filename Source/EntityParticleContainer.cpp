@@ -6,7 +6,9 @@ namespace spades::particles {
 EntityParticleContainer::EntityParticleContainer(
     amrex::AmrParGDB* par_gdb, int ngrow)
     : SpadesParticleContainer<
-          EntityTypes,
+          EntityTypes::NTYPES,
+          0,
+          0,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(par_gdb, ngrow)
 {}
@@ -17,7 +19,9 @@ EntityParticleContainer::EntityParticleContainer(
     const amrex::Vector<amrex::BoxArray>& ba,
     int ngrow)
     : SpadesParticleContainer<
-          EntityTypes,
+          EntityTypes::NTYPES,
+          0,
+          0,
           EntityRealData::ncomps,
           EntityIntData::ncomps>(geom, dmap, ba, ngrow)
 {}
@@ -64,6 +68,10 @@ void EntityParticleContainer::initialize_entities()
     const auto& dom = Geom(LEV).Domain();
     const auto entities_per_lp = m_entities_per_lp;
 
+    for (amrex::MFIter mfi = MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+        DefineAndReturnParticleTile(LEV, mfi);
+    }
+
     amrex::iMultiFab num_particles(
         ParticleBoxArray(LEV), ParticleDistributionMap(LEV), 1, 0,
         amrex::MFInfo());
@@ -93,21 +101,23 @@ void EntityParticleContainer::initialize_entities()
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
         const auto& offset_arr = init_offsets[mfi].const_array();
         const auto& num_particles_arr = num_particles[mfi].const_array();
-        auto& pti = DefineAndReturnParticleTile(LEV, mfi);
+        const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
+        auto& pti = GetParticles(LEV)[index];
         pti.resize(np);
-        auto* aos = pti.GetArrayOfStructs().dataPtr();
+        const auto parrs = particle_arrays(pti);
+
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const int start = offset_arr(iv);
                 for (int n = start; n < start + num_particles_arr(iv); n++) {
-                    auto& p = aos[n];
+                    auto& p = parrs.m_aos[n];
                     p.id() = pid + n;
                     p.cpu() = my_proc;
 
-                    MarkEntityUndefined()(p);
-                    p.idata(EntityIntData::owner) =
+                    MarkEntityUndefined()(n, parrs);
+                    parrs.m_idata[EntityIntData::owner][n] =
                         static_cast<int>(dom.index(iv));
 
                     AMREX_D_TERM(
@@ -116,17 +126,17 @@ void EntityParticleContainer::initialize_entities()
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(p.idata(EntityIntData::i) = iv[0];
-                                 , p.idata(EntityIntData::j) = iv[1];
-                                 , p.idata(EntityIntData::k) = iv[2];)
+                    AMREX_D_TERM(parrs.m_idata[EntityIntData::i][n] = iv[0];
+                                 , parrs.m_idata[EntityIntData::j][n] = iv[1];
+                                 , parrs.m_idata[EntityIntData::k][n] = iv[2];)
                 }
 
                 for (int n = start; n < start + entities_per_lp; n++) {
-                    auto& pent = aos[n];
                     const amrex::Real ts = 0.0;
 
-                    pent.rdata(EntityRealData::timestamp) = ts;
-                    pent.idata(EntityIntData::type_id) = EntityTypes::ENTITY;
+                    parrs.m_rdata[EntityRealData::timestamp][n] = ts;
+                    parrs.m_idata[EntityIntData::type_id][n] =
+                        EntityTypes::ENTITY;
                 }
             });
 
@@ -140,24 +150,19 @@ void EntityParticleContainer::initialize_entities()
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
-        auto index = std::make_pair(pti.index(), pti.LocalTileIndex());
+        const size_t np = pti.numParticles();
+        const auto parrs = particle_arrays(pti.GetParticleTile());
 
-        auto& particle_tile = GetParticles(LEV)[index];
-        const size_t np = particle_tile.numParticles();
-        auto& particles = particle_tile.GetArrayOfStructs();
-        auto* pstruct = particles().dataPtr();
-
-        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
-            auto& p = pstruct[pindex];
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             bool valid_type = false;
             for (int typ = 0; typ < EntityTypes::NTYPES; typ++) {
-                valid_type = p.idata(EntityIntData::type_id) == typ;
+                valid_type = parrs.m_idata[EntityIntData::type_id][pidx] == typ;
                 if (valid_type) {
                     break;
                 }
             }
             AMREX_ASSERT(valid_type);
-            AMREX_ASSERT(p.id() >= 0);
+            AMREX_ASSERT(parrs.m_aos[pidx].id() >= 0);
         });
     }
 }
@@ -166,7 +171,6 @@ void EntityParticleContainer::sort()
 {
     BL_PROFILE("spades::EntityParticleContainer::sort()");
 
-    sort_impl(CompareEntity());
+    sort_impl(CompareParticle());
 }
-
 } // namespace spades::particles
