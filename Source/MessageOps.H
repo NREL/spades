@@ -9,54 +9,29 @@
 
 namespace spades::particles {
 
-/**
-   @brief Functor for comparing messages
-
-   This is used to sort messages based on cell index, message type,
-   and timestamp (in that order).
- **/
-struct CompareMessage
-{
-    /**
-       @brief Compare messages
-       @param p1 [in] first message
-       @param p2 [in] second message
-       @return boolean of p1 < p2 based on criteria
-     **/
-    template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
-    operator()(const P& p1, const P& p2) const
-    {
-        // sort by iv, then message type then by timestamp
-        const amrex::IntVect piv1(AMREX_D_DECL(
-            p1.idata(MessageIntData::i), p1.idata(MessageIntData::j),
-            p1.idata(MessageIntData::k)));
-        const amrex::IntVect piv2(AMREX_D_DECL(
-            p2.idata(MessageIntData::i), p2.idata(MessageIntData::j),
-            p2.idata(MessageIntData::k)));
-        const auto m1 = p1.idata(MessageIntData::type_id);
-        const auto m2 = p2.idata(MessageIntData::type_id);
-        const auto t1 = p1.rdata(MessageRealData::timestamp);
-        const auto t2 = p2.rdata(MessageRealData::timestamp);
-        return (piv1 < piv2) ||
-               (piv1 == piv2 && ((m1 < m2) || (m1 == m2 && t1 < t2)));
-    }
-};
-
 //! Functor for making a conjugate message out of another
 struct MakeConjugate
 {
     /**
-       @brief Create a conjugate message
-       @param p1 [in] first message
-       @param p2 [out] second message
-     **/
-    template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
-    operator()(const P& p1, P& p2) const
+         @brief Create a conjugate message
+         @param p1 [in] first message index
+         @param p2 [out] second message index
+         @param nr [in] number of real components
+         @param ni [in] number of int components
+         @param rdata [in, out] message real data
+         @param idata [in, out] message int data
+       **/
+    template <class RT, class IT>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
+        const amrex::Long p1,
+        amrex::Long p2,
+        const int nr,
+        const int ni,
+        RT& rdata,
+        IT& idata) const
     {
-        Copy()(p1, p2);
-        p2.idata(MessageIntData::type_id) = MessageTypes::CONJUGATE;
+        Copy()(p1, p2, nr, ni, rdata, idata);
+        idata[MessageIntData::type_id][p2] = MessageTypes::CONJUGATE;
     }
 };
 
@@ -66,6 +41,9 @@ struct CreateMessage
     /**
        @brief Create a message
        @param p [in, out] message
+       @param n [in] message index
+       @param rdata [in, out] message real data
+       @param idata [in, out] message int data
        @param timestamp [in] time stamp
        @param pos [in] position
        @param iv [in] index
@@ -74,9 +52,12 @@ struct CreateMessage
        @param receiver_lp [in] receiver LP id
        @param receiver_entity [in] entity id
      **/
-    template <class P>
+    template <class P, class RT, class IT>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
         P& p,
+        const amrex::Long n,
+        RT& rdata,
+        IT& idata,
         const amrex::Real timestamp,
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         const amrex::IntVect& iv,
@@ -86,19 +67,19 @@ struct CreateMessage
         const int receiver_entity) const
     {
         AMREX_ASSERT(
-            p.idata(MessageIntData::type_id) == MessageTypes::UNDEFINED);
+            idata[MessageIntData::type_id][n] == MessageTypes::UNDEFINED);
 
-        p.idata(MessageIntData::type_id) = MessageTypes::MESSAGE;
-        p.rdata(MessageRealData::timestamp) = timestamp;
+        idata[MessageIntData::type_id][n] = MessageTypes::MESSAGE;
+        rdata[MessageRealData::timestamp][n] = timestamp;
 
         AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)
-        AMREX_D_TERM(p.idata(MessageIntData::i) = iv[0];
-                     , p.idata(MessageIntData::j) = iv[1];
-                     , p.idata(MessageIntData::k) = iv[2];)
-        p.idata(MessageIntData::sender_lp) = sender_lp;
-        p.idata(MessageIntData::sender_entity) = sender_entity;
-        p.idata(MessageIntData::receiver_lp) = receiver_lp;
-        p.idata(MessageIntData::receiver_entity) = receiver_entity;
+        AMREX_D_TERM(idata[MessageIntData::i][n] = iv[0];
+                     , idata[MessageIntData::j][n] = iv[1];
+                     , idata[MessageIntData::k][n] = iv[2];)
+        idata[MessageIntData::sender_lp][n] = sender_lp;
+        idata[MessageIntData::sender_entity][n] = sender_entity;
+        idata[MessageIntData::receiver_lp][n] = receiver_lp;
+        idata[MessageIntData::receiver_entity][n] = receiver_entity;
     }
 };
 
@@ -107,16 +88,19 @@ struct MarkMessageUndefined
 {
     /**
        @brief Mark a message as undefined
-       @param p [in, out] message
+       @param n [in] message index
+       @param rdata [in, out] message real data
+       @param idata [in, out] message int data
      **/
-    template <class P>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
+    template <class RT, class IT>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
+    operator()(const amrex::Long n, RT& rdata, IT& idata) const
     {
-        p.idata(MessageIntData::type_id) = MessageTypes::UNDEFINED;
-        p.idata(MessageIntData::pair) = -1;
-        p.rdata(MessageRealData::timestamp) = 0.0;
-        p.rdata(MessageRealData::old_timestamp) = 0.0;
-        p.rdata(MessageRealData::creation_time) = 0.0;
+        idata[MessageIntData::type_id][n] = MessageTypes::UNDEFINED;
+        idata[MessageIntData::pair][n] = -1;
+        rdata[MessageRealData::timestamp][n] = 0.0;
+        rdata[MessageRealData::old_timestamp][n] = 0.0;
+        rdata[MessageRealData::creation_time][n] = 0.0;
     }
 };
 

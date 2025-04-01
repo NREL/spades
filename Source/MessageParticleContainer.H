@@ -18,6 +18,8 @@ namespace spades::particles {
 class MessageParticleContainer
     : public SpadesParticleContainer<
           MessageTypes,
+          0,
+          0,
           MessageRealData::ncomps,
           MessageIntData::ncomps>
 {

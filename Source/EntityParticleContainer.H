@@ -18,6 +18,8 @@ namespace spades::particles {
 class EntityParticleContainer
     : public SpadesParticleContainer<
           EntityTypes,
+          0,
+          0,
           EntityRealData::ncomps,
           EntityIntData::ncomps>
 {

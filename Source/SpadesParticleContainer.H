@@ -20,9 +20,18 @@
 namespace spades::particles {
 
 //! Main SPADES particle container
-template <typename PType, int NStructReal, int NStructInt>
+template <
+    typename PType,
+    int NStructReal,
+    int NStructInt,
+    int NArrayReal,
+    int NArrayInt>
 class SpadesParticleContainer
-    : public amrex::NeighborParticleContainer<NStructReal, NStructInt>
+    : public amrex::NeighborParticleContainer<
+          NStructReal,
+          NStructInt,
+          NArrayReal,
+          NArrayInt>
 {
 public:
     /**

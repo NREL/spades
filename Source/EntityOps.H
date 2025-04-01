@@ -9,53 +9,21 @@
 
 namespace spades::particles {
 
-/**
-   @brief Functor for comparing entities
-
-   This is used to sort entities based on cell index, entity type,
-   and timestamp (in that order).
- **/
-struct CompareEntity
-{
-    /**
-       @brief Compare entities
-       @param p1 [in] first entity
-       @param p2 [in] second entity
-       @return boolean of p1 < p2 based on criteria
-     **/
-    template <class P>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
-    operator()(const P& p1, const P& p2) const
-    {
-        // sort by iv, then entity type then by timestamp
-        const amrex::IntVect piv1(AMREX_D_DECL(
-            p1.idata(EntityIntData::i), p1.idata(EntityIntData::j),
-            p1.idata(EntityIntData::k)));
-        const amrex::IntVect piv2(AMREX_D_DECL(
-            p2.idata(EntityIntData::i), p2.idata(EntityIntData::j),
-            p2.idata(EntityIntData::k)));
-
-        const auto m1 = p1.idata(EntityIntData::type_id);
-        const auto m2 = p2.idata(EntityIntData::type_id);
-        const auto t1 = p1.rdata(EntityRealData::timestamp);
-        const auto t2 = p2.rdata(EntityRealData::timestamp);
-        return (piv1 < piv2) ||
-               (piv1 == piv2 && ((m1 < m2) || (m1 == m2 && t1 < t2)));
-    }
-};
-
 //! Functor for making a entity undefined
 struct MarkEntityUndefined
 {
     /**
        @brief Mark a entity as undefined
-       @param p [in, out] entity
+       @param n [in] entity index
+       @param rdata [in, out] entity real data
+       @param idata [in, out] entity int data
      **/
-    template <class P>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void operator()(P& p) const
+    template <class RT, class IT>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
+    operator()(const amrex::Long n, RT& rdata, IT& idata) const
     {
-        p.idata(EntityIntData::type_id) = EntityTypes::UNDEFINED;
-        p.rdata(EntityRealData::timestamp) = 0.0;
+        idata[EntityIntData::type_id][n] = EntityTypes::UNDEFINED;
+        rdata[EntityRealData::timestamp][n] = 0.0;
     }
 };
 
