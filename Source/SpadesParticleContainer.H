@@ -134,6 +134,9 @@ public:
     //! Encoded sort the particles implementation
     void encoded_sort_impl();
 
+    //! Print all the particles to screen
+    void print_messages(const std::string& header);
+
     //! Reposition the particles inside a cell for visualization
     void reposition_particles();
 

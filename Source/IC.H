@@ -81,7 +81,7 @@ public:
 
                 s_arrs[nbx](i, j, k, n) = state;
             });
-        amrex::Gpu::synchronize();
+        amrex::Gpu::streamSynchronize();
     }
 
     //! Initial condition operator

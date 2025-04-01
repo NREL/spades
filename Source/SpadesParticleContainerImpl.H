@@ -195,7 +195,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::check_sort(
             }
         }
     });
-    amrex::Gpu::Device::synchronize();
+    amrex::Gpu::streamSynchronize();
 }
 
 template <typename PType, int NStructReal, int NStructInt>
@@ -241,7 +241,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             p_cell_list[pindex] = pindex;
         });
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(prep);
 
         // Sort particle indices based on the cell index
@@ -285,7 +285,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 return compare(p1, p2);
             });
 #endif
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(sort);
 
         // Reorder the particles in memory
@@ -294,7 +294,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
             "ReorderParticles",
             reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(reorder);
 
 #ifdef AMREX_DEBUG
@@ -377,7 +377,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             p_cell_list[pindex] = pindex;
         });
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(prep);
 
         BL_PROFILE_VAR(
@@ -467,7 +467,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
             //     p.idata(CommonIntData::type_id),
             //     p.rdata(CommonRealData::timestamp), normalized, scaled, t);
         });
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(encode);
 
         // Sort particle indices based on the cell index
@@ -509,7 +509,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 return p_encode[xi] < p_encode[yi];
             });
 #endif
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(sort);
 
         // Reorder the particles in memory
@@ -518,13 +518,41 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
             "ReorderParticles",
             reorder);
         this->ReorderParticles(LEV, mfi, cell_list.data());
-        amrex::Gpu::Device::synchronize();
+        amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(reorder);
 
 #ifdef AMREX_DEBUG
         check_sort(mfi);
 #endif
     }
+}
+
+template <typename PType, int NStructReal, int NStructInt>
+void SpadesParticleContainer<PType, NStructReal, NStructInt>::print_messages(
+    const std::string& header)
+{
+    BL_PROFILE("spades::SpadesParticleContainer::print_messages()");
+
+    amrex::Print() << header << " -----------------------------" << std::endl;
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+    for (amrex::MFIter mfi = this->MakeMFIter(LEV); mfi.isValid(); ++mfi) {
+        const int gid = mfi.index();
+        const int tid = mfi.LocalTileIndex();
+        const auto index = std::make_pair(gid, tid);
+        const auto& particle_tile = this->GetParticles(LEV)[index];
+        const size_t np = particle_tile.numParticles();
+        const auto& particles = particle_tile.GetArrayOfStructs();
+        const auto* pstruct = particles().dataPtr();
+
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
+            const auto& p = pstruct[pindex];
+            DevicePrint()(p);
+        });
+    }
+    amrex::Print() << "End " << header << "-----------------------------"
+                   << std::endl;
 }
 
 template <typename PType, int NStructReal, int NStructInt>

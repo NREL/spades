@@ -123,6 +123,9 @@ void EntityParticleContainer::initialize_entities()
                     pent.idata(EntityIntData::type_id) = EntityTypes::ENTITY;
                 }
             });
+
+        // This is necessary
+        amrex::Gpu::streamSynchronize();
     }
     Redistribute();
 
