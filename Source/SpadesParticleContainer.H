@@ -20,11 +20,41 @@
 namespace spades::particles {
 
 //! Main SPADES particle container
-template <typename PType, int NStructReal, int NStructInt>
+template <
+    int NType,
+    int NStructReal,
+    int NStructInt,
+    int NArrayReal,
+    int NArrayInt>
 class SpadesParticleContainer
-    : public amrex::NeighborParticleContainer<NStructReal, NStructInt>
+    : public amrex::NeighborParticleContainer<
+          NStructReal,
+          NStructInt,
+          NArrayReal,
+          NArrayInt>
 {
 public:
+    using ParticleType = typename amrex::NeighborParticleContainer<
+        NStructReal,
+        NStructInt,
+        NArrayReal,
+        NArrayInt>::ParticleType;
+    using ParticleTileType = typename amrex::NeighborParticleContainer<
+        NStructReal,
+        NStructInt,
+        NArrayReal,
+        NArrayInt>::ParticleTileType;
+    using IntVector = typename amrex::NeighborParticleContainer<
+        NStructReal,
+        NStructInt,
+        NArrayReal,
+        NArrayInt>::IntVector;
+    using RealVector = typename amrex::NeighborParticleContainer<
+        NStructReal,
+        NStructInt,
+        NArrayReal,
+        NArrayInt>::RealVector;
+
     /**
        @brief Class identifier name
        @return class identifier
@@ -182,6 +212,16 @@ public:
             valid_types.cend()) {
             amrex::Abort("Invalid sort type. Must be nonencoded or encoded");
         }
+    }
+
+    ParticleArrays<NArrayReal, NArrayInt, ParticleType, RealVector, IntVector>
+    particle_arrays(ParticleTileType& pti) const
+    {
+        auto& aos = pti.GetArrayOfStructs();
+        auto& soa = pti.GetStructOfArrays();
+        return ParticleArrays<
+            NArrayReal, NArrayInt, ParticleType, RealVector, IntVector>(
+            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
     }
 
 protected:
