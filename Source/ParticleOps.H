@@ -35,7 +35,6 @@ struct Print
 };
 
 //! Functor for printing particle data on device
-#ifdef AMREX_USE_GPU
 struct DevicePrint
 {
     /**
@@ -52,7 +51,6 @@ struct DevicePrint
             p.rdata(CommonRealData::timestamp));
     }
 };
-#endif
 
 //! Functor for copying a particle's data to another
 struct Copy
