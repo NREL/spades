@@ -62,13 +62,18 @@ macro(setup_test)
     endif()
     if(SPADES_TEST_WITH_FCOMPARE)
       set(FCOMPARE_COMMAND "&& ${FCOMPARE_EXE} ${FCOMPARE_TOLERANCE} ${PLOT_GOLD} ${PLOT_TEST}")
+      if (SPADES_TEST_WITH_PYTHON)
+        set(PARTICLE_FCOMPARE_EXE ${CMAKE_SOURCE_DIR}/Scripts/fcompare_particles.py
+          CACHE INTERNAL "Path to particle fcompare executable for regression tests")
+        set(PARTICLE_FCOMPARE_COMMAND "&& ${Python3_EXECUTABLE} ${PARTICLE_FCOMPARE_EXE} ${FCOMPARE_TOLERANCE} ${PLOT_GOLD} ${PLOT_TEST}")
+      endif()
     endif()
 endmacro(setup_test)
 
 # Standard regression test
 function(add_test_r TEST_NAME)
     setup_test()
-    add_test(${TEST_NAME} bash -c "set -o pipefail && ${MPI_COMMANDS} ${CMAKE_BINARY_DIR}/${spades_exe_name} ${MPIEXEC_POSTFLAGS} ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp ${RUNTIME_OPTIONS} 2>&1 | tee ${TEST_NAME}.log ${SAVE_GOLDS_COMMAND} ${FCOMPARE_COMMAND}")
+    add_test(${TEST_NAME} bash -c "set -o pipefail && ${MPI_COMMANDS} ${CMAKE_BINARY_DIR}/${spades_exe_name} ${MPIEXEC_POSTFLAGS} ${CURRENT_TEST_BINARY_DIR}/${TEST_NAME}.inp ${RUNTIME_OPTIONS} 2>&1 | tee ${TEST_NAME}.log ${SAVE_GOLDS_COMMAND} ${FCOMPARE_COMMAND} ${PARTICLE_FCOMPARE_COMMAND}")
     # Set properties for test
     set_tests_properties(${TEST_NAME} PROPERTIES
                          TIMEOUT 5400

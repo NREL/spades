@@ -88,6 +88,7 @@ jobs:
           -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
           -DSPADES_ENABLE_MPI:BOOL=ON \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+          -DSPADES_TEST_WITH_PYTHON:BOOL=OFF \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
           ${{github.workspace}}
     - name: Build
@@ -339,6 +340,7 @@ jobs:
           -DCMAKE_C_COMPILER:STRING=clang \
           -DSPADES_ENABLE_MPI:BOOL=OFF \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+          -DSPADES_TEST_WITH_PYTHON:BOOL=OFF \
           -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
           -DSPADES_ENABLE_CLANG_TIDY:BOOL=ON \
           -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
@@ -428,6 +430,7 @@ jobs:
           -DCMAKE_C_COMPILER:STRING=clang-${LLVM_VERSION} \
           -DSPADES_ENABLE_MPI:BOOL=OFF \
           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+          -DSPADES_TEST_WITH_PYTHON:BOOL=OFF \
           -DSPADES_ENABLE_ALL_WARNINGS:BOOL=ON \
           -DSPADES_ENABLE_ASAN:BOOL=${{matrix.is_asan}} \
           -DSPADES_ENABLE_UBSAN:BOOL=${{matrix.is_asan}} \
@@ -487,6 +490,7 @@ jobs:
   #           -DCMAKE_C_COMPILER:STRING=clang \
   #           -DSPADES_ENABLE_MPI:BOOL=OFF \
   #           -DSPADES_TEST_WITH_FCOMPARE:BOOL=OFF \
+  #           -DSPADES_TEST_WITH_PYTHON:BOOL=OFF \
   #           ${{github.workspace}}
   #     - name: Build
   #       run: |
