@@ -21,5 +21,6 @@ To compare to previously generated gold files, use the following additional opti
 .. code-block:: console
 
     -DSPADES_TEST_WITH_FCOMPARE:BOOL=ON \
+    -DSPADES_TEST_WITH_PYTHON:BOOL=ON \
     -DSPADES_SAVED_GOLDS_DIRECTORY:STRING=$(pwd)/golds/tmp \
     -DSPADES_REFERENCE_GOLDS_DIRECTORY:STRING=$(pwd)/golds/current \

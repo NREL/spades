@@ -26,6 +26,7 @@ option(SPADES_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(SPADES_ENABLE_LSAN "Enable LeakSanitizer" OFF)
 option(SPADES_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(SPADES_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+option(SPADES_TEST_WITH_PYTHON "Enable testing relying on python, like postprocessing" OFF)
 set(SPADES_PRECISION "DOUBLE" CACHE STRING "Floating point precision SINGLE or DOUBLE")
 
 # Options for C++
@@ -87,6 +88,11 @@ if(CLANG_TIDY_EXE)
 endif()
 
 include(set_compile_flags)
+
+if(SPADES_TEST_WITH_PYTHON)
+  set(CMAKE_PREFIX_PATH ${PYTHON_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+endif()
 
 generate_version_info()
 add_subdirectory(Source)

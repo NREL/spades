@@ -42,6 +42,10 @@ CMake configuration reference
 
    Check test plots against gold files. Default: OFF
 
+.. cmakeval:: SPADES_TEST_WITH_PYTHON
+
+   Check particle test plots against gold files. Default: OFF
+
 .. cmakeval:: SPADES_SAVE_GOLDS
 
    Provide a directory in which to save golds during testing. Default: OFF
