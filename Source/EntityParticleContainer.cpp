@@ -43,6 +43,12 @@ void EntityParticleContainer::initialize_variable_names()
     m_real_data_names[EntityRealData::timestamp] = "timestamp";
     m_writeflags_real[EntityRealData::timestamp] = 1;
 
+    AMREX_D_TERM(m_int_data_names[EntityIntData::i] = "i";
+                 m_writeflags_int[EntityIntData::i] = 1;
+                 , m_int_data_names[EntityIntData::j] = "j";
+                 m_writeflags_int[EntityIntData::j] = 1;
+                 , m_int_data_names[EntityIntData::k] = "k";
+                 m_writeflags_int[EntityIntData::k] = 1;)
     m_int_data_names[EntityIntData::type_id] = "type_id";
     m_writeflags_int[EntityIntData::type_id] = 1;
     m_int_data_names[EntityIntData::owner] = "owner";

@@ -42,8 +42,21 @@ def main():
     p0df = p0f()
     p1df = p1f()
     assert p0df.shape == p1df.shape
-    p0df.sort_values(by=["id", "cpu"], inplace=True, kind="stable", ignore_index=True)
-    p1df.sort_values(by=["id", "cpu"], inplace=True, kind="stable", ignore_index=True)
+    p0df.drop(["id", "cpu"], axis=1)
+    p1df.drop(["id", "cpu"], axis=1)
+    lps = ["i", "j", "k"][:p0f.ndim]
+    p0df.sort_values(
+        by=lps+["type_id", "timestamp"],
+        inplace=True,
+        kind="stable",
+        ignore_index=True,
+    )
+    p1df.sort_values(
+        by=lps+["type_id", "timestamp"],
+        inplace=True,
+        kind="stable",
+        ignore_index=True,
+    )
 
     adiff = np.sqrt(np.square(p0df - p1df).sum(axis=0))
     rdiff = np.sqrt(np.square(p0df - p1df).sum(axis=0)) / np.sqrt(
