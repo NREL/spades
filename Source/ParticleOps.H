@@ -107,8 +107,13 @@ struct ParticleOps
 #endif
     }
 
+    //! AOS data
     P* m_aos = nullptr;
+
+    //! Pointers to real data
     amrex::GpuArray<amrex::Real*, NReal> m_rdata;
+
+    //! Pointers to int data
     amrex::GpuArray<int*, NInt> m_idata;
 };
 
