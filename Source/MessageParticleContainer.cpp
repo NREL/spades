@@ -175,10 +175,10 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
         const size_t np = pti.numParticles();
-        auto* aos = pti.GetArrayOfStructs().dataPtr();
+        auto& aos = pti.GetArrayOfStructs();
         auto& soa = pti.GetStructOfArrays();
         const auto pdata = MessageData<ParticleType, RealVector, IntVector>(
-            aos, soa.GetRealData(), soa.GetIntData());
+            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             auto& p = pdata.m_aos[pidx];
