@@ -104,5 +104,37 @@ struct MarkMessageUndefined
     }
 };
 
+// Message data
+template <class P, class RT, class IT>
+struct MessageData
+    : public ParticleData<
+          MessageRealData::ncomps,
+          MessageIntData::ncomps,
+          P,
+          RT,
+          IT>
+{
+
+    MessageData(
+        P* aos,
+        std::array<RT, MessageRealData::ncomps>& rdata,
+        std::array<IT, MessageIntData::ncomps>& idata)
+        : ParticleData<
+              MessageRealData::ncomps,
+              MessageIntData::ncomps,
+              P,
+              RT,
+              IT>(aos, rdata, idata) {};
+
+    void mark_undefined(const amrex::Long n) const
+    {
+        this->m_idata[MessageIntData::type_id][n] = MessageTypes::UNDEFINED;
+        this->m_idata[MessageIntData::pair][n] = -1;
+        this->m_rdata[MessageRealData::timestamp][n] = 0.0;
+        this->m_rdata[MessageRealData::old_timestamp][n] = 0.0;
+        this->m_rdata[MessageRealData::creation_time][n] = 0.0;
+    }
+};
+
 } // namespace spades::particles
 #endif

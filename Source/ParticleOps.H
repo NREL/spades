@@ -8,6 +8,27 @@
 
 namespace spades::particles {
 
+//! Object for storing particle data pointers
+template <size_t NReal, size_t NInt, class P, class RT, class IT>
+struct ParticleData
+{
+    ParticleData(
+        P* aos, std::array<RT, NReal>& rdata, std::array<IT, NInt>& idata)
+        : m_aos(aos)
+    {
+        for (int i = 0; i < NReal; i++) {
+            m_rdata[i] = rdata[i].data();
+        }
+        for (int i = 0; i < NInt; i++) {
+            m_idata[i] = idata[i].data();
+        }
+    }
+
+    P* m_aos = nullptr;
+    amrex::GpuArray<amrex::Real*, NReal> m_rdata;
+    amrex::GpuArray<int*, NInt> m_idata;
+};
+
 //! Functor for printing particle data on host
 struct Print
 {

@@ -104,22 +104,23 @@ void EntityParticleContainer::initialize_entities()
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = GetParticles(LEV)[index];
         pti.resize(np);
-        auto* aos = pti.GetArrayOfStructs().dataPtr();
+        auto& aos = pti.GetArrayOfStructs();
         auto& soa = pti.GetStructOfArrays();
-        auto* rdata = soa.GetRealData().data();
-        auto* idata = soa.GetIntData().data();
+        const auto pdata = EntityData<ParticleType, RealVector, IntVector>(
+            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
+
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const int start = offset_arr(iv);
                 for (int n = start; n < start + num_particles_arr(iv); n++) {
-                    auto& p = aos[n];
+                    auto& p = pdata.m_aos[n];
                     p.id() = pid + n;
                     p.cpu() = my_proc;
 
-                    MarkEntityUndefined()(n, rdata, idata);
-                    idata[EntityIntData::owner][n] =
+                    pdata.mark_undefined(n);
+                    pdata.m_idata[EntityIntData::owner][n] =
                         static_cast<int>(dom.index(iv));
 
                     AMREX_D_TERM(
@@ -128,16 +129,17 @@ void EntityParticleContainer::initialize_entities()
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(idata[EntityIntData::i][n] = iv[0];
-                                 , idata[EntityIntData::j][n] = iv[1];
-                                 , idata[EntityIntData::k][n] = iv[2];)
+                    AMREX_D_TERM(pdata.m_idata[EntityIntData::i][n] = iv[0];
+                                 , pdata.m_idata[EntityIntData::j][n] = iv[1];
+                                 , pdata.m_idata[EntityIntData::k][n] = iv[2];)
                 }
 
                 for (int n = start; n < start + entities_per_lp; n++) {
                     const amrex::Real ts = 0.0;
 
-                    rdata[EntityRealData::timestamp][n] = ts;
-                    idata[EntityIntData::type_id][n] = EntityTypes::ENTITY;
+                    pdata.m_rdata[EntityRealData::timestamp][n] = ts;
+                    pdata.m_idata[EntityIntData::type_id][n] =
+                        EntityTypes::ENTITY;
                 }
             });
 
@@ -152,15 +154,16 @@ void EntityParticleContainer::initialize_entities()
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
         const size_t np = pti.numParticles();
-        auto* aos = pti.GetArrayOfStructs().dataPtr();
+        auto& aos = pti.GetArrayOfStructs();
         auto& soa = pti.GetStructOfArrays();
-        auto* idata = soa.GetIntData(EntityIntData::type_id).data();
+        const auto pdata = EntityData<ParticleType, RealVector, IntVector>(
+            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            auto& p = aos[pidx];
+            auto& p = pdata.m_aos[pidx];
             bool valid_type = false;
             for (int typ = 0; typ < EntityTypes::NTYPES; typ++) {
-                valid_type = idata[pidx] == typ;
+                valid_type = pdata.m_idata[EntityIntData::type_id][pidx] == typ;
                 if (valid_type) {
                     break;
                 }
