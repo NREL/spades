@@ -24,6 +24,50 @@ struct ParticleData
         }
     }
 
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE int
+    get(const amrex::IntVect& iv,
+        const amrex::Array4<const int>& counts,
+        const amrex::Array4<const int>& offsets,
+        const int n,
+        const int typ) const
+    {
+        AMREX_ASSERT(counts(iv, typ) > n);
+        const int idx = offsets(iv, typ) + n;
+
+        AMREX_ASSERT(m_aos[idx].id() >= 0);
+        AMREX_ASSERT(m_idata[CommonIntData::type_id][idx] == typ);
+
+        return idx;
+    }
+
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool check(
+        const amrex::IntVect& iv,
+        const amrex::Array4<const int>& counts,
+        const amrex::Array4<const int>& offsets,
+        const int n,
+        const int typ) const
+    {
+        AMREX_ASSERT(counts(iv, typ) > n);
+        const int idx = offsets(iv, typ) + n;
+        return m_idata[CommonIntData::type_id][idx] == typ;
+    }
+
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void assert_different(
+        const amrex::IntVect& iv,
+        const amrex::Array4<const int>& counts,
+        const amrex::Array4<const int>& offsets,
+        const int n,
+        const int typ,
+        const int expected_type) const
+    {
+#ifdef AMREX_DEBUG
+        const int idx = offsets(iv, typ) + n;
+        AMREX_ASSERT(m_idata[CommonIntData::type_id][idx] == expected_type);
+#else
+        amrex::ignore_unused(n, typ, expected_type);
+#endif
+    }
+
     P* m_aos = nullptr;
     amrex::GpuArray<amrex::Real*, NReal> m_rdata;
     amrex::GpuArray<int*, NInt> m_idata;
