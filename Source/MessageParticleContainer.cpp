@@ -451,21 +451,19 @@ void MessageParticleContainer::garbage_collect(const amrex::Real gvt)
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
         const size_t np = pti.numParticles();
-        auto& soa = pti.GetStructOfArrays();
-        auto* rdata = soa.GetRealData().data();
-        auto* idata = soa.GetIntData().data();
+        const auto pops = particle_ops(pti.GetParticleTile());
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            if (((rdata[MessageRealData::timestamp][pidx] < gvt) &&
-                 (idata[MessageIntData::type_id][pidx] !=
+            if (((pops.m_rdata[MessageRealData::timestamp][pidx] < gvt) &&
+                 (pops.m_idata[MessageIntData::type_id][pidx] !=
                   MessageTypes::UNDEFINED)) ||
-                ((idata[MessageIntData::type_id][pidx] ==
+                ((pops.m_idata[MessageIntData::type_id][pidx] ==
                   MessageTypes::CONJUGATE) &&
-                 (rdata[MessageRealData::creation_time][pidx] < gvt))) {
+                 (pops.m_rdata[MessageRealData::creation_time][pidx] < gvt))) {
                 AMREX_ASSERT(
-                    idata[MessageIntData::type_id][pidx] !=
+                    pops.m_idata[MessageIntData::type_id][pidx] !=
                     MessageTypes::MESSAGE);
-                MarkMessageUndefined()(pidx, rdata, idata);
+                pops.mark_undefined(pidx);
             }
         });
     }
@@ -484,15 +482,14 @@ amrex::Real MessageParticleContainer::compute_gvt()
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
         const size_t np = pti.numParticles();
-        const auto& soa = pti.GetStructOfArrays();
-        const auto* rdata = soa.GetRealData(MessageRealData::timestamp).data();
-        const auto* idata = soa.GetIntData(MessageIntData::type_id).data();
+        const auto pops = particle_ops(pti.GetParticleTile());
 
         amrex::Gpu::DeviceVector<amrex::Real> ts(np, constants::LARGE_NUM);
         auto* p_ts = ts.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            if (idata[pidx] == MessageTypes::MESSAGE) {
-                p_ts[pidx] = rdata[pidx];
+            if (pops.m_idata[MessageIntData::type_id][pidx] ==
+                MessageTypes::MESSAGE) {
+                p_ts[pidx] = pops.m_rdata[MessageRealData::timestamp][pidx];
             }
         });
         gvt = std::min(amrex::Reduce::Min(np, ts.data()), gvt);

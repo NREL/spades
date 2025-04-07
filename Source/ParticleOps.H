@@ -8,10 +8,16 @@
 
 namespace spades::particles {
 
-//! Object for storing particle data pointers
+//! Particle operations
 template <size_t NReal, size_t NInt, class P, class RT, class IT>
 struct ParticleOps
 {
+    /**
+       @brief Constructor
+       @param aos [in] particle AOS data
+       @param rdata [in] particle real data
+       @param idata [in] particle int data
+     **/
     ParticleOps(
         P* aos, std::array<RT, NReal>& rdata, std::array<IT, NInt>& idata)
         : m_aos(aos)
@@ -24,6 +30,14 @@ struct ParticleOps
         }
     }
 
+    /**
+       @brief Get a particle
+       @param iv [in] cell index of the particle
+       @param counts [in] cell counts of particle types
+       @param offsets [in] cell offsets of particle types
+       @param n [in] particle index
+       @param typ [in] particle type
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE int
     get(const amrex::IntVect& iv,
         const amrex::Array4<const int>& counts,
@@ -40,6 +54,15 @@ struct ParticleOps
         return idx;
     }
 
+    /**
+       @brief Check validity of the particle type
+       @param iv [in] cell index of the particle
+       @param counts [in] cell counts of particle types
+       @param offsets [in] cell offsets of particle types
+       @param n [in] particle index
+       @param typ [in] particle type that is requested
+       @return boolean if the particle is of the requested type
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool check(
         const amrex::IntVect& iv,
         const amrex::Array4<const int>& counts,
@@ -52,6 +75,22 @@ struct ParticleOps
         return m_idata[CommonIntData::type_id][idx] == typ;
     }
 
+    /**
+       @brief Assert that the particle is of a different but expected
+       type
+
+       A particle sometimes changes type (e.g., marked as undefined)
+       but the counts and offsets haven't been updated yet. This
+       asserts that the requested particle of a certain type \p typ
+       changed to another type \p expected_type.
+
+       @param iv [in] cell index of the particle
+       @param counts [in] cell counts of particle types
+       @param offsets [in] cell offsets of particle types
+       @param n [in] particle index
+       @param typ [in] particle type that is requested
+       @param expected_type [in] expected particle type
+     **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void assert_different(
         const amrex::IntVect& iv,
         const amrex::Array4<const int>& counts,

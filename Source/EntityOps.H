@@ -9,7 +9,7 @@
 
 namespace spades::particles {
 
-// Entity data
+//! Entity operations
 template <class P, class RT, class IT>
 struct EntityOps
     : public ParticleOps<
@@ -20,6 +20,12 @@ struct EntityOps
           IT>
 {
 
+    /**
+       @brief Constructor
+       @param aos [in] particle AOS data
+       @param rdata [in] particle real data
+       @param idata [in] particle int data
+     **/
     EntityOps(
         P* aos,
         std::array<RT, EntityRealData::ncomps>& rdata,
@@ -27,6 +33,10 @@ struct EntityOps
         : ParticleOps<EntityRealData::ncomps, EntityIntData::ncomps, P, RT, IT>(
               aos, rdata, idata) {};
 
+    /**
+       @brief Mark an entity as undefined
+       @param n [in] message index
+     **/
     void mark_undefined(const amrex::Long n) const
     {
         this->m_idata[EntityIntData::type_id][n] = EntityTypes::UNDEFINED;
