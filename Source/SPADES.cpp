@@ -385,27 +385,15 @@ void SPADES::process_messages()
         const auto& ent_cnt_arr = m_entity_pc->counts().const_array(mfi);
         const auto& ent_offsets_arr = m_entity_pc->offsets().const_array(mfi);
         auto& msg_pti = m_message_pc->GetParticles(LEV)[index];
-        auto* msg_aos = msg_pti.GetArrayOfStructs().dataPtr();
+        const auto msg_pops = m_message_pc->particle_ops(msg_pti);
         auto& ent_pti = m_entity_pc->GetParticles(LEV)[index];
-        auto* ent_aos = ent_pti.GetArrayOfStructs().dataPtr();
-
-        auto& msg_soa = msg_pti.GetStructOfArrays();
-        auto* msg_rdata = msg_soa.GetRealData().data();
-        auto* msg_idata = msg_soa.GetIntData().data();
-
-        auto& ent_soa = ent_pti.GetStructOfArrays();
-        auto* ent_rdata = ent_soa.GetRealData().data();
-        auto* ent_idata = ent_soa.GetIntData().data();
+        const auto ent_pops = m_entity_pc->particle_ops(ent_pti);
 
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k),
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto msg_getter = particles::Get(
-                    iv, msg_cnt_arr, msg_offsets_arr, msg_aos, msg_idata);
-                const auto ent_getter = particles::Get(
-                    iv, ent_cnt_arr, ent_offsets_arr, ent_aos, ent_idata);
 
                 for (int n = 0;
                      n < amrex::min<int>(
@@ -413,11 +401,12 @@ void SPADES::process_messages()
                              messages_per_step);
                      n++) {
 
-                    const auto prcv_soa =
-                        msg_getter(n, particles::MessageTypes::MESSAGE);
+                    const auto prcv_soa = msg_pops.get(
+                        iv, msg_cnt_arr, msg_offsets_arr, n,
+                        particles::MessageTypes::MESSAGE);
                     const auto ts =
-                        msg_rdata[particles::MessageRealData::timestamp]
-                                 [prcv_soa];
+                        msg_pops.m_rdata[particles::MessageRealData::timestamp]
+                                        [prcv_soa];
                     if (ts >= lbts + lookahead + window_size) {
                         return;
                     }
@@ -425,34 +414,41 @@ void SPADES::process_messages()
                     AMREX_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
 
                     const auto ent =
-                        msg_idata[particles::MessageIntData::receiver_entity]
-                                 [prcv_soa];
-                    const auto pe_soa =
-                        ent_getter(ent, particles::EntityTypes::ENTITY);
+                        msg_pops
+                            .m_idata[particles::MessageIntData::receiver_entity]
+                                    [prcv_soa];
+                    const auto pe_soa = ent_pops.get(
+                        iv, ent_cnt_arr, ent_offsets_arr, ent,
+                        particles::EntityTypes::ENTITY);
                     AMREX_ASSERT(
-                        dom.atOffset(ent_idata[particles::EntityIntData::owner]
-                                              [pe_soa]) == iv);
+                        dom.atOffset(
+                            ent_pops.m_idata[particles::EntityIntData::owner]
+                                            [pe_soa]) == iv);
                     AMREX_ASSERT(
-                        ent_rdata[particles::EntityRealData::timestamp]
-                                 [pe_soa] < ts);
+                        ent_pops.m_rdata[particles::EntityRealData::timestamp]
+                                        [pe_soa] < ts);
 
                     // process the event
                     AMREX_ASSERT(
                         dom.atOffset(
-                            msg_idata[particles::MessageIntData::receiver_lp]
-                                     [prcv_soa]) == iv);
-                    msg_rdata[particles::MessageRealData::old_timestamp]
-                             [prcv_soa] =
-                                 ent_rdata[particles::EntityRealData::timestamp]
-                                          [pe_soa];
-                    ent_rdata[particles::EntityRealData::timestamp][pe_soa] =
+                            msg_pops
+                                .m_idata[particles::MessageIntData::receiver_lp]
+                                        [prcv_soa]) == iv);
+                    msg_pops.m_rdata[particles::MessageRealData::old_timestamp]
+                                    [prcv_soa] =
+                        ent_pops.m_rdata[particles::EntityRealData::timestamp]
+                                        [pe_soa];
+                    ent_pops
+                        .m_rdata[particles::EntityRealData::timestamp][pe_soa] =
                         ts;
-                    msg_idata[particles::MessageIntData::type_id][prcv_soa] =
+                    msg_pops
+                        .m_idata[particles::MessageIntData::type_id][prcv_soa] =
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
                     const auto ent_lvt =
-                        ent_rdata[particles::EntityRealData::timestamp][pe_soa];
+                        ent_pops.m_rdata[particles::EntityRealData::timestamp]
+                                        [pe_soa];
                     const amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                         amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
@@ -468,24 +464,28 @@ void SPADES::process_messages()
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
-                    const auto psnd_soa =
-                        msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
-                    auto& psnd = msg_aos[psnd_soa];
-                    particles::CreateMessage()(
-                        psnd, psnd_soa, msg_rdata, msg_idata, next_ts, pos,
-                        iv_dest, static_cast<int>(dom.index(iv)), ent,
+                    const auto psnd_soa = msg_pops.get(
+                        iv, msg_cnt_arr, msg_offsets_arr, 2 * n,
+                        particles::MessageTypes::UNDEFINED);
+                    auto& psnd = msg_pops.m_aos[psnd_soa];
+                    msg_pops.create_message(
+                        psnd_soa, next_ts, pos, iv_dest,
+                        static_cast<int>(dom.index(iv)), ent,
                         static_cast<int>(dom.index(iv_dest)), rcv_ent);
-                    auto& prcv = msg_aos[prcv_soa];
+                    auto& prcv = msg_pops.m_aos[prcv_soa];
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
-                    msg_idata[particles::MessageIntData::pair][psnd_soa] = pair;
-                    msg_rdata[particles::MessageRealData::creation_time]
-                             [psnd_soa] = ent_lvt;
+                    msg_pops
+                        .m_idata[particles::MessageIntData::pair][psnd_soa] =
+                        pair;
+                    msg_pops.m_rdata[particles::MessageRealData::creation_time]
+                                    [psnd_soa] = ent_lvt;
 
                     // Create the conjugate message
-                    const auto pcnj_soa = msg_getter(
-                        2 * n + 1, particles::MessageTypes::UNDEFINED);
-                    auto& pcnj = msg_aos[pcnj_soa];
+                    const auto pcnj_soa = msg_pops.get(
+                        iv, msg_cnt_arr, msg_offsets_arr, 2 * n + 1,
+                        particles::MessageTypes::UNDEFINED);
+                    auto& pcnj = msg_pops.m_aos[pcnj_soa];
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
@@ -498,14 +498,17 @@ void SPADES::process_messages()
                             plo[1] + (iv[1] + constants::HALF) * dx[1],
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
-                    particles::CreateMessage()(
-                        pcnj, pcnj_soa, msg_rdata, msg_idata, next_ts, conj_pos,
-                        iv, static_cast<int>(dom.index(iv)), ent,
+                    msg_pops.create_message(
+                        pcnj_soa, next_ts, conj_pos, iv,
+                        static_cast<int>(dom.index(iv)), ent,
                         static_cast<int>(dom.index(iv_dest)), rcv_ent);
-                    msg_idata[particles::MessageIntData::pair][pcnj_soa] = pair;
-                    msg_rdata[particles::MessageRealData::creation_time]
-                             [pcnj_soa] = ent_lvt;
-                    msg_idata[particles::MessageIntData::type_id][pcnj_soa] =
+                    msg_pops
+                        .m_idata[particles::MessageIntData::pair][pcnj_soa] =
+                        pair;
+                    msg_pops.m_rdata[particles::MessageRealData::creation_time]
+                                    [pcnj_soa] = ent_lvt;
+                    msg_pops
+                        .m_idata[particles::MessageIntData::type_id][pcnj_soa] =
                         particles::MessageTypes::CONJUGATE;
                 }
 
@@ -513,10 +516,12 @@ void SPADES::process_messages()
                 amrex::Real max_ent_lvt = constants::LOW_NUM;
                 for (int n = 0;
                      n < ent_cnt_arr(iv, particles::EntityTypes::ENTITY); n++) {
-                    const auto pe =
-                        ent_getter(n, particles::EntityTypes::ENTITY);
+                    const auto pe = ent_pops.get(
+                        iv, ent_cnt_arr, ent_offsets_arr, n,
+                        particles::EntityTypes::ENTITY);
                     const auto ent_lvt =
-                        ent_rdata[particles::EntityRealData::timestamp][pe];
+                        ent_pops
+                            .m_rdata[particles::EntityRealData::timestamp][pe];
                     if (ent_lvt > max_ent_lvt) {
                         max_ent_lvt = ent_lvt;
                     }

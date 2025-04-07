@@ -118,10 +118,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = GetParticles(LEV)[index];
         pti.resize(np);
-        auto& aos = pti.GetArrayOfStructs();
-        auto& soa = pti.GetStructOfArrays();
-        const auto pdata = MessageData<ParticleType, RealVector, IntVector>(
-            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
+        const auto pops = particle_ops(pti);
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k),
@@ -129,17 +126,17 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const int start = offset_arr(iv);
                 for (int n = start; n < start + num_particles_arr(iv); n++) {
-                    auto& p = pdata.m_aos[n];
+                    auto& p = pops.m_aos[n];
                     p.id() = pid + n;
                     p.cpu() = my_proc;
 
-                    pdata.mark_undefined(n);
-                    pdata.m_idata[MessageIntData::sender_lp][n] =
+                    pops.mark_undefined(n);
+                    pops.m_idata[MessageIntData::sender_lp][n] =
                         static_cast<int>(dom.index(iv));
-                    pdata.m_idata[MessageIntData::sender_entity][n] = 0;
-                    pdata.m_idata[MessageIntData::receiver_lp][n] =
+                    pops.m_idata[MessageIntData::sender_entity][n] = 0;
+                    pops.m_idata[MessageIntData::receiver_lp][n] =
                         static_cast<int>(dom.index(iv));
-                    pdata.m_idata[MessageIntData::receiver_entity][n] = 0;
+                    pops.m_idata[MessageIntData::receiver_entity][n] = 0;
 
                     AMREX_D_TERM(
                         p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
@@ -147,20 +144,20 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(pdata.m_idata[MessageIntData::i][n] = iv[0];
-                                 , pdata.m_idata[MessageIntData::j][n] = iv[1];
-                                 , pdata.m_idata[MessageIntData::k][n] = iv[2];)
+                    AMREX_D_TERM(pops.m_idata[MessageIntData::i][n] = iv[0];
+                                 , pops.m_idata[MessageIntData::j][n] = iv[1];
+                                 , pops.m_idata[MessageIntData::k][n] = iv[2];)
                 }
 
                 for (int n = start; n < start + messages_per_lp; n++) {
                     const amrex::Real ts =
                         random_exponential(1.0, engine) + lookahead;
 
-                    pdata.m_rdata[MessageRealData::timestamp][n] = ts;
-                    pdata.m_rdata[MessageRealData::creation_time][n] = 0.0;
-                    pdata.m_idata[MessageIntData::type_id][n] =
+                    pops.m_rdata[MessageRealData::timestamp][n] = ts;
+                    pops.m_rdata[MessageRealData::creation_time][n] = 0.0;
+                    pops.m_idata[MessageIntData::type_id][n] =
                         MessageTypes::MESSAGE;
-                    pdata.m_idata[MessageIntData::pair][n] = -1;
+                    pops.m_idata[MessageIntData::pair][n] = -1;
                 }
             });
 
@@ -175,17 +172,13 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
         const size_t np = pti.numParticles();
-        auto& aos = pti.GetArrayOfStructs();
-        auto& soa = pti.GetStructOfArrays();
-        const auto pdata = MessageData<ParticleType, RealVector, IntVector>(
-            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
+        const auto pops = particle_ops(pti.GetParticleTile());
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            auto& p = pdata.m_aos[pidx];
+            auto& p = pops.m_aos[pidx];
             bool valid_type = false;
             for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
-                valid_type =
-                    pdata.m_idata[MessageIntData::type_id][pidx] == typ;
+                valid_type = pops.m_idata[MessageIntData::type_id][pidx] == typ;
                 if (valid_type) {
                     break;
                 }
@@ -223,10 +216,7 @@ void MessageParticleContainer::update_undefined()
         const auto& cnt_arr = m_counts.const_array(mfi);
         const auto& offsets_arr = m_offsets.const_array(mfi);
         auto& pti = GetParticles(LEV)[index];
-        auto& aos = pti.GetArrayOfStructs();
-        auto& soa = pti.GetStructOfArrays();
-        const auto pdata = MessageData<ParticleType, RealVector, IntVector>(
-            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
+        const auto pops = particle_ops(pti);
 
         // remove particles
         // BL_PROFILE_VAR(
@@ -254,9 +244,9 @@ void MessageParticleContainer::update_undefined()
                 const auto idx = box.index(iv);
                 const auto np = p_removals[idx];
                 for (int m = 0; m < np; m++) {
-                    const auto pidx = pdata.get(
+                    const auto pidx = pops.get(
                         iv, cnt_arr, offsets_arr, m, MessageTypes::UNDEFINED);
-                    pdata.m_aos[pidx].id() = -1;
+                    pops.m_aos[pidx].id() = -1;
                 }
             });
         // amrex::Gpu::streamSynchronize();
@@ -304,17 +294,12 @@ void MessageParticleContainer::update_undefined()
         auto& pti_adds = pc_adds.GetParticles(LEV)[index];
         pti_adds.resize(np);
         const auto my_proc = amrex::ParallelDescriptor::MyProc();
-        auto& aos_adds = pti_adds.GetArrayOfStructs();
-        auto& soa_adds = pti_adds.GetStructOfArrays();
-        const auto pdata_adds =
-            MessageData<ParticleType, RealVector, IntVector>(
-                aos_adds.dataPtr(), soa_adds.GetRealData(),
-                soa_adds.GetIntData());
+        const auto pops_adds = pc_adds.particle_ops(pti_adds);
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
             const int start = p_update_offsets[icell];
             const auto iv = box.atOffset(icell);
             for (int n = start; n < start + p_additions[icell]; n++) {
-                auto& p = pdata_adds.m_aos[n];
+                auto& p = pops_adds.m_aos[n];
                 p.id() = pid + n;
                 p.cpu() = my_proc;
 
@@ -323,23 +308,22 @@ void MessageParticleContainer::update_undefined()
                     , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
                     , p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                pdata_adds.mark_undefined(n);
-                pdata_adds.m_idata[MessageIntData::sender_lp][n] =
+                pops_adds.mark_undefined(n);
+                pops_adds.m_idata[MessageIntData::sender_lp][n] =
                     static_cast<int>(dom.index(iv));
-                pdata_adds.m_idata[MessageIntData::sender_entity][n] = 0;
-                pdata_adds.m_idata[MessageIntData::receiver_lp][n] =
+                pops_adds.m_idata[MessageIntData::sender_entity][n] = 0;
+                pops_adds.m_idata[MessageIntData::receiver_lp][n] =
                     static_cast<int>(dom.index(iv));
-                pdata_adds.m_idata[MessageIntData::receiver_entity][n] = 0;
+                pops_adds.m_idata[MessageIntData::receiver_entity][n] = 0;
 
                 AMREX_D_TERM(
                     p.pos(0) = plo[0] + (iv[0] + constants::HALF) * dx[0];
                     , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
                     , p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                AMREX_D_TERM(pdata_adds.m_idata[MessageIntData::i][n] = iv[0];
-                             , pdata_adds.m_idata[MessageIntData::j][n] = iv[1];
-                             ,
-                             pdata_adds.m_idata[MessageIntData::k][n] = iv[2];)
+                AMREX_D_TERM(pops_adds.m_idata[MessageIntData::i][n] = iv[0];
+                             , pops_adds.m_idata[MessageIntData::j][n] = iv[1];
+                             , pops_adds.m_idata[MessageIntData::k][n] = iv[2];)
             }
         });
         // amrex::Gpu::streamSynchronize();
@@ -375,10 +359,7 @@ void MessageParticleContainer::resolve_pairs()
         const auto& offsets_arr = m_offsets.const_array(mfi);
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = GetParticles(LEV)[index];
-        auto& aos = pti.GetArrayOfStructs();
-        auto& soa = pti.GetStructOfArrays();
-        const auto pdata = MessageData<ParticleType, RealVector, IntVector>(
-            aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
+        const auto pops = particle_ops(pti);
 
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
@@ -387,12 +368,12 @@ void MessageParticleContainer::resolve_pairs()
 
                 for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI); n++) {
 
-                    const auto pant_soa = pdata.get(
+                    const auto pant_soa = pops.get(
                         iv, cnt_arr, offsets_arr, n, MessageTypes::ANTI);
                     AMREX_ASSERT(
-                        pdata.m_idata[MessageIntData::pair][pant_soa] != -1);
+                        pops.m_idata[MessageIntData::pair][pant_soa] != -1);
                     AMREX_ASSERT(
-                        pdata.m_idata[MessageIntData::receiver_lp][pant_soa] ==
+                        pops.m_idata[MessageIntData::receiver_lp][pant_soa] ==
                         dom.index(iv));
 
 #ifdef AMREX_DEBUG
@@ -402,53 +383,51 @@ void MessageParticleContainer::resolve_pairs()
                          m++) {
                         // This is a message that was already treated,
                         // expect it to be undefined
-                        if (!pdata.check(
+                        if (!pops.check(
                                 iv, cnt_arr, offsets_arr, m,
                                 MessageTypes::MESSAGE)) {
-                            pdata.assert_different(
+                            pops.assert_different(
                                 iv, cnt_arr, offsets_arr, m,
                                 MessageTypes::MESSAGE, MessageTypes::UNDEFINED);
                             continue;
                         }
-                        const auto pmsg_soa = pdata.get(
+                        const auto pmsg_soa = pops.get(
                             iv, cnt_arr, offsets_arr, m, MessageTypes::MESSAGE);
-                        if ((pdata.m_idata[MessageIntData::pair][pmsg_soa] ==
-                             pdata.m_idata[MessageIntData::pair][pant_soa]) &&
+                        if ((pops.m_idata[MessageIntData::pair][pmsg_soa] ==
+                             pops.m_idata[MessageIntData::pair][pant_soa]) &&
                             (std::abs(
-                                 pdata.m_rdata[MessageRealData::timestamp]
-                                              [pmsg_soa] -
-                                 pdata.m_rdata[MessageRealData::timestamp]
-                                              [pant_soa]) < constants::EPS)) {
+                                 pops.m_rdata[MessageRealData::timestamp]
+                                             [pmsg_soa] -
+                                 pops.m_rdata[MessageRealData::timestamp]
+                                             [pant_soa]) < constants::EPS)) {
                             AMREX_ASSERT(
-                                pdata.m_idata[MessageIntData::sender_lp]
-                                             [pmsg_soa] ==
-                                pdata.m_idata[MessageIntData::sender_lp]
-                                             [pant_soa]);
+                                pops.m_idata[MessageIntData::sender_lp]
+                                            [pmsg_soa] ==
+                                pops.m_idata[MessageIntData::sender_lp]
+                                            [pant_soa]);
                             AMREX_ASSERT(
-                                pdata.m_idata[MessageIntData::sender_entity]
-                                             [pmsg_soa] ==
-                                pdata.m_idata[MessageIntData::sender_entity]
-                                             [pant_soa]);
+                                pops.m_idata[MessageIntData::sender_entity]
+                                            [pmsg_soa] ==
+                                pops.m_idata[MessageIntData::sender_entity]
+                                            [pant_soa]);
                             AMREX_ASSERT(
-                                pdata.m_idata[MessageIntData::receiver_lp]
-                                             [pmsg_soa] ==
-                                pdata.m_idata[MessageIntData::receiver_lp]
-                                             [pant_soa]);
+                                pops.m_idata[MessageIntData::receiver_lp]
+                                            [pmsg_soa] ==
+                                pops.m_idata[MessageIntData::receiver_lp]
+                                            [pant_soa]);
                             AMREX_ASSERT(
-                                pdata.m_idata[MessageIntData::receiver_entity]
-                                             [pmsg_soa] ==
-                                pdata.m_idata[MessageIntData::receiver_entity]
-                                             [pant_soa]);
+                                pops.m_idata[MessageIntData::receiver_entity]
+                                            [pmsg_soa] ==
+                                pops.m_idata[MessageIntData::receiver_entity]
+                                            [pant_soa]);
                             AMREX_ASSERT(
                                 std::abs(
-                                    pdata
-                                        .m_rdata[MessageRealData::creation_time]
+                                    pops.m_rdata[MessageRealData::creation_time]
                                                 [pmsg_soa] -
-                                    pdata
-                                        .m_rdata[MessageRealData::creation_time]
+                                    pops.m_rdata[MessageRealData::creation_time]
                                                 [pant_soa]) < constants::EPS);
-                            pdata.mark_undefined(pant_soa);
-                            pdata.mark_undefined(pmsg_soa);
+                            pops.mark_undefined(pant_soa);
+                            pops.mark_undefined(pmsg_soa);
 #ifdef AMREX_DEBUG
                             found_pair = true;
 #endif
@@ -521,6 +500,18 @@ amrex::Real MessageParticleContainer::compute_gvt()
     amrex::ParallelDescriptor::ReduceRealMin(gvt);
 
     return gvt;
+}
+
+MessageOps<
+    MessageParticleContainer::ParticleType,
+    MessageParticleContainer::RealVector,
+    MessageParticleContainer::IntVector>
+MessageParticleContainer::particle_ops(ParticleTileType& pti) const
+{
+    auto& aos = pti.GetArrayOfStructs();
+    auto& soa = pti.GetStructOfArrays();
+    return MessageOps<ParticleType, RealVector, IntVector>(
+        aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
 }
 
 } // namespace spades::particles

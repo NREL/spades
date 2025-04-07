@@ -1,5 +1,5 @@
-#ifndef MESSAGEOPS_H
-#define MESSAGEOPS_H
+#ifndef ENTITYOPS_H
+#define ENTITYOPS_H
 
 #include <AMReX.H>
 #include <AMReX_Array4.H>
@@ -11,8 +11,8 @@ namespace spades::particles {
 
 // Entity data
 template <class P, class RT, class IT>
-struct EntityData
-    : public ParticleData<
+struct EntityOps
+    : public ParticleOps<
           EntityRealData::ncomps,
           EntityIntData::ncomps,
           P,
@@ -20,16 +20,12 @@ struct EntityData
           IT>
 {
 
-    EntityData(
+    EntityOps(
         P* aos,
         std::array<RT, EntityRealData::ncomps>& rdata,
         std::array<IT, EntityIntData::ncomps>& idata)
-        : ParticleData<
-              EntityRealData::ncomps,
-              EntityIntData::ncomps,
-              P,
-              RT,
-              IT>(aos, rdata, idata) {};
+        : ParticleOps<EntityRealData::ncomps, EntityIntData::ncomps, P, RT, IT>(
+              aos, rdata, idata) {};
 
     void mark_undefined(const amrex::Long n) const
     {

@@ -10,9 +10,9 @@ namespace spades::particles {
 
 //! Object for storing particle data pointers
 template <size_t NReal, size_t NInt, class P, class RT, class IT>
-struct ParticleData
+struct ParticleOps
 {
-    ParticleData(
+    ParticleOps(
         P* aos, std::array<RT, NReal>& rdata, std::array<IT, NInt>& idata)
         : m_aos(aos)
     {

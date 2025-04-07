@@ -85,6 +85,12 @@ public:
     //! Initialize variable names
     void initialize_variable_names() override;
 
+    MessageOps<
+        MessageParticleContainer::ParticleType,
+        MessageParticleContainer::RealVector,
+        MessageParticleContainer::IntVector>
+    particle_ops(ParticleTileType& pti) const;
+
 private:
     //! Initial messages per LP
     int m_messages_per_lp{1};

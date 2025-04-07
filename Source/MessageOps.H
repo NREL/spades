@@ -106,8 +106,8 @@ struct MarkMessageUndefined
 
 // Message data
 template <class P, class RT, class IT>
-struct MessageData
-    : public ParticleData<
+struct MessageOps
+    : public ParticleOps<
           MessageRealData::ncomps,
           MessageIntData::ncomps,
           P,
@@ -115,11 +115,11 @@ struct MessageData
           IT>
 {
 
-    MessageData(
+    MessageOps(
         P* aos,
         std::array<RT, MessageRealData::ncomps>& rdata,
         std::array<IT, MessageIntData::ncomps>& idata)
-        : ParticleData<
+        : ParticleOps<
               MessageRealData::ncomps,
               MessageIntData::ncomps,
               P,
@@ -133,6 +133,34 @@ struct MessageData
         this->m_rdata[MessageRealData::timestamp][n] = 0.0;
         this->m_rdata[MessageRealData::old_timestamp][n] = 0.0;
         this->m_rdata[MessageRealData::creation_time][n] = 0.0;
+    }
+
+    void create_message(
+        const amrex::Long n,
+        const amrex::Real timestamp,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
+        const amrex::IntVect& iv,
+        const int sender_lp,
+        const int sender_entity,
+        const int receiver_lp,
+        const int receiver_entity) const
+    {
+        AMREX_ASSERT(
+            this->m_idata[MessageIntData::type_id][n] ==
+            MessageTypes::UNDEFINED);
+
+        this->m_idata[MessageIntData::type_id][n] = MessageTypes::MESSAGE;
+        this->m_rdata[MessageRealData::timestamp][n] = timestamp;
+
+        auto& p = this->m_aos[n];
+        AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)
+        AMREX_D_TERM(this->m_idata[MessageIntData::i][n] = iv[0];
+                     , this->m_idata[MessageIntData::j][n] = iv[1];
+                     , this->m_idata[MessageIntData::k][n] = iv[2];)
+        this->m_idata[MessageIntData::sender_lp][n] = sender_lp;
+        this->m_idata[MessageIntData::sender_entity][n] = sender_entity;
+        this->m_idata[MessageIntData::receiver_lp][n] = receiver_lp;
+        this->m_idata[MessageIntData::receiver_entity][n] = receiver_entity;
     }
 };
 

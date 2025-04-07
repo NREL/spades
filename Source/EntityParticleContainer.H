@@ -67,6 +67,12 @@ public:
     //! Initialize variable names
     void initialize_variable_names() override;
 
+    EntityOps<
+        EntityParticleContainer::ParticleType,
+        EntityParticleContainer::RealVector,
+        EntityParticleContainer::IntVector>
+    particle_ops(ParticleTileType& pti) const;
+
 private:
     //! Initial entities per LP
     int m_entities_per_lp{1};
