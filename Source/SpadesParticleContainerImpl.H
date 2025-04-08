@@ -431,24 +431,24 @@ void SpadesParticleContainer<
         }
         const auto& min_ts_arr = m_min_timestamp.array(mfi);
         const auto& max_ts_arr = m_max_timestamp.array(mfi);
-        auto& soa = pti.GetStructOfArrays();
-        auto* rdata = soa.GetRealData(CommonRealData::timestamp).data();
-        auto* idata = soa.GetIntData().data();
+        const auto parrs = particle_arrays(pti);
+        auto* ts = parrs.m_rdata[CommonRealData::timestamp];
 #ifdef AMREX_DEBUG
         const amrex::Box& box = mfi.tilebox();
 #endif
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             const amrex::IntVect piv(AMREX_D_DECL(
-                idata[CommonIntData::i][pidx], idata[CommonIntData::j][pidx],
-                idata[CommonIntData::k][pidx]));
+                parrs.m_idata[CommonIntData::i][pidx],
+                parrs.m_idata[CommonIntData::j][pidx],
+                parrs.m_idata[CommonIntData::k][pidx]));
 
             AMREX_ASSERT(box.contains(piv));
             amrex::Gpu::Atomic::Min(
-                &min_ts_arr(piv, idata[CommonIntData::type_id][pidx]),
-                rdata[pidx]);
+                &min_ts_arr(piv, parrs.m_idata[CommonIntData::type_id][pidx]),
+                ts[pidx]);
             amrex::Gpu::Atomic::Max(
-                &max_ts_arr(piv, idata[CommonIntData::type_id][pidx]),
-                rdata[pidx]);
+                &max_ts_arr(piv, parrs.m_idata[CommonIntData::type_id][pidx]),
+                ts[pidx]);
         });
     }
     BL_PROFILE_VAR_STOP(bounds);
@@ -479,9 +479,8 @@ void SpadesParticleContainer<
 
         BL_PROFILE_VAR(
             "spades::SpadesParticleContainer::encoded_sort::encode", encode);
-        auto& soa = pti.GetStructOfArrays();
-        auto* rdata = soa.GetRealData(CommonRealData::timestamp).data();
-        auto* idata = soa.GetIntData().data();
+        const auto parrs = particle_arrays(pti);
+        auto* ts = parrs.m_rdata[CommonRealData::timestamp];
         const auto& min_ts_arr = m_min_timestamp.array(mfi);
         const auto& max_ts_arr = m_max_timestamp.array(mfi);
         amrex::Gpu::DeviceVector<std::uint64_t> encode(np);
@@ -489,9 +488,12 @@ void SpadesParticleContainer<
         const auto box_lo = box.smallEnd();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             AMREX_D_TERM(
-                const auto pi = idata[CommonIntData::i][pidx] - box_lo[0];
-                , const auto pj = idata[CommonIntData::j][pidx] - box_lo[1];
-                , const auto pk = idata[CommonIntData::k][pidx] - box_lo[2];);
+                const auto pi =
+                    parrs.m_idata[CommonIntData::i][pidx] - box_lo[0];
+                , const auto pj =
+                      parrs.m_idata[CommonIntData::j][pidx] - box_lo[1];
+                , const auto pk =
+                      parrs.m_idata[CommonIntData::k][pidx] - box_lo[2];);
 
             AMREX_D_EXPR(
                 AMREX_ALWAYS_ASSERT(pi >= 0), AMREX_ALWAYS_ASSERT(pj >= 0),
@@ -506,8 +508,8 @@ void SpadesParticleContainer<
                 AMREX_ALWAYS_ASSERT(
                     static_cast<std::uint64_t>(pk) <=
                     max_representation(constants::K_NBITS)));
-            AMREX_ASSERT(idata[CommonIntData::type_id][pidx] >= 0);
-            AMREX_ASSERT(rdata[pidx] >= (0.0 - constants::SMALL_NUM));
+            AMREX_ASSERT(parrs.m_idata[CommonIntData::type_id][pidx] >= 0);
+            AMREX_ASSERT(ts[pidx] >= (0.0 - constants::SMALL_NUM));
 
             int shift = constants::TOTAL_NBITS;
 #if AMREX_SPACEDIM == 3
@@ -527,25 +529,27 @@ void SpadesParticleContainer<
                 static_cast<std::uint64_t>(pi & bitmask(constants::I_NBITS))
                 << shift;
             shift -= constants::TYPE_NBITS;
-            const std::uint64_t typ = static_cast<std::uint64_t>(
-                                          idata[CommonIntData::type_id][pidx] &
-                                          bitmask(constants::TYPE_NBITS))
-                                      << shift;
+            const std::uint64_t typ =
+                static_cast<std::uint64_t>(
+                    parrs.m_idata[CommonIntData::type_id][pidx] &
+                    bitmask(constants::TYPE_NBITS))
+                << shift;
 
             const amrex::IntVect piv(AMREX_D_DECL(
-                idata[CommonIntData::i][pidx], idata[CommonIntData::j][pidx],
-                idata[CommonIntData::k][pidx]));
+                parrs.m_idata[CommonIntData::i][pidx],
+                parrs.m_idata[CommonIntData::j][pidx],
+                parrs.m_idata[CommonIntData::k][pidx]));
             const amrex::Real min_t =
-                min_ts_arr(piv, idata[CommonIntData::type_id][pidx]);
+                min_ts_arr(piv, parrs.m_idata[CommonIntData::type_id][pidx]);
             const amrex::Real max_t =
-                max_ts_arr(piv, idata[CommonIntData::type_id][pidx]);
+                max_ts_arr(piv, parrs.m_idata[CommonIntData::type_id][pidx]);
             AMREX_ASSERT(min_t <= max_t);
             const amrex::Real delta =
                 (amrex::Math::abs(max_t - min_t) > constants::EPS)
                     ? max_t - min_t
                     : 1.0;
 
-            const amrex::Real normalized = (rdata[pidx] - min_t) / delta;
+            const amrex::Real normalized = (ts[pidx] - min_t) / delta;
             const amrex::Real scaled =
                 normalized * static_cast<amrex::Real>((1ULL << shift) - 1);
             const auto ts = static_cast<std::uint64_t>(
@@ -559,7 +563,7 @@ void SpadesParticleContainer<
             //     "%.16f, (normalized: %.16f, scaled: %.16f, encoded: %lu)\n",
             //     pidx, p_encode[pidx], piv[0], piv[1],
             //     idata(CommonIntData::type_id)[pidx],
-            //     rdata[pidx], normalized, scaled, t);
+            //     ts[pidx], normalized, scaled, t);
         });
         amrex::Gpu::streamSynchronize();
         BL_PROFILE_VAR_STOP(encode);
@@ -687,9 +691,6 @@ void SpadesParticleContainer<
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = this->GetParticles(LEV)[index];
         const auto parrs = particle_arrays(pti);
-        auto* aos = pti.GetArrayOfStructs().dataPtr();
-        auto& soa = pti.GetStructOfArrays();
-        auto* idata = soa.GetIntData().data();
 
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
@@ -701,12 +702,12 @@ void SpadesParticleContainer<
                     AMREX_ASSERT(cnt_arr(iv, typ) < nbins);
                     for (int n = 0; n < cnt_arr(iv, typ); n++) {
                         const auto pidx = getter(n, typ);
-                        auto& p = aos[pidx];
+                        auto& p = parrs.m_aos[pidx];
 
                         const amrex::IntVect piv(AMREX_D_DECL(
-                            idata[CommonIntData::i][pidx],
-                            idata[CommonIntData::j][pidx],
-                            idata[CommonIntData::k][pidx]));
+                            parrs.m_idata[CommonIntData::i][pidx],
+                            parrs.m_idata[CommonIntData::j][pidx],
+                            parrs.m_idata[CommonIntData::k][pidx]));
                         AMREX_ASSERT(piv == iv);
 
                         AMREX_D_TERM(p.pos(0) = plo[0] + iv[0] * dx[0] +
