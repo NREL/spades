@@ -468,7 +468,6 @@ void SPADES::process_messages()
                     // FIXME, in general, Create is clunky. Better way?
                     const auto psnd_soa =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
-                    auto& psnd = msg_parrs.m_aos[psnd_soa];
                     particles::CreateMessage()(
                         psnd_soa, msg_parrs, next_ts, pos, iv_dest,
                         static_cast<int>(dom.index(iv)), ent,
@@ -485,7 +484,6 @@ void SPADES::process_messages()
                     // Create the conjugate message
                     const auto pcnj_soa = msg_getter(
                         2 * n + 1, particles::MessageTypes::UNDEFINED);
-                    auto& pcnj = msg_parrs.m_aos[pcnj_soa];
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
