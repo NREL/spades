@@ -469,9 +469,9 @@ void SPADES::process_messages()
                         particles::MessageTypes::UNDEFINED);
                     auto& psnd = msg_parrs.m_aos[psnd_soa];
                     particles::CreateMessage()(
-                        psnd, psnd_soa, msg_parrs.m_rdata, msg_parrs.m_idata,
-                        next_ts, pos, iv_dest, static_cast<int>(dom.index(iv)),
-                        ent, static_cast<int>(dom.index(iv_dest)), rcv_ent);
+                        psnd_soa, msg_parrs, next_ts, pos, iv_dest,
+                        static_cast<int>(dom.index(iv)), ent,
+                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
                     const auto pair = static_cast<int>(
                         pairing_function(prcv.cpu(), prcv.id()));
@@ -499,9 +499,9 @@ void SPADES::process_messages()
                             plo[2] + (iv[2] + constants::HALF) * dx[2])};
 
                     particles::CreateMessage()(
-                        pcnj, pcnj_soa, msg_parrs.m_rdata, msg_parrs.m_idata,
-                        next_ts, conj_pos, iv, static_cast<int>(dom.index(iv)),
-                        ent, static_cast<int>(dom.index(iv_dest)), rcv_ent);
+                        pcnj_soa, msg_parrs, next_ts, conj_pos, iv,
+                        static_cast<int>(dom.index(iv)), ent,
+                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     msg_parrs
                         .m_idata[particles::MessageIntData::pair][pcnj_soa] =
                         pair;

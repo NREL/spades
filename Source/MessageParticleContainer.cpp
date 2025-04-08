@@ -130,7 +130,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     p.id() = pid + n;
                     p.cpu() = my_proc;
 
-                    MarkMessageUndefined()(n, parrs.m_rdata, parrs.m_idata);
+                    MarkMessageUndefined()(n, parrs);
                     parrs.m_idata[MessageIntData::sender_lp][n] =
                         static_cast<int>(dom.index(iv));
                     parrs.m_idata[MessageIntData::sender_entity][n] = 0;
@@ -309,8 +309,7 @@ void MessageParticleContainer::update_undefined()
                     , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
                     , p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                MarkMessageUndefined()(
-                    n, parrs_adds.m_rdata, parrs_adds.m_idata);
+                MarkMessageUndefined()(n, parrs_adds);
                 parrs_adds.m_idata[MessageIntData::sender_lp][n] =
                     static_cast<int>(dom.index(iv));
                 parrs_adds.m_idata[MessageIntData::sender_entity][n] = 0;
@@ -431,10 +430,8 @@ void MessageParticleContainer::resolve_pairs()
                                     parrs
                                         .m_rdata[MessageRealData::creation_time]
                                                 [pant_soa]) < constants::EPS);
-                            MarkMessageUndefined()(
-                                pant_soa, parrs.m_rdata, parrs.m_idata);
-                            MarkMessageUndefined()(
-                                pmsg_soa, parrs.m_rdata, parrs.m_idata);
+                            MarkMessageUndefined()(pant_soa, parrs);
+                            MarkMessageUndefined()(pmsg_soa, parrs);
 #ifdef AMREX_DEBUG
                             found_pair = true;
 #endif
@@ -470,7 +467,7 @@ void MessageParticleContainer::garbage_collect(const amrex::Real gvt)
                 AMREX_ASSERT(
                     parrs.m_idata[MessageIntData::type_id][pidx] !=
                     MessageTypes::MESSAGE);
-                MarkMessageUndefined()(pidx, parrs.m_rdata, parrs.m_idata);
+                MarkMessageUndefined()(pidx, parrs);
             }
         });
     }

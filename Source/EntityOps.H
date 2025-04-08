@@ -15,15 +15,14 @@ struct MarkEntityUndefined
     /**
        @brief Mark a entity as undefined
        @param n [in] entity index
-       @param rdata [in, out] entity real data
-       @param idata [in, out] entity int data
+       @param parrs [in, out] entity arrays
      **/
-    template <class RT, class IT>
+    template <class ParticleArrays>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
-    operator()(const amrex::Long n, RT& rdata, IT& idata) const
+    operator()(const amrex::Long n, ParticleArrays& parrs) const
     {
-        idata[EntityIntData::type_id][n] = EntityTypes::UNDEFINED;
-        rdata[EntityRealData::timestamp][n] = 0.0;
+        parrs.m_idata[EntityIntData::type_id][n] = EntityTypes::UNDEFINED;
+        parrs.m_rdata[EntityRealData::timestamp][n] = 0.0;
     }
 };
 

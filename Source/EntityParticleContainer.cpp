@@ -116,7 +116,7 @@ void EntityParticleContainer::initialize_entities()
                     p.id() = pid + n;
                     p.cpu() = my_proc;
 
-                    MarkEntityUndefined()(n, parrs.m_rdata, parrs.m_idata);
+                    MarkEntityUndefined()(n, parrs);
                     parrs.m_idata[EntityIntData::owner][n] =
                         static_cast<int>(dom.index(iv));
 
