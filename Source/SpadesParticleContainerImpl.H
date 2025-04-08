@@ -1,10 +1,10 @@
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
-SpadesParticleContainer<PType, NStructReal, NStructInt, NArrayReal, NArrayInt>::
+SpadesParticleContainer<NType, NStructReal, NStructInt, NArrayReal, NArrayInt>::
     SpadesParticleContainer(amrex::AmrParGDB* par_gdb, int ngrow)
     : amrex::NeighborParticleContainer<
           NStructReal,
@@ -24,12 +24,12 @@ SpadesParticleContainer<PType, NStructReal, NStructInt, NArrayReal, NArrayInt>::
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
-SpadesParticleContainer<PType, NStructReal, NStructInt, NArrayReal, NArrayInt>::
+SpadesParticleContainer<NType, NStructReal, NStructInt, NArrayReal, NArrayInt>::
     SpadesParticleContainer(
         const amrex::Vector<amrex::Geometry>& geom,
         const amrex::Vector<amrex::DistributionMapping>& dmap,
@@ -51,13 +51,13 @@ SpadesParticleContainer<PType, NStructReal, NStructInt, NArrayReal, NArrayInt>::
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -66,12 +66,12 @@ void SpadesParticleContainer<
     BL_PROFILE("spades::SpadesParticleContainer::initialize_state()");
 
     m_counts.define(
-        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
-        PType::NTYPES, m_ngrow, amrex::MFInfo());
+        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV), NType,
+        m_ngrow, amrex::MFInfo());
 
     m_offsets.define(
-        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
-        PType::NTYPES, m_ngrow, amrex::MFInfo());
+        this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV), NType,
+        m_ngrow, amrex::MFInfo());
 
     m_counts.setVal(0);
     m_offsets.setVal(0);
@@ -79,10 +79,10 @@ void SpadesParticleContainer<
     if (m_sort_type == "encoded") {
         m_min_timestamp.define(
             this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
-            PType::NTYPES, m_ngrow, amrex::MFInfo());
+            NType, m_ngrow, amrex::MFInfo());
         m_max_timestamp.define(
             this->ParticleBoxArray(LEV), this->ParticleDistributionMap(LEV),
-            PType::NTYPES, m_ngrow, amrex::MFInfo());
+            NType, m_ngrow, amrex::MFInfo());
 
         m_min_timestamp.setVal(constants::LARGE_NUM);
         m_max_timestamp.setVal(0.0);
@@ -90,13 +90,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -108,13 +108,13 @@ void SpadesParticleContainer<
     m_offsets.clear();
 }
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -151,13 +151,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -181,7 +181,7 @@ void SpadesParticleContainer<
             [=] AMREX_GPU_DEVICE(int i) -> int {
                 const auto iv = box.atOffset(i);
                 int total_particles = 0;
-                for (int typ = 0; typ < PType::NTYPES; typ++) {
+                for (int typ = 0; typ < NType; typ++) {
                     total_particles += cnt_arr(iv, typ);
                 }
                 return total_particles;
@@ -193,7 +193,7 @@ void SpadesParticleContainer<
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                for (int typ = 1; typ < PType::NTYPES; typ++) {
+                for (int typ = 1; typ < NType; typ++) {
                     offsets_arr(iv, typ) =
                         offsets_arr(iv, typ - 1) + cnt_arr(iv, typ - 1);
                 }
@@ -202,13 +202,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -220,13 +220,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -272,14 +272,14 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 template <typename CompareFunc>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -297,14 +297,14 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 template <typename CompareFunc>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -391,13 +391,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -406,8 +406,7 @@ void SpadesParticleContainer<
     // Taking inspiration from AMReX's SortParticlesByBin
     BL_PROFILE("spades::SpadesParticleContainer::encoded_sort_impl()");
 
-    AMREX_ALWAYS_ASSERT(
-        PType::NTYPES <= max_representation(constants::TYPE_NBITS));
+    AMREX_ALWAYS_ASSERT(NType <= max_representation(constants::TYPE_NBITS));
 
     BL_PROFILE_VAR(
         "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
@@ -619,13 +618,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -656,13 +655,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,
@@ -697,7 +696,7 @@ void SpadesParticleContainer<
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto getter = Get(iv, cnt_arr, offsets_arr, aos, idata);
 
-                for (int typ = 0; typ < PType::NTYPES; typ++) {
+                for (int typ = 0; typ < NType; typ++) {
                     AMREX_ASSERT(cnt_arr(iv, typ) < nbins);
                     for (int n = 0; n < cnt_arr(iv, typ); n++) {
                         const auto pidx = getter(n, typ);
@@ -709,13 +708,13 @@ void SpadesParticleContainer<
                             idata[CommonIntData::k][pidx]));
                         AMREX_ASSERT(piv == iv);
 
-                        AMREX_D_TERM(
-                            p.pos(0) = plo[0] + iv[0] * dx[0] +
-                                       (typ + 1) * dx[0] / (PType::NTYPES + 1);
-                            , p.pos(1) = plo[1] + iv[1] * dx[1] +
-                                         (n + 1) * dx[1] / nbins;
-                            , p.pos(2) =
-                                  plo[2] + (iv[2] + constants::HALF) * dx[2];)
+                        AMREX_D_TERM(p.pos(0) = plo[0] + iv[0] * dx[0] +
+                                                (typ + 1) * dx[0] / (NType + 1);
+                                     , p.pos(1) = plo[1] + iv[1] * dx[1] +
+                                                  (n + 1) * dx[1] / nbins;
+                                     , p.pos(2) =
+                                           plo[2] +
+                                           (iv[2] + constants::HALF) * dx[2];)
 
                         // ensure the particle didn't change cells
                         AMREX_ASSERT(piv == getParticleCell(p, plo, dxi, dom));
@@ -726,13 +725,13 @@ void SpadesParticleContainer<
 }
 
 template <
-    typename PType,
+    int NType,
     int NStructReal,
     int NStructInt,
     int NArrayReal,
     int NArrayInt>
 void SpadesParticleContainer<
-    PType,
+    NType,
     NStructReal,
     NStructInt,
     NArrayReal,

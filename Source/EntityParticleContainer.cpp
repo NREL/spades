@@ -6,7 +6,7 @@ namespace spades::particles {
 EntityParticleContainer::EntityParticleContainer(
     amrex::AmrParGDB* par_gdb, int ngrow)
     : SpadesParticleContainer<
-          EntityTypes,
+          EntityTypes::NTYPES,
           0,
           0,
           EntityRealData::ncomps,
@@ -19,7 +19,7 @@ EntityParticleContainer::EntityParticleContainer(
     const amrex::Vector<amrex::BoxArray>& ba,
     int ngrow)
     : SpadesParticleContainer<
-          EntityTypes,
+          EntityTypes::NTYPES,
           0,
           0,
           EntityRealData::ncomps,
@@ -104,7 +104,7 @@ void EntityParticleContainer::initialize_entities()
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = GetParticles(LEV)[index];
         pti.resize(np);
-        const auto pops = particle_ops(pti);
+        const auto parrs = particle_arrays(pti);
 
         amrex::ParallelFor(
             box, [=] AMREX_GPU_DEVICE(
@@ -112,12 +112,12 @@ void EntityParticleContainer::initialize_entities()
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const int start = offset_arr(iv);
                 for (int n = start; n < start + num_particles_arr(iv); n++) {
-                    auto& p = pops.m_aos[n];
+                    auto& p = parrs.m_aos[n];
                     p.id() = pid + n;
                     p.cpu() = my_proc;
 
-                    pops.mark_undefined(n);
-                    pops.m_idata[EntityIntData::owner][n] =
+                    MarkEntityUndefined()(n, parrs.m_rdata, parrs.m_idata);
+                    parrs.m_idata[EntityIntData::owner][n] =
                         static_cast<int>(dom.index(iv));
 
                     AMREX_D_TERM(
@@ -126,16 +126,16 @@ void EntityParticleContainer::initialize_entities()
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(pops.m_idata[EntityIntData::i][n] = iv[0];
-                                 , pops.m_idata[EntityIntData::j][n] = iv[1];
-                                 , pops.m_idata[EntityIntData::k][n] = iv[2];)
+                    AMREX_D_TERM(parrs.m_idata[EntityIntData::i][n] = iv[0];
+                                 , parrs.m_idata[EntityIntData::j][n] = iv[1];
+                                 , parrs.m_idata[EntityIntData::k][n] = iv[2];)
                 }
 
                 for (int n = start; n < start + entities_per_lp; n++) {
                     const amrex::Real ts = 0.0;
 
-                    pops.m_rdata[EntityRealData::timestamp][n] = ts;
-                    pops.m_idata[EntityIntData::type_id][n] =
+                    parrs.m_rdata[EntityRealData::timestamp][n] = ts;
+                    parrs.m_idata[EntityIntData::type_id][n] =
                         EntityTypes::ENTITY;
                 }
             });
@@ -151,13 +151,13 @@ void EntityParticleContainer::initialize_entities()
 #endif
     for (MyParIter pti(*this, LEV); pti.isValid(); ++pti) {
         const size_t np = pti.numParticles();
-        const auto pops = particle_ops(pti.GetParticleTile());
+        const auto parrs = particle_arrays(pti.GetParticleTile());
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            auto& p = pops.m_aos[pidx];
+            auto& p = parrs.m_aos[pidx];
             bool valid_type = false;
             for (int typ = 0; typ < EntityTypes::NTYPES; typ++) {
-                valid_type = pops.m_idata[EntityIntData::type_id][pidx] == typ;
+                valid_type = parrs.m_idata[EntityIntData::type_id][pidx] == typ;
                 if (valid_type) {
                     break;
                 }
@@ -174,17 +174,4 @@ void EntityParticleContainer::sort()
 
     sort_impl(CompareParticle());
 }
-
-EntityOps<
-    EntityParticleContainer::ParticleType,
-    EntityParticleContainer::RealVector,
-    EntityParticleContainer::IntVector>
-EntityParticleContainer::particle_ops(ParticleTileType& pti) const
-{
-    auto& aos = pti.GetArrayOfStructs();
-    auto& soa = pti.GetStructOfArrays();
-    return EntityOps<ParticleType, RealVector, IntVector>(
-        aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
-}
-
 } // namespace spades::particles

@@ -17,7 +17,7 @@ namespace spades::particles {
 //! Main SPADES message container
 class MessageParticleContainer
     : public SpadesParticleContainer<
-          MessageTypes,
+          MessageTypes::NTYPES,
           0,
           0,
           MessageRealData::ncomps,
@@ -84,12 +84,6 @@ public:
 
     //! Initialize variable names
     void initialize_variable_names() override;
-
-    MessageOps<
-        MessageParticleContainer::ParticleType,
-        MessageParticleContainer::RealVector,
-        MessageParticleContainer::IntVector>
-    particle_ops(ParticleTileType& pti) const;
 
 private:
     //! Initial messages per LP

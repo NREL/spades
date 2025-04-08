@@ -17,7 +17,7 @@ namespace spades::particles {
 //! Main SPADES entity container
 class EntityParticleContainer
     : public SpadesParticleContainer<
-          EntityTypes,
+          EntityTypes::NTYPES,
           0,
           0,
           EntityRealData::ncomps,
@@ -66,12 +66,6 @@ public:
 
     //! Initialize variable names
     void initialize_variable_names() override;
-
-    EntityOps<
-        EntityParticleContainer::ParticleType,
-        EntityParticleContainer::RealVector,
-        EntityParticleContainer::IntVector>
-    particle_ops(ParticleTileType& pti) const;
 
 private:
     //! Initial entities per LP

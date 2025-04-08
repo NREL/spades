@@ -9,38 +9,21 @@
 
 namespace spades::particles {
 
-//! Entity operations
-template <class P, class RT, class IT>
-struct EntityOps
-    : public ParticleOps<
-          EntityRealData::ncomps,
-          EntityIntData::ncomps,
-          P,
-          RT,
-          IT>
+//! Functor for making a entity undefined
+struct MarkEntityUndefined
 {
-
     /**
-       @brief Constructor
-       @param aos [in] particle AOS data
-       @param rdata [in] particle real data
-       @param idata [in] particle int data
+       @brief Mark a entity as undefined
+       @param n [in] entity index
+       @param rdata [in, out] entity real data
+       @param idata [in, out] entity int data
      **/
-    EntityOps(
-        P* aos,
-        std::array<RT, EntityRealData::ncomps>& rdata,
-        std::array<IT, EntityIntData::ncomps>& idata)
-        : ParticleOps<EntityRealData::ncomps, EntityIntData::ncomps, P, RT, IT>(
-              aos, rdata, idata) {};
-
-    /**
-       @brief Mark an entity as undefined
-       @param n [in] message index
-     **/
-    void mark_undefined(const amrex::Long n) const
+    template <class RT, class IT>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
+    operator()(const amrex::Long n, RT& rdata, IT& idata) const
     {
-        this->m_idata[EntityIntData::type_id][n] = EntityTypes::UNDEFINED;
-        this->m_rdata[EntityRealData::timestamp][n] = 0.0;
+        idata[EntityIntData::type_id][n] = EntityTypes::UNDEFINED;
+        rdata[EntityRealData::timestamp][n] = 0.0;
     }
 };
 
