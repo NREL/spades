@@ -339,16 +339,14 @@ void SpadesParticleContainer<
         // Sort particle indices based on the cell index
         BL_PROFILE_VAR(
             "spades::SpadesParticleContainer::nonencoded_sort::sort", sort);
-        auto& soa = pti.GetStructOfArrays();
-        auto* rdata = soa.GetRealData().data();
-        auto* idata = soa.GetIntData().data();
+        const auto parrs = particle_arrays(pti);
 #ifdef AMREX_USE_GPU
 #if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
         thrust::sort(
             thrust::device, cell_list.begin(), cell_list.end(),
             [=] AMREX_GPU_DEVICE(
                 const amrex::Long xi, const amrex::Long yi) noexcept {
-                return compare(xi, yi, rdata, idata);
+                return compare(xi, yi, parrs);
             });
 #else
         // Perform sort on CPU, then copy back to device (not good)
@@ -359,7 +357,7 @@ void SpadesParticleContainer<
         std::sort(
             h_cell_list.begin(), h_cell_list.end(),
             [=](const amrex::Long xi, const amrex::Long yi) {
-                return compare(xi, yi, rdata, idata);
+                return compare(xi, yi, parrs);
             });
         amrex::Gpu::copy(
             amrex::Gpu::hostToDevice, h_cell_list.begin(), h_cell_list.end(),
@@ -369,7 +367,7 @@ void SpadesParticleContainer<
         std::sort(
             cell_list.begin(), cell_list.end(),
             [=](const amrex::Long xi, const amrex::Long yi) {
-                return compare(xi, yi, rdata, idata);
+                return compare(xi, yi, parrs);
             });
 #endif
         amrex::Gpu::streamSynchronize();
@@ -640,14 +638,10 @@ void SpadesParticleContainer<
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         const auto& pti = this->GetParticles(LEV)[index];
         const size_t np = pti.numParticles();
-        const auto* aos = pti.GetArrayOfStructs().dataPtr();
-        auto& soa = pti.GetStructOfArrays();
-        auto* rdata = soa.GetRealData(CommonRealData::timestamp).data();
-        auto* idata = soa.GetIntData().data();
+        const auto parrs = particle_arrays(pti);
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            const auto& p = aos[pidx];
-            DevicePrint()(p, pidx, rdata, idata);
+            DevicePrint()(pidx, parrs);
         });
     }
     amrex::Print() << "End " << header << "-----------------------------"
@@ -686,6 +680,7 @@ void SpadesParticleContainer<
         const auto& offsets_arr = m_offsets.const_array(mfi);
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = this->GetParticles(LEV)[index];
+        const auto parrs = particle_arrays(pti);
         auto* aos = pti.GetArrayOfStructs().dataPtr();
         auto& soa = pti.GetStructOfArrays();
         auto* idata = soa.GetIntData().data();
@@ -694,7 +689,7 @@ void SpadesParticleContainer<
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const auto getter = Get(iv, cnt_arr, offsets_arr, aos, idata);
+                const auto getter = Get(iv, cnt_arr, offsets_arr, parrs);
 
                 for (int typ = 0; typ < NType; typ++) {
                     AMREX_ASSERT(cnt_arr(iv, typ) < nbins);

@@ -30,83 +30,6 @@ struct ParticleArrays
         }
     }
 
-    /**
-       @brief Get a particle
-       @param iv [in] cell index of the particle
-       @param counts [in] cell counts of particle types
-       @param offsets [in] cell offsets of particle types
-       @param n [in] particle index
-       @param typ [in] particle type
-     **/
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE int
-    get(const amrex::IntVect& iv,
-        const amrex::Array4<const int>& counts,
-        const amrex::Array4<const int>& offsets,
-        const int n,
-        const int typ) const
-    {
-        AMREX_ASSERT(counts(iv, typ) > n);
-        const int idx = offsets(iv, typ) + n;
-
-        AMREX_ASSERT(m_aos[idx].id() >= 0);
-        AMREX_ASSERT(m_idata[CommonIntData::type_id][idx] == typ);
-
-        return idx;
-    }
-
-    /**
-       @brief Check validity of the particle type
-       @param iv [in] cell index of the particle
-       @param counts [in] cell counts of particle types
-       @param offsets [in] cell offsets of particle types
-       @param n [in] particle index
-       @param typ [in] particle type that is requested
-       @return boolean if the particle is of the requested type
-     **/
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool check(
-        const amrex::IntVect& iv,
-        const amrex::Array4<const int>& counts,
-        const amrex::Array4<const int>& offsets,
-        const int n,
-        const int typ) const
-    {
-        AMREX_ASSERT(counts(iv, typ) > n);
-        const int idx = offsets(iv, typ) + n;
-        return m_idata[CommonIntData::type_id][idx] == typ;
-    }
-
-    /**
-       @brief Assert that the particle is of a different but expected
-       type
-
-       A particle sometimes changes type (e.g., marked as undefined)
-       but the counts and offsets haven't been updated yet. This
-       asserts that the requested particle of a certain type \p typ
-       changed to another type \p expected_type.
-
-       @param iv [in] cell index of the particle
-       @param counts [in] cell counts of particle types
-       @param offsets [in] cell offsets of particle types
-       @param n [in] particle index
-       @param typ [in] particle type that is requested
-       @param expected_type [in] expected particle type
-     **/
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void assert_different(
-        const amrex::IntVect& iv,
-        const amrex::Array4<const int>& counts,
-        const amrex::Array4<const int>& offsets,
-        const int n,
-        const int typ,
-        const int expected_type) const
-    {
-#ifdef AMREX_DEBUG
-        const int idx = offsets(iv, typ) + n;
-        AMREX_ASSERT(m_idata[CommonIntData::type_id][idx] == expected_type);
-#else
-        amrex::ignore_unused(n, typ, expected_type);
-#endif
-    }
-
     //! AOS data
     P* m_aos = nullptr;
 
@@ -127,21 +50,22 @@ struct Print
        @param rdata [in] particle real data
        @param idata [in] particle int data
      **/
-    template <class P, class RT, class IT>
-    void operator()(P& p, const amrex::Long n, RT& rdata, IT& idata) const
+    template <class PArrs>
+    void operator()(const amrex::Long n, PArrs& parrs) const
     {
+        auto& p = parrs.m_aos[n];
         amrex::Print() << "Particle data: \n"
                        << "  id = " << p.id() << "\n"
                        << "  cpu = " << p.cpu() << "\n"
-                       << "  type = " << idata[CommonIntData::type_id][n]
-                       << "\n";
+                       << "  type = "
+                       << parrs.m_idata[CommonIntData::type_id][n] << "\n";
         for (int i = 0; i < p.NInt; i++) {
-            amrex::Print() << "  int comp(" << i << ") = " << idata[i][n]
-                           << "\n";
+            amrex::Print() << "  int comp(" << i
+                           << ") = " << parrs.m_idata[i][n] << "\n";
         }
         for (int i = 0; i < p.NReal; i++) {
-            amrex::Print() << "  real comp(" << i << ") = " << rdata[i][n]
-                           << "\n";
+            amrex::Print() << "  real comp(" << i
+                           << ") = " << parrs.m_rdata[i][n] << "\n";
         }
     }
 };
@@ -156,14 +80,15 @@ struct DevicePrint
          @param rdata [in] particle real data
          @param idata [in] particle int data
        **/
-    template <class P, class RT, class IT>
-    AMREX_GPU_DEVICE void
-    operator()(P& p, const amrex::Long n, RT& rdata, IT& idata) const
+    template <class PArrs>
+    AMREX_GPU_DEVICE void operator()(const amrex::Long n, PArrs& parrs) const
     {
+        auto& p = parrs.m_aos[n];
         printf(
             "Particle data: id = %ld, cpu = %ld, type = %d, timestamp = %.8e\n",
             static_cast<amrex::Long>(p.id()), static_cast<amrex::Long>(p.cpu()),
-            idata[CommonIntData::type_id][n], rdata[CommonRealData::timestamp]);
+            parrs.m_idata[CommonIntData::type_id][n],
+            parrs.m_rdata[CommonRealData::timestamp][n]);
     }
 };
 
@@ -179,26 +104,21 @@ struct Copy
          @param rdata [in, out] particle real data
          @param idata [in, out] particle int data
        **/
-    template <class RT, class IT>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
-        const amrex::Long p1,
-        const amrex::Long p2,
-        const int nr,
-        const int ni,
-        RT& rdata,
-        IT& idata) const
+    template <class PArrs>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
+    operator()(const amrex::Long p1, const amrex::Long p2, PArrs& parrs) const
     {
-        for (int i = 0; i < nr; i++) {
-            rdata[i][p2] = rdata[i][p1];
+        for (int i = 0; i < PArrs::NReal; i++) {
+            parrs.m_rdata[i][p2] = parrs.m_rdata[i][p1];
         }
-        for (int i = 0; i < ni; i++) {
-            idata[i][p2] = idata[i][p1];
+        for (int i = 0; i < PArrs::NInt; i++) {
+            parrs.m_idata[i][p2] = parrs.m_idata[i][p1];
         }
     }
 };
 
 //! Functor for accessing a particle in a cell
-template <class P, class IT>
+template <class PArrs>
 struct Get
 {
     /**
@@ -206,20 +126,15 @@ struct Get
        @param iv [in] cell index of the particle
        @param counts [in] cell counts of particle types
        @param offsets [in] cell offsets of particle types
-       @param pstruct [in] particle array
+       @param parrs [in] particle arrays
        @param idata [in] particle int data
      **/
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE
     Get(const amrex::IntVect& iv,
         const amrex::Array4<const int>& counts,
         const amrex::Array4<const int>& offsets,
-        P* pstruct,
-        IT& idata)
-        : m_iv(iv)
-        , m_counts(counts)
-        , m_offsets(offsets)
-        , m_pstruct(pstruct)
-        , m_idata(idata)
+        PArrs& parrs)
+        : m_iv(iv), m_counts(counts), m_offsets(offsets), m_parrs(parrs)
     {}
 
     /**
@@ -235,8 +150,8 @@ struct Get
         AMREX_ASSERT(m_counts(m_iv, typ) > n);
         const int idx = m_offsets(m_iv, typ) + n;
 
-        AMREX_ASSERT(m_pstruct[idx].id() >= 0);
-        AMREX_ASSERT(m_idata[CommonIntData::type_id][idx] == typ);
+        AMREX_ASSERT(m_parrs.m_aos[idx].id() >= 0);
+        AMREX_ASSERT(m_parrs.m_idata[CommonIntData::type_id][idx] == typ);
 
         return idx;
     }
@@ -252,7 +167,7 @@ struct Get
     {
         AMREX_ASSERT(m_counts(m_iv, typ) > n);
         const int idx = m_offsets(m_iv, typ) + n;
-        return m_idata[CommonIntData::type_id][idx] == typ;
+        return m_parrs.m_idata[CommonIntData::type_id][idx] == typ;
     }
 
     /**
@@ -273,7 +188,8 @@ struct Get
     {
 #ifdef AMREX_DEBUG
         const int idx = m_offsets(m_iv, typ) + n;
-        AMREX_ASSERT(m_idata[CommonIntData::type_id][idx] == expected_type);
+        AMREX_ASSERT(
+            m_parrs.m_idata[CommonIntData::type_id][idx] == expected_type);
 #else
         amrex::ignore_unused(n, typ, expected_type);
 #endif
@@ -289,10 +205,7 @@ struct Get
     const amrex::Array4<const int>& m_offsets;
 
     //! Particle array
-    P* m_pstruct;
-
-    //! Int data
-    IT& m_idata;
+    PArrs& m_parrs;
 };
 
 //! Functor for pairing particles
@@ -322,26 +235,27 @@ struct CompareParticle
      @brief Compare particles
      @param p1 [in] first particle
      @param p2 [in] second particle
-     @param rdata [in] particle real data
-     @param idata [in] particle int data
+     @param parrs [in] particle arrays
      @return boolean of p1 < p2 based on criteria
    **/
-    template <class RT, class IT>
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool operator()(
-        const amrex::Long p1, const amrex::Long p2, RT& rdata, IT& idata) const
+    template <class PArrs>
+    AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool
+    operator()(const amrex::Long p1, const amrex::Long p2, PArrs& parrs) const
     {
         // sort by iv, then particle type then by timestamp
         const amrex::IntVect piv1(AMREX_D_DECL(
-            idata[CommonIntData::i][p1], idata[CommonIntData::j][p1],
-            idata[CommonIntData::k][p1]));
+            parrs.m_idata[CommonIntData::i][p1],
+            parrs.m_idata[CommonIntData::j][p1],
+            parrs.m_idata[CommonIntData::k][p1]));
         const amrex::IntVect piv2(AMREX_D_DECL(
-            idata[CommonIntData::i][p2], idata[CommonIntData::j][p2],
-            idata[CommonIntData::k][p2]));
+            parrs.m_idata[CommonIntData::i][p2],
+            parrs.m_idata[CommonIntData::j][p2],
+            parrs.m_idata[CommonIntData::k][p2]));
 
-        const auto m1 = idata[CommonIntData::type_id][p1];
-        const auto m2 = idata[CommonIntData::type_id][p2];
-        const auto t1 = rdata[CommonRealData::timestamp][p1];
-        const auto t2 = rdata[CommonRealData::timestamp][p2];
+        const auto m1 = parrs.m_idata[CommonIntData::type_id][p1];
+        const auto m2 = parrs.m_idata[CommonIntData::type_id][p2];
+        const auto t1 = parrs.m_rdata[CommonRealData::timestamp][p1];
+        const auto t2 = parrs.m_rdata[CommonRealData::timestamp][p2];
         return (piv1 < piv2) ||
                (piv1 == piv2 && ((m1 < m2) || (m1 == m2 && t1 < t2)));
     }

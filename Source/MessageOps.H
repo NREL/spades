@@ -24,10 +24,10 @@ struct CreateMessage
        @param receiver_lp [in] receiver LP id
        @param receiver_entity [in] entity id
      **/
-    template <class ParticleArrays>
+    template <class PArrs>
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(
         const amrex::Long n,
-        ParticleArrays& parrs,
+        PArrs& parrs,
         const amrex::Real timestamp,
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         const amrex::IntVect& iv,
@@ -63,9 +63,9 @@ struct MarkMessageUndefined
        @param n [in] message index
        @param parrs [in, out] message arrays
      **/
-    template <class ParticleArrays>
+    template <class PArrs>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
-    operator()(const amrex::Long n, ParticleArrays& parrs) const
+    operator()(const amrex::Long n, PArrs& parrs) const
     {
         parrs.m_idata[MessageIntData::type_id][n] = MessageTypes::UNDEFINED;
         parrs.m_idata[MessageIntData::pair][n] = -1;

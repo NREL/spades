@@ -394,6 +394,10 @@ void SPADES::process_messages()
                      int i, int j, int AMREX_D_PICK(, , k),
                      amrex::RandomEngine const& engine) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto msg_getter =
+                    particles::Get(iv, msg_cnt_arr, msg_offsets_arr, msg_parrs);
+                const auto ent_getter =
+                    particles::Get(iv, ent_cnt_arr, ent_offsets_arr, ent_parrs);
 
                 for (int n = 0;
                      n < amrex::min<int>(
@@ -401,9 +405,8 @@ void SPADES::process_messages()
                              messages_per_step);
                      n++) {
 
-                    const auto prcv_soa = msg_parrs.get(
-                        iv, msg_cnt_arr, msg_offsets_arr, n,
-                        particles::MessageTypes::MESSAGE);
+                    const auto prcv_soa =
+                        msg_getter(n, particles::MessageTypes::MESSAGE);
                     const auto ts =
                         msg_parrs.m_rdata[particles::MessageRealData::timestamp]
                                          [prcv_soa];
@@ -417,9 +420,8 @@ void SPADES::process_messages()
                         msg_parrs
                             .m_idata[particles::MessageIntData::receiver_entity]
                                     [prcv_soa];
-                    const auto pe_soa = ent_parrs.get(
-                        iv, ent_cnt_arr, ent_offsets_arr, ent,
-                        particles::EntityTypes::ENTITY);
+                    const auto pe_soa =
+                        ent_getter(ent, particles::EntityTypes::ENTITY);
                     AMREX_ASSERT(
                         dom.atOffset(
                             ent_parrs.m_idata[particles::EntityIntData::owner]
@@ -464,9 +466,8 @@ void SPADES::process_messages()
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(1.0, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
-                    const auto psnd_soa = msg_parrs.get(
-                        iv, msg_cnt_arr, msg_offsets_arr, 2 * n,
-                        particles::MessageTypes::UNDEFINED);
+                    const auto psnd_soa =
+                        msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     auto& psnd = msg_parrs.m_aos[psnd_soa];
                     particles::CreateMessage()(
                         psnd_soa, msg_parrs, next_ts, pos, iv_dest,
@@ -482,9 +483,8 @@ void SPADES::process_messages()
                                      [psnd_soa] = ent_lvt;
 
                     // Create the conjugate message
-                    const auto pcnj_soa = msg_parrs.get(
-                        iv, msg_cnt_arr, msg_offsets_arr, 2 * n + 1,
-                        particles::MessageTypes::UNDEFINED);
+                    const auto pcnj_soa = msg_getter(
+                        2 * n + 1, particles::MessageTypes::UNDEFINED);
                     auto& pcnj = msg_parrs.m_aos[pcnj_soa];
 
                     // FIXME, could do a copy. Or just pass p.pos to Create
@@ -516,9 +516,8 @@ void SPADES::process_messages()
                 amrex::Real max_ent_lvt = constants::LOW_NUM;
                 for (int n = 0;
                      n < ent_cnt_arr(iv, particles::EntityTypes::ENTITY); n++) {
-                    const auto pe = ent_parrs.get(
-                        iv, ent_cnt_arr, ent_offsets_arr, n,
-                        particles::EntityTypes::ENTITY);
+                    const auto pe =
+                        ent_getter(n, particles::EntityTypes::ENTITY);
                     const auto ent_lvt =
                         ent_parrs
                             .m_rdata[particles::EntityRealData::timestamp][pe];
@@ -577,20 +576,20 @@ void SPADES::rollback()
                 box, [=] AMREX_GPU_DEVICE(
                          int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                     const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                    const auto msg_getter = particles::Get(
+                        iv, msg_cnt_arr, msg_offsets_arr, msg_parrs);
 
                     const amrex::Real msg_lvt =
                         msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0
                             ? msg_parrs.m_rdata[particles::MessageRealData::
-                                                    timestamp][msg_parrs.get(
-                                  iv, msg_cnt_arr, msg_offsets_arr, 0,
-                                  particles::MessageTypes::MESSAGE)]
+                                                    timestamp][msg_getter(
+                                  0, particles::MessageTypes::MESSAGE)]
                             : constants::LARGE_NUM;
                     const amrex::Real ant_lvt =
                         msg_cnt_arr(iv, particles::MessageTypes::ANTI) > 0
-                            ? msg_parrs.m_rdata[particles::MessageRealData::
-                                                    timestamp][msg_parrs.get(
-                                  iv, msg_cnt_arr, msg_offsets_arr, 0,
-                                  particles::MessageTypes::ANTI)]
+                            ? msg_parrs.m_rdata
+                                  [particles::MessageRealData::timestamp]
+                                  [msg_getter(0, particles::MessageTypes::ANTI)]
                             : constants::LARGE_NUM;
                     const amrex::Real rollback_timestamp =
                         amrex::min<amrex::Real>(msg_lvt, ant_lvt);
@@ -607,9 +606,8 @@ void SPADES::rollback()
                              n < msg_cnt_arr(
                                      iv, particles::MessageTypes::PROCESSED);
                              n++) {
-                            const auto pprd_soa = msg_parrs.get(
-                                iv, msg_cnt_arr, msg_offsets_arr, n,
-                                particles::MessageTypes::PROCESSED);
+                            const auto pprd_soa = msg_getter(
+                                n, particles::MessageTypes::PROCESSED);
                             if (msg_parrs.m_rdata
                                     [particles::MessageRealData::timestamp]
                                     [pprd_soa] >= rollback_timestamp) {
@@ -627,20 +625,18 @@ void SPADES::rollback()
                                     // This is a conjugate message that was
                                     // already treated, expect it to be an anti
                                     // message
-                                    if (!msg_parrs.check(
-                                            iv, msg_cnt_arr, msg_offsets_arr, m,
-                                            particles::MessageTypes::
-                                                CONJUGATE)) {
-                                        msg_parrs.assert_different(
-                                            iv, msg_cnt_arr, msg_offsets_arr, m,
+                                    if (!msg_getter.check(
+                                            m, particles::MessageTypes::
+                                                   CONJUGATE)) {
+                                        msg_getter.assert_different(
+                                            m,
                                             particles::MessageTypes::CONJUGATE,
                                             particles::MessageTypes::ANTI);
                                         continue;
                                     }
 
-                                    const auto pcnj_soa = msg_parrs.get(
-                                        iv, msg_cnt_arr, msg_offsets_arr, m,
-                                        particles::MessageTypes::CONJUGATE);
+                                    const auto pcnj_soa = msg_getter(
+                                        m, particles::MessageTypes::CONJUGATE);
 
                                     if (pair ==
                                         msg_parrs.m_idata
@@ -700,8 +696,10 @@ void SPADES::rollback()
                                     particles::MessageTypes::MESSAGE;
 
                                 // restore the state
-                                auto pe_soa = ent_parrs.get(
+                                const auto ent_getter = particles::Get(
                                     iv, ent_cnt_arr, ent_offsets_arr,
+                                    ent_parrs);
+                                auto pe_soa = ent_getter(
                                     msg_parrs
                                         .m_idata[particles::MessageIntData::
                                                      receiver_entity][pprd_soa],
@@ -835,9 +833,10 @@ void SPADES::update_lbts()
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
 
                 if (msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0) {
-                    const auto prcv_soa = msg_parrs.get(
-                        iv, msg_cnt_arr, msg_offsets_arr, 0,
-                        particles::MessageTypes::MESSAGE);
+                    const auto msg_getter = particles::Get(
+                        iv, msg_cnt_arr, msg_offsets_arr, msg_parrs);
+                    const auto prcv_soa =
+                        msg_getter(0, particles::MessageTypes::MESSAGE);
                     lbts_arr(iv) =
                         msg_parrs.m_rdata[particles::MessageRealData::timestamp]
                                          [prcv_soa];

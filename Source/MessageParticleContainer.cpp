@@ -244,9 +244,9 @@ void MessageParticleContainer::update_undefined()
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
                 const auto idx = box.index(iv);
                 const auto np = p_removals[idx];
+                const auto getter = Get(iv, cnt_arr, offsets_arr, parrs);
                 for (int m = 0; m < np; m++) {
-                    const auto pidx = parrs.get(
-                        iv, cnt_arr, offsets_arr, m, MessageTypes::UNDEFINED);
+                    const auto pidx = getter(m, MessageTypes::UNDEFINED);
                     parrs.m_aos[pidx].id() = -1;
                 }
             });
@@ -367,11 +367,10 @@ void MessageParticleContainer::resolve_pairs()
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k)) noexcept {
                 const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+                const auto getter = Get(iv, cnt_arr, offsets_arr, parrs);
 
                 for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI); n++) {
-
-                    const auto pant_soa = parrs.get(
-                        iv, cnt_arr, offsets_arr, n, MessageTypes::ANTI);
+                    const auto pant_soa = getter(n, MessageTypes::ANTI);
                     AMREX_ASSERT(
                         parrs.m_idata[MessageIntData::pair][pant_soa] != -1);
                     AMREX_ASSERT(
@@ -385,16 +384,13 @@ void MessageParticleContainer::resolve_pairs()
                          m++) {
                         // This is a message that was already treated,
                         // expect it to be undefined
-                        if (!parrs.check(
-                                iv, cnt_arr, offsets_arr, m,
-                                MessageTypes::MESSAGE)) {
-                            parrs.assert_different(
-                                iv, cnt_arr, offsets_arr, m,
-                                MessageTypes::MESSAGE, MessageTypes::UNDEFINED);
+                        if (!getter.check(m, MessageTypes::MESSAGE)) {
+                            getter.assert_different(
+                                m, MessageTypes::MESSAGE,
+                                MessageTypes::UNDEFINED);
                             continue;
                         }
-                        const auto pmsg_soa = parrs.get(
-                            iv, cnt_arr, offsets_arr, m, MessageTypes::MESSAGE);
+                        const auto pmsg_soa = getter(m, MessageTypes::MESSAGE);
                         if ((parrs.m_idata[MessageIntData::pair][pmsg_soa] ==
                              parrs.m_idata[MessageIntData::pair][pant_soa]) &&
                             (std::abs(
