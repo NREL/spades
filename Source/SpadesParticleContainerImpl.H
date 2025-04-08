@@ -133,18 +133,19 @@ void SpadesParticleContainer<
         const auto& cnt_arr = m_counts.array(mfi);
         const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
         auto& pti = this->GetParticles(LEV)[index];
-        auto& soa = pti.GetStructOfArrays();
-        auto* idata = soa.GetIntData().data();
+        const auto parrs = particle_arrays(pti);
         const int np = pti.numParticles();
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             const amrex::IntVect iv(AMREX_D_DECL(
-                idata[CommonIntData::i][pidx], idata[CommonIntData::j][pidx],
-                idata[CommonIntData::k][pidx]));
+                parrs.m_idata[CommonIntData::i][pidx],
+                parrs.m_idata[CommonIntData::j][pidx],
+                parrs.m_idata[CommonIntData::k][pidx]));
 
             if (box.contains(iv)) {
                 amrex::Gpu::Atomic::AddNoRet(
-                    &cnt_arr(iv, idata[CommonIntData::type_id][pidx]), 1);
+                    &cnt_arr(iv, parrs.m_idata[CommonIntData::type_id][pidx]),
+                    1);
             }
         });
     }
@@ -236,35 +237,40 @@ void SpadesParticleContainer<
     const auto index = std::make_pair(mfi.index(), mfi.LocalTileIndex());
     auto& pti = this->GetParticles(LEV)[index];
     const size_t np = pti.numParticles();
-    auto& soa = pti.GetStructOfArrays();
-    auto* rdata = soa.GetRealData(CommonRealData::timestamp).data();
-    auto* idata = soa.GetIntData().data();
+    const auto parrs = particle_arrays(pti);
 
     amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
         if (pidx > 0) {
             const auto pm = pidx - 1;
             const amrex::IntVect pivm(AMREX_D_DECL(
-                idata[CommonIntData::i][pm], idata[CommonIntData::j][pm],
-                idata[CommonIntData::k][pm]));
+                parrs.m_idata[CommonIntData::i][pm],
+                parrs.m_idata[CommonIntData::j][pm],
+                parrs.m_idata[CommonIntData::k][pm]));
             const amrex::IntVect piv(AMREX_D_DECL(
-                idata[CommonIntData::i][pidx], idata[CommonIntData::j][pidx],
-                idata[CommonIntData::k][pidx]));
-            if ((idata[CommonIntData::type_id][pm] ==
-                 idata[CommonIntData::type_id][pidx]) &&
+                parrs.m_idata[CommonIntData::i][pidx],
+                parrs.m_idata[CommonIntData::j][pidx],
+                parrs.m_idata[CommonIntData::k][pidx]));
+            if ((parrs.m_idata[CommonIntData::type_id][pm] ==
+                 parrs.m_idata[CommonIntData::type_id][pidx]) &&
                 (pivm == piv)) {
-                if (rdata[pm] > rdata[pidx]) {
+                if (parrs.m_rdata[CommonRealData::timestamp][pm] >
+                    parrs.m_rdata[CommonRealData::timestamp][pidx]) {
                     printf(
                         "Unsorted time stamp %.16f > %.16f in ivm: (%d, %d) of "
                         "type "
                         "%d, iv: (%d,%d) of type %d\n",
-                        rdata[pm], rdata[pidx], idata[CommonIntData::i][pm],
-                        idata[CommonIntData::j][pm],
-                        idata[CommonIntData::type_id][pm],
-                        idata[CommonIntData::i][pidx],
-                        idata[CommonIntData::j][pidx],
-                        idata[CommonIntData::type_id][pidx]);
+                        parrs.m_rdata[CommonRealData::timestamp][pm],
+                        parrs.m_rdata[CommonRealData::timestamp][pidx],
+                        parrs.m_idata[CommonIntData::i][pm],
+                        parrs.m_idata[CommonIntData::j][pm],
+                        parrs.m_idata[CommonIntData::type_id][pm],
+                        parrs.m_idata[CommonIntData::i][pidx],
+                        parrs.m_idata[CommonIntData::j][pidx],
+                        parrs.m_idata[CommonIntData::type_id][pidx]);
                 }
-                AMREX_ASSERT(rdata[pm] <= rdata[pidx]);
+                AMREX_ASSERT(
+                    parrs.m_rdata[CommonRealData::timestamp][pm] <=
+                    parrs.m_rdata[CommonRealData::timestamp][pidx]);
             }
         }
     });
