@@ -42,8 +42,8 @@ def main():
     p0df = p0f()
     p1df = p1f()
     assert p0df.shape == p1df.shape
-    p0df.drop(["id", "cpu"], axis=1)
-    p1df.drop(["id", "cpu"], axis=1)
+    p0df.drop(["id", "cpu"], axis=1, inplace=True)
+    p1df.drop(["id", "cpu"], axis=1, inplace=True)
     lps = ["i", "j", "k"][:p0f.ndim]
     p0df.sort_values(
         by=lps+["type_id", "timestamp"],
