@@ -214,12 +214,12 @@ public:
         }
     }
 
-    ParticleOps<NArrayReal, NArrayInt, ParticleType, RealVector, IntVector>
+    ParticleArrays<NArrayReal, NArrayInt, ParticleType, RealVector, IntVector>
     particle_arrays(ParticleTileType& pti) const
     {
         auto& aos = pti.GetArrayOfStructs();
         auto& soa = pti.GetStructOfArrays();
-        return ParticleOps<
+        return ParticleArrays<
             NArrayReal, NArrayInt, ParticleType, RealVector, IntVector>(
             aos.dataPtr(), soa.GetRealData(), soa.GetIntData());
     }

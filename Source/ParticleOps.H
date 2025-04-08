@@ -10,7 +10,7 @@ namespace spades::particles {
 
 //! Particle operations
 template <size_t NReal, size_t NInt, class P, class RT, class IT>
-struct ParticleOps
+struct ParticleArrays
 {
     /**
        @brief Constructor
@@ -18,7 +18,7 @@ struct ParticleOps
        @param rdata [in] particle real data
        @param idata [in] particle int data
      **/
-    ParticleOps(
+    ParticleArrays(
         P* aos, std::array<RT, NReal>& rdata, std::array<IT, NInt>& idata)
         : m_aos(aos)
     {
