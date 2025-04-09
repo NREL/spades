@@ -44,15 +44,15 @@ def main():
     assert p0df.shape == p1df.shape
     p0df.drop(["id", "cpu"], axis=1, inplace=True)
     p1df.drop(["id", "cpu"], axis=1, inplace=True)
-    lps = ["i", "j", "k"][:p0f.ndim]
+    lps = ["i", "j", "k"][: p0f.ndim]
     p0df.sort_values(
-        by=lps+["type_id", "timestamp"],
+        by=lps + ["type_id", "timestamp"],
         inplace=True,
         kind="stable",
         ignore_index=True,
     )
     p1df.sort_values(
-        by=lps+["type_id", "timestamp"],
+        by=lps + ["type_id", "timestamp"],
         inplace=True,
         kind="stable",
         ignore_index=True,

@@ -39,14 +39,16 @@ if __name__ == "__main__":
 
     df_lst = []
     renames = {
-        "::encoded_sort": "::sort",
-        "::nonencoded_sort": "::sort",
+        "::encoded_sort::": "::sort::",
+        "::nonencoded_sort::": "::sort::",
     }
     for fname in args.fnames:
         lst = []
         with open(fname, "r") as f:
             logging = False
             for line in f:
+                if line.startswith("Time spent in evolve():"):
+                    total_time = float(line.split()[-1])
                 if line.startswith("Name") and ("NCalls" in line):
                     line = next(f)
                     line = next(f)
@@ -63,31 +65,50 @@ if __name__ == "__main__":
                         }
                     )
 
+        lst.append(
+            {
+                "function": "spades::Total",
+                f"average-{fname}": total_time,
+            }
+        )
         df = pd.DataFrame(lst)
         df.function = df.function.apply(
             lambda x: reduce(lambda s, kv: s.replace(*kv), renames.items(), x)
         )
         df_lst.append(df)
+
+    # Make sure all the df have the same reported functions, fill missing ones with 0
+    all_functions = list(set([x for df in df_lst for x in df["function"].to_list()]))
+    for df in df_lst:
+        for x in all_functions:
+            if x not in df.function.values:
+                dct = {col: 0.0 for col in df.columns if "function" not in col}
+                dct["function"] = x
+                df.loc[len(df)] = dct
+
+    # Make a single df
     df = reduce(
-        lambda left, right: pd.merge(left, right, on=["function"], how="outer"), df_lst
+        lambda left, right: pd.merge(left, right, on=["function"], how="inner"), df_lst
     )
-    df = df.sort_values(by=f"average-{args.fnames[0]}", ascending=False).head(10)
+    df["average"] = df[[x for x in df.columns if "function" not in x]].mean(axis=1)
+    df = df.sort_values(by="average", ascending=False).head(10)
     df.function = df.function.str.replace("_", "\_", regex=False)
 
     pname = "profile_plots.pdf"
     plt.figure("timing", figsize=(14, 6))
     ax = plt.gca()
     ind = np.arange(len(df))
-    width = 0.25
+    width = 0.8 / (len(args.fnames))
+    offset = 0.5* (len(args.fnames)-1) * width
     for k, fname in enumerate(args.fnames):
         ax.barh(
-            ind + k * width,
+            ind - offset + k * width,
             df[f"average-{fname}"],
             width,
             align="center",
             label=args.labels[k],
         )
-    ax.set(yticks=ind + width, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
+    ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
     ax.invert_yaxis()
 
     # Save the plots
