@@ -175,9 +175,13 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::check_sort(
                 p.idata(CommonIntData::k)));
             AMREX_ASSERT(pivm <= piv);
             if (pivm == piv) {
-                printf(
-                    "Unsorted type %d > %d\n", pm.idata(CommonIntData::type_id),
-                    p.idata(CommonIntData::type_id));
+                if (pm.idata(CommonIntData::type_id) >
+                    p.idata(CommonIntData::type_id)) {
+                    printf(
+                        "Unsorted type %d > %d\n",
+                        pm.idata(CommonIntData::type_id),
+                        p.idata(CommonIntData::type_id));
+                }
                 AMREX_ASSERT(
                     pm.idata(CommonIntData::type_id) <=
                     p.idata(CommonIntData::type_id));
