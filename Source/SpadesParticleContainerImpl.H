@@ -329,6 +329,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
     BL_PROFILE_VAR(
         "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
     m_min_timestamp.setVal(constants::LARGE_NUM);
+    m_min_timestamp.setVal(0.0, PType::NTYPES-1, 1);
     m_max_timestamp.setVal(0.0);
 
 #ifdef AMREX_USE_OMP
@@ -358,12 +359,14 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
                 p.idata(CommonIntData::k)));
 
             AMREX_ASSERT(box.contains(piv));
-            amrex::Gpu::Atomic::Min(
-                &min_ts_arr(piv, p.idata(CommonIntData::type_id)),
-                p.rdata(CommonRealData::timestamp));
-            amrex::Gpu::Atomic::Max(
-                &max_ts_arr(piv, p.idata(CommonIntData::type_id)),
-                p.rdata(CommonRealData::timestamp));
+            if (p.idata(CommonIntData::type_id) != (PType::NTYPES-1)) {
+                amrex::Gpu::Atomic::Min(
+                    &min_ts_arr(piv, p.idata(CommonIntData::type_id)),
+                    p.rdata(CommonRealData::timestamp));
+                amrex::Gpu::Atomic::Max(
+                    &max_ts_arr(piv, p.idata(CommonIntData::type_id)),
+                    p.rdata(CommonRealData::timestamp));
+            }
         });
     }
     BL_PROFILE_VAR_STOP(bounds);
