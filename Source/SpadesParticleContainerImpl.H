@@ -85,6 +85,7 @@ void SpadesParticleContainer<
             NType, m_ngrow, amrex::MFInfo());
 
         m_min_timestamp.setVal(constants::LARGE_NUM);
+        m_min_timestamp.setVal(0.0, NType - 1, 1);
         m_max_timestamp.setVal(0.0);
     }
 }
@@ -427,8 +428,8 @@ void SpadesParticleContainer<
 
     BL_PROFILE_VAR(
         "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
-    m_min_timestamp.setVal(constants::LARGE_NUM);
-    m_max_timestamp.setVal(0.0);
+    m_min_timestamp.setVal(constants::LARGE_NUM, 0, NType - 1);
+    m_max_timestamp.setVal(0.0, 0, NType - 1);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -450,18 +451,22 @@ void SpadesParticleContainer<
         const amrex::Box& box = mfi.tilebox();
 #endif
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            const amrex::IntVect piv(AMREX_D_DECL(
-                parrs.m_idata[CommonIntData::i][pidx],
-                parrs.m_idata[CommonIntData::j][pidx],
-                parrs.m_idata[CommonIntData::k][pidx]));
+            if (parrs.m_idata[CommonIntData::type_id][pidx] != (NType - 1)) {
+                const amrex::IntVect piv(AMREX_D_DECL(
+                    parrs.m_idata[CommonIntData::i][pidx],
+                    parrs.m_idata[CommonIntData::j][pidx],
+                    parrs.m_idata[CommonIntData::k][pidx]));
 
-            AMREX_ASSERT(box.contains(piv));
-            amrex::Gpu::Atomic::Min(
-                &min_ts_arr(piv, parrs.m_idata[CommonIntData::type_id][pidx]),
-                ts[pidx]);
-            amrex::Gpu::Atomic::Max(
-                &max_ts_arr(piv, parrs.m_idata[CommonIntData::type_id][pidx]),
-                ts[pidx]);
+                AMREX_ASSERT(box.contains(piv));
+                amrex::Gpu::Atomic::Min(
+                    &min_ts_arr(
+                        piv, parrs.m_idata[CommonIntData::type_id][pidx]),
+                    ts[pidx]);
+                amrex::Gpu::Atomic::Max(
+                    &max_ts_arr(
+                        piv, parrs.m_idata[CommonIntData::type_id][pidx]),
+                    ts[pidx]);
+            }
         });
     }
     BL_PROFILE_VAR_STOP(bounds);
