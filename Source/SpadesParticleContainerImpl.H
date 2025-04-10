@@ -354,11 +354,11 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 #endif
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
-            AMREX_ASSERT(box.contains(piv));
             if (p.idata(CommonIntData::type_id) != (PType::NTYPES - 1)) {
                 const amrex::IntVect piv(AMREX_D_DECL(
                     p.idata(CommonIntData::i), p.idata(CommonIntData::j),
                     p.idata(CommonIntData::k)));
+                AMREX_ASSERT(box.contains(piv));
                 amrex::Gpu::Atomic::Min(
                     &min_ts_arr(piv, p.idata(CommonIntData::type_id)),
                     p.rdata(CommonRealData::timestamp));
