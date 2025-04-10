@@ -58,6 +58,7 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::initialize_state()
             PType::NTYPES, m_ngrow, amrex::MFInfo());
 
         m_min_timestamp.setVal(constants::LARGE_NUM);
+        m_min_timestamp.setVal(0.0, PType::NTYPES - 1, 1);
         m_max_timestamp.setVal(0.0);
     }
 }
@@ -328,8 +329,8 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 
     BL_PROFILE_VAR(
         "spades::SpadesParticleContainer::encoded_sort::bounds", bounds);
-    m_min_timestamp.setVal(constants::LARGE_NUM);
-    m_max_timestamp.setVal(0.0);
+    m_min_timestamp.setVal(constants::LARGE_NUM, 0, PType::NTYPES - 1);
+    m_max_timestamp.setVal(0.0, 0, PType::NTYPES - 1);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -353,17 +354,18 @@ void SpadesParticleContainer<PType, NStructReal, NStructInt>::
 #endif
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pindex) noexcept {
             const auto& p = pstruct[pindex];
-            const amrex::IntVect piv(AMREX_D_DECL(
-                p.idata(CommonIntData::i), p.idata(CommonIntData::j),
-                p.idata(CommonIntData::k)));
-
-            AMREX_ASSERT(box.contains(piv));
-            amrex::Gpu::Atomic::Min(
-                &min_ts_arr(piv, p.idata(CommonIntData::type_id)),
-                p.rdata(CommonRealData::timestamp));
-            amrex::Gpu::Atomic::Max(
-                &max_ts_arr(piv, p.idata(CommonIntData::type_id)),
-                p.rdata(CommonRealData::timestamp));
+            if (p.idata(CommonIntData::type_id) != (PType::NTYPES - 1)) {
+                const amrex::IntVect piv(AMREX_D_DECL(
+                    p.idata(CommonIntData::i), p.idata(CommonIntData::j),
+                    p.idata(CommonIntData::k)));
+                AMREX_ASSERT(box.contains(piv));
+                amrex::Gpu::Atomic::Min(
+                    &min_ts_arr(piv, p.idata(CommonIntData::type_id)),
+                    p.rdata(CommonRealData::timestamp));
+                amrex::Gpu::Atomic::Max(
+                    &max_ts_arr(piv, p.idata(CommonIntData::type_id)),
+                    p.rdata(CommonRealData::timestamp));
+            }
         });
     }
     BL_PROFILE_VAR_STOP(bounds);
