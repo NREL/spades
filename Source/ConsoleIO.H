@@ -10,6 +10,8 @@
  **/
 namespace spades::io {
 
+using namespace amrex::mpidatatypes;
+
 /**
    @brief Print SPADES banner
    @param comm [in] MPI communicator
