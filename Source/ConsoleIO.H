@@ -5,12 +5,12 @@
 #include <AMReX.H>
 #include <AMReX_OpenMP.H>
 
-using namespace amrex::mpidatatypes;
-
 /**
    @brief IO functionality for SPADES
  **/
 namespace spades::io {
+
+using namespace amrex::mpidatatypes;
 
 /**
    @brief Print SPADES banner
