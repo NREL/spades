@@ -10,6 +10,7 @@ html/
 doctrees/
 *.ipynb
 .ccls-cache
+__pycache__
 
 Build/CMakeCache.txt
 Build/CMakeDoxyfile.in

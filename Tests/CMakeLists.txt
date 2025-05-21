@@ -61,7 +61,7 @@ macro(setup_test)
       set(SAVE_GOLDS_COMMAND "&& cp -R ${PLOT_TEST} ${SAVED_GOLDS_DIRECTORY}/${TEST_NAME}/")
     endif()
     if(SPADES_TEST_WITH_FCOMPARE)
-      set(FCOMPARE_COMMAND "&& ${FCOMPARE_EXE} ${FCOMPARE_TOLERANCE} ${PLOT_GOLD} ${PLOT_TEST}")
+      set(FCOMPARE_COMMAND "&& CUDA_LAUNCH_BLOCKING=1 ${FCOMPARE_EXE} ${FCOMPARE_TOLERANCE} ${PLOT_GOLD} ${PLOT_TEST}")
       if (SPADES_TEST_WITH_PYTHON)
         set(PARTICLE_FCOMPARE_EXE ${CMAKE_SOURCE_DIR}/Scripts/fcompare_particles.py
           CACHE INTERNAL "Path to particle fcompare executable for regression tests")
