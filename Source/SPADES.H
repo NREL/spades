@@ -19,7 +19,7 @@
 #include "EntityParticleContainer.H"
 
 /**
-   @brief Scalable PArallel Discrete Event Simulation
+   @brief Solver for PArallel Discrete Event Simulation
  **/
 namespace spades {
 

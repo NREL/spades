@@ -1,5 +1,5 @@
-SPADES: Scalable PArallel Discrete Event Simulation
----------------------------------------------------
+SPADES: Solver for PArallel Discrete Event Simulation
+-----------------------------------------------------
 
 |CI Badge| |Documentation Badge| |License Badge| |AMReX Badge| |C++ Badge|
 
@@ -18,7 +18,7 @@ SPADES: Scalable PArallel Discrete Event Simulation
 .. |C++ Badge| image:: https://img.shields.io/badge/language-C%2B%2B17-blue
    :target: https://isocpp.org/
 
-SPADES (Scalable PArallel Discrete Event Simulation) is an open-source
+SPADES (Solver for PArallel Discrete Event Simulation) is an open-source
 parallel discrete event simulation (PDES) package built on the AMReX
 library. Targeted at solving discrete event systems in parallel, this
 software package aims to be performance portable and scalable on

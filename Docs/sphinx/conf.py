@@ -35,7 +35,7 @@ texinfo_documents = [
         "SPADES Documentation",
         author,
         "SPADES",
-        "Scalable PArallel Discrete Event Simulation.",
+        "Solver for PArallel Discrete Event Simulation.",
         "Miscellaneous",
     ),
 ]
