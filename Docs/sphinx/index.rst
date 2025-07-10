@@ -1,6 +1,6 @@
-===================================================
-SPADES: Scalable PArallel Discrete Event Simulation
-===================================================
+=====================================================
+SPADES: Solver for PArallel Discrete Event Simulation
+=====================================================
 
 .. toctree::
    :maxdepth: 5
