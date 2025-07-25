@@ -18,21 +18,24 @@ SPADES: Solver for PArallel Discrete Event Simulation
 .. |C++ Badge| image:: https://img.shields.io/badge/language-C%2B%2B17-blue
    :target: https://isocpp.org/
 
-SPADES (Solver for PArallel Discrete Event Simulation) is an open-source
-parallel discrete event simulation (PDES) package built on the AMReX
-library. Targeted at solving discrete event systems in parallel, this
-software package aims to be performance portable and scalable on
-heterogeneous computing architectures, e.g., graphic processing units
-(GPU). SPADES implements optimistic synchronization with rollback
-through an implementation of the Time Warp algorithm. An alternative
-conservative synchronization approach is also implemented using the
-Lower Bound on Incoming Time Stamp. In our implementation, logical
-processes are represented as cells in a grid and event messages are
-represented as particles. SPADES supports various parallel
-decomposition strategies, including the use of the Message Passing
-Interface (MPI) and OpenMP threading. All major GPU architectures
-(e.g., Intel, AMD, NVIDIA) are supported through the use of
-performance portability functionalities implemented in AMReX.
+SPADES (Solver for PArallel Discrete Event Simulation) is an
+open-source parallel discrete event simulation (PDES) package built on
+the AMReX library. Targeted at solving discrete event systems in
+parallel, this software package aims to be performance portable and
+scalable on heterogeneous computing architectures, e.g., graphic
+processing units (GPU). SPADES implements optimistic synchronization
+with rollback through an implementation of the Time Warp algorithm. An
+alternative conservative synchronization approach is also implemented
+using the Lower Bound on Incoming Time Stamp. In our implementation,
+logical processes are represented as cells in a grid and event
+messages are represented as particles. SPADES supports various
+parallel decomposition strategies, including the use of the Message
+Passing Interface (MPI) and OpenMP threading. All major GPU
+architectures (e.g., Intel, AMD, NVIDIA) are supported through the use
+of performance portability functionalities implemented in AMReX. The
+SPADES software is released in NREL Software Record SWR-24-99 “SPADES
+(Scalable Parallel Discrete Events Simulation)”.
+
 
 Getting Started
 ~~~~~~~~~~~~~~~
@@ -63,7 +66,5 @@ The full documentation for `SPADES` exists in the Docs directory; at present thi
 
 Funding
 ~~~~~~~
-
-The SPADES software is released in NREL Software Record SWR-24-99 “SPADES (Scalable Parallel Discrete Events Simulation)”.
 
 This work was authored by the National Renewable Energy Laboratory (NREL) for the U.S. Department of Energy (DOE) under Contract No. DE-AC36-08GO28308. This work was supported by the Laboratory Directed Research and Development (LDRD) Program at NREL. The views expressed in the article do not necessarily represent the views of the DOE or the U.S. Government. The U.S. Government retains and the publisher, by accepting the article for publication, acknowledges that the U.S. Government retains a nonexclusive, paid-up, irrevocable, worldwide license to publish or reproduce the published form of this work, or allow others to do so, for U.S. Government purposes. A portion of the research was performed using computational resources sponsored by the Department of Energy’s Office of Energy Efficiency and Renewable Energy and located at the National Renewable Energy Laboratory.
