@@ -36,6 +36,7 @@ if __name__ == "__main__":
         raise AssertionError("Need same number of labels and file names")
 
     types = ["message", "processed_message", "conjugate_message", "undefined_message"]
+    n_mean_steps = 100
     for lbl, fname in zip(args.labels, args.fnames):
         df = pd.read_csv(fname)
 
@@ -55,6 +56,10 @@ if __name__ == "__main__":
             plt.plot(df.step, df[f"{typ}s"] / df.lps)
             plt.fill_between(df.step, df[f"min_{typ}s"], df[f"max_{typ}s"], alpha=0.5)
 
+        print(f"Data for {fname}:")
+        print(f"  Mean rate = {df.avg_rate.tail(n_mean_steps).mean()}")
+        print(f"  GVT at the last step = {df.gvt.iloc[-1]}")
+
     pname = "profile_data.pdf"
     with PdfPages(pname) as pdf:
         plt.figure("gvt")
@@ -68,7 +73,7 @@ if __name__ == "__main__":
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$r~[\#/s]$")
         legend = plt.legend(loc="lower right")
-        plt.ylim([0, 3e6])
+        # plt.ylim([0, 3e6])
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
@@ -82,6 +87,6 @@ if __name__ == "__main__":
         for typ in types:
             plt.figure(f"{typ}s")
             plt.xlabel(r"$s~[-]$")
-            plt.ylabel(f"$m_{typ[0]}~[\#]$")
+            plt.ylabel(f"$m_{typ[0]}~[\\#]$")
             plt.tight_layout()
             pdf.savefig(dpi=300)

@@ -91,15 +91,22 @@ if __name__ == "__main__":
         lambda left, right: pd.merge(left, right, on=["function"], how="inner"), df_lst
     )
     df["average"] = df[[x for x in df.columns if "function" not in x]].mean(axis=1)
-    df = df.sort_values(by="average", ascending=False).head(10)
-    df.function = df.function.str.replace("_", "\_", regex=False)
+    df = df.sort_values(by="average", ascending=False).head(8)
+    df.function = df.function.str.replace("_", "\\_", regex=False)
+
+    norm = df.loc[df.function == "spades::Total"][f"average-{args.fnames[0]}"].values[0]
+    norm_cols = df.columns.difference(["function"])
+    for col in norm_cols:
+        df[f"norm-{col}"] = df[col] / norm
+
+    print(df[df.function == "spades::Total"].T)
 
     pname = "profile_plots.pdf"
     plt.figure("timing", figsize=(14, 6))
     ax = plt.gca()
     ind = np.arange(len(df))
     width = 0.8 / (len(args.fnames))
-    offset = 0.5* (len(args.fnames)-1) * width
+    offset = 0.5 * (len(args.fnames) - 1) * width
     for k, fname in enumerate(args.fnames):
         ax.barh(
             ind - offset + k * width,
@@ -111,10 +118,37 @@ if __name__ == "__main__":
     ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
     ax.invert_yaxis()
 
+    plt.figure("norm-timing", figsize=(14, 6))
+    ax = plt.gca()
+    ind = np.arange(len(df))
+    width = 0.8 / (len(args.fnames))
+    offset = 0.5 * (len(args.fnames) - 1) * width
+    for k, fname in enumerate(args.fnames):
+        ax.barh(
+            ind - offset + k * width,
+            df[f"norm-average-{fname}"],
+            width,
+            align="center",
+            label=args.labels[k],
+        )
+    ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
+    ax.invert_yaxis()
+
     # Save the plots
     with PdfPages(pname) as pdf:
         plt.figure("timing")
-        plt.xlabel(r"Time $[s]$", fontsize=22, fontweight="bold")
+        ax = plt.gca()
+        plt.xlabel(r"$t~[s]$", fontsize=22, fontweight="bold")
+        # plt.ylabel(r"$\bar{u} (x=0)$", fontsize=22, fontweight="bold")
+        plt.setp(ax.get_xmajorticklabels(), fontsize=22, fontweight="bold")
+        plt.setp(ax.get_ymajorticklabels(), fontsize=22, fontweight="bold")
+        legend = ax.legend(loc="lower right", fontsize=22)
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("norm-timing")
+        ax = plt.gca()
+        plt.xlabel(r"$t / \tau~[-]$", fontsize=22, fontweight="bold")
         # plt.ylabel(r"$\bar{u} (x=0)$", fontsize=22, fontweight="bold")
         plt.setp(ax.get_xmajorticklabels(), fontsize=22, fontweight="bold")
         plt.setp(ax.get_ymajorticklabels(), fontsize=22, fontweight="bold")
