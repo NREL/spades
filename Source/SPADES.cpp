@@ -142,7 +142,7 @@ void SPADES::read_parameters()
         pp.query("file_name_digits", m_file_name_digits);
         pp.query("rng_file_name_digits", m_rng_file_name_digits);
         AMREX_ALWAYS_ASSERT(
-            m_rng_file_name_digits >= amrex::ParallelDescriptor::NProcs());
+                            m_rng_file_name_digits >= std::ceil(std::log10(amrex::ParallelDescriptor::NProcs())));
     }
 
     {
