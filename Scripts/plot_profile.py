@@ -99,7 +99,9 @@ if __name__ == "__main__":
     for col in norm_cols:
         df[f"norm-{col}"] = df[col] / norm
 
-    print(df[df.function == "spades::Total"].T)
+    # print_fname = "spades::Total"
+    print_fname = "spades::SpadesParticleContainer::sort::sort"
+    print(df[df.function == print_fname].T)
 
     pname = "profile_plots.pdf"
     plt.figure("timing", figsize=(14, 6))
