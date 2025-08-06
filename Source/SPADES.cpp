@@ -478,7 +478,7 @@ void SPADES::process_messages()
                         prcv.id() < std::numeric_limits<int>::max());
                     msg_parrs
                         .m_idata[particles::MessageIntData::pair_id][psnd_soa] =
-                        prcv.id();
+                        static_cast<int>(prcv.id());
                     msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
                                      [psnd_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
@@ -505,7 +505,7 @@ void SPADES::process_messages()
                         static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     msg_parrs
                         .m_idata[particles::MessageIntData::pair_id][pcnj_soa] =
-                        prcv.id();
+                        static_cast<int>(prcv.id());
                     msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
                                      [pcnj_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
@@ -616,8 +616,6 @@ void SPADES::rollback()
                                     [pprd_soa] >= rollback_timestamp) {
 
                                 auto& pprd = msg_parrs.m_aos[pprd_soa];
-                                const int pair = static_cast<int>(
-                                    pairing_function(pprd.cpu(), pprd.id()));
                                 for (int m = 0;
                                      m <
                                      msg_cnt_arr(
