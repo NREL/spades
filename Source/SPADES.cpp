@@ -473,11 +473,13 @@ void SPADES::process_messages()
                         static_cast<int>(dom.index(iv)), ent,
                         static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
-                    const auto pair = static_cast<int>(
-                        pairing_function(prcv.cpu(), prcv.id()));
+                    AMREX_ALWAYS_ASSERT(prcv.id() < std::numeric_limits<int>::max());
                     msg_parrs
-                        .m_idata[particles::MessageIntData::pair][psnd_soa] =
-                        pair;
+                        .m_idata[particles::MessageIntData::pair_id][psnd_soa] =
+                      prcv.id();
+                    msg_parrs
+                        .m_idata[particles::MessageIntData::pair_cpu][psnd_soa] =
+                        prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
                                      [psnd_soa] = ent_lvt;
 
@@ -501,8 +503,11 @@ void SPADES::process_messages()
                         static_cast<int>(dom.index(iv)), ent,
                         static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     msg_parrs
-                        .m_idata[particles::MessageIntData::pair][pcnj_soa] =
-                        pair;
+                        .m_idata[particles::MessageIntData::pair_id][pcnj_soa] =
+                        prcv.id();
+                    msg_parrs
+                        .m_idata[particles::MessageIntData::pair_cpu][pcnj_soa] =
+                        prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
                                      [pcnj_soa] = ent_lvt;
                     msg_parrs
@@ -636,10 +641,13 @@ void SPADES::rollback()
                                     const auto pcnj_soa = msg_getter(
                                         m, particles::MessageTypes::CONJUGATE);
 
-                                    if (pair ==
+                                    if ((pprd.cpu() ==
                                         msg_parrs.m_idata
-                                            [particles::MessageIntData::pair]
-                                            [pcnj_soa]) {
+                                            [particles::MessageIntData::pair_cpu]
+                                            [pcnj_soa]) && (pprd.cpu() ==
+                                        msg_parrs.m_idata
+                                            [particles::MessageIntData::pair_cpu]
+                                            [pcnj_soa]))                                      {
                                         AMREX_ASSERT(
                                             std::abs(
                                                 msg_parrs.m_rdata
