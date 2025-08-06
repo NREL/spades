@@ -639,10 +639,10 @@ void SPADES::rollback()
                                     const auto pcnj_soa = msg_getter(
                                         m, particles::MessageTypes::CONJUGATE);
 
-                                    if ((pprd.cpu() ==
+                                    if ((pprd.id() ==
                                          msg_parrs.m_idata
                                              [particles::MessageIntData::
-                                                  pair_cpu][pcnj_soa]) &&
+                                                  pair_id][pcnj_soa]) &&
                                         (pprd.cpu() ==
                                          msg_parrs.m_idata
                                              [particles::MessageIntData::
