@@ -22,7 +22,7 @@ jobs:
         source: './Source'
         exclude: '.'
         extensions: 'H,h,cpp'
-        clangFormatVersion: 20
+        clangFormatVersion: 19
   CPU:
     needs: Formatting
     runs-on: ${{matrix.os}}
