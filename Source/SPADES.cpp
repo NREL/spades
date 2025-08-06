@@ -142,7 +142,8 @@ void SPADES::read_parameters()
         pp.query("file_name_digits", m_file_name_digits);
         pp.query("rng_file_name_digits", m_rng_file_name_digits);
         AMREX_ALWAYS_ASSERT(
-                            m_rng_file_name_digits >= std::ceil(std::log10(amrex::ParallelDescriptor::NProcs())));
+            m_rng_file_name_digits >=
+            std::ceil(std::log10(amrex::ParallelDescriptor::NProcs())));
     }
 
     {
@@ -473,13 +474,13 @@ void SPADES::process_messages()
                         static_cast<int>(dom.index(iv)), ent,
                         static_cast<int>(dom.index(iv_dest)), rcv_ent);
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
-                    AMREX_ALWAYS_ASSERT(prcv.id() < std::numeric_limits<int>::max());
+                    AMREX_ALWAYS_ASSERT(
+                        prcv.id() < std::numeric_limits<int>::max());
                     msg_parrs
                         .m_idata[particles::MessageIntData::pair_id][psnd_soa] =
-                      prcv.id();
-                    msg_parrs
-                        .m_idata[particles::MessageIntData::pair_cpu][psnd_soa] =
-                        prcv.cpu();
+                        prcv.id();
+                    msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
+                                     [psnd_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
                                      [psnd_soa] = ent_lvt;
 
@@ -505,9 +506,8 @@ void SPADES::process_messages()
                     msg_parrs
                         .m_idata[particles::MessageIntData::pair_id][pcnj_soa] =
                         prcv.id();
-                    msg_parrs
-                        .m_idata[particles::MessageIntData::pair_cpu][pcnj_soa] =
-                        prcv.cpu();
+                    msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
+                                     [pcnj_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
                                      [pcnj_soa] = ent_lvt;
                     msg_parrs
@@ -642,12 +642,13 @@ void SPADES::rollback()
                                         m, particles::MessageTypes::CONJUGATE);
 
                                     if ((pprd.cpu() ==
-                                        msg_parrs.m_idata
-                                            [particles::MessageIntData::pair_cpu]
-                                            [pcnj_soa]) && (pprd.cpu() ==
-                                        msg_parrs.m_idata
-                                            [particles::MessageIntData::pair_cpu]
-                                            [pcnj_soa]))                                      {
+                                         msg_parrs.m_idata
+                                             [particles::MessageIntData::
+                                                  pair_cpu][pcnj_soa]) &&
+                                        (pprd.cpu() ==
+                                         msg_parrs.m_idata
+                                             [particles::MessageIntData::
+                                                  pair_cpu][pcnj_soa])) {
                                         AMREX_ASSERT(
                                             std::abs(
                                                 msg_parrs.m_rdata

@@ -51,12 +51,13 @@ void MessageParticleContainer::initialize_variable_names()
     m_real_data_names[MessageRealData::creation_time] = "creation_time";
     m_writeflags_real[MessageRealData::creation_time] = 1;
 
-    AMREX_D_TERM(m_int_data_names[MessageIntData::i] = "i";
-                 m_writeflags_int[MessageIntData::i] = 1;
-                 , m_int_data_names[MessageIntData::j] = "j";
-                 m_writeflags_int[MessageIntData::j] = 1;
-                 , m_int_data_names[MessageIntData::k] = "k";
-                 m_writeflags_int[MessageIntData::k] = 1;)
+    AMREX_D_TERM(
+        m_int_data_names[MessageIntData::i] = "i";
+        m_writeflags_int[MessageIntData::i] = 1;
+        , m_int_data_names[MessageIntData::j] = "j";
+        m_writeflags_int[MessageIntData::j] = 1;
+        , m_int_data_names[MessageIntData::k] = "k";
+        m_writeflags_int[MessageIntData::k] = 1;)
     m_int_data_names[MessageIntData::type_id] = "type_id";
     m_writeflags_int[MessageIntData::type_id] = 1;
     m_int_data_names[MessageIntData::sender_lp] = "sender_lp";
@@ -376,7 +377,8 @@ void MessageParticleContainer::resolve_pairs()
                     AMREX_ASSERT(
                         parrs.m_idata[MessageIntData::pair_id][pant_soa] != -1);
                     AMREX_ASSERT(
-                        parrs.m_idata[MessageIntData::pair_cpu][pant_soa] != -1);
+                        parrs.m_idata[MessageIntData::pair_cpu][pant_soa] !=
+                        -1);
                     AMREX_ASSERT(
                         parrs.m_idata[MessageIntData::receiver_lp][pant_soa] ==
                         dom.index(iv));
@@ -396,10 +398,12 @@ void MessageParticleContainer::resolve_pairs()
                         }
                         const auto pmsg_soa = getter(m, MessageTypes::MESSAGE);
                         if ((parrs.m_idata[MessageIntData::pair_id][pmsg_soa] ==
-                             parrs.m_idata[MessageIntData::pair_id][pant_soa])
-                            && (parrs.m_idata[MessageIntData::pair_cpu][pmsg_soa] ==
-                             parrs.m_idata[MessageIntData::pair_cpu][pant_soa])
-                            &&
+                             parrs
+                                 .m_idata[MessageIntData::pair_id][pant_soa]) &&
+                            (parrs
+                                 .m_idata[MessageIntData::pair_cpu][pmsg_soa] ==
+                             parrs.m_idata[MessageIntData::pair_cpu]
+                                          [pant_soa]) &&
                             (std::abs(
                                  parrs.m_rdata[MessageRealData::timestamp]
                                               [pmsg_soa] -
