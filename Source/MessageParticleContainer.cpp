@@ -51,12 +51,13 @@ void MessageParticleContainer::initialize_variable_names()
     m_real_data_names[MessageRealData::creation_time] = "creation_time";
     m_writeflags_real[MessageRealData::creation_time] = 1;
 
-    AMREX_D_TERM(m_int_data_names[MessageIntData::i] = "i";
-                 m_writeflags_int[MessageIntData::i] = 1;
-                 , m_int_data_names[MessageIntData::j] = "j";
-                 m_writeflags_int[MessageIntData::j] = 1;
-                 , m_int_data_names[MessageIntData::k] = "k";
-                 m_writeflags_int[MessageIntData::k] = 1;)
+    AMREX_D_TERM(
+        m_int_data_names[MessageIntData::i] = "i";
+        m_writeflags_int[MessageIntData::i] = 1;
+        , m_int_data_names[MessageIntData::j] = "j";
+        m_writeflags_int[MessageIntData::j] = 1;
+        , m_int_data_names[MessageIntData::k] = "k";
+        m_writeflags_int[MessageIntData::k] = 1;)
     m_int_data_names[MessageIntData::type_id] = "type_id";
     m_writeflags_int[MessageIntData::type_id] = 1;
     m_int_data_names[MessageIntData::sender_lp] = "sender_lp";
@@ -67,8 +68,10 @@ void MessageParticleContainer::initialize_variable_names()
     m_writeflags_int[MessageIntData::receiver_lp] = 1;
     m_int_data_names[MessageIntData::receiver_entity] = "receiver_entity";
     m_writeflags_int[MessageIntData::receiver_entity] = 1;
-    m_int_data_names[MessageIntData::pair] = "pair";
-    m_writeflags_int[MessageIntData::pair] = 0;
+    m_int_data_names[MessageIntData::pair_id] = "pair_id";
+    m_writeflags_int[MessageIntData::pair_id] = 0;
+    m_int_data_names[MessageIntData::pair_cpu] = "pair_cpu";
+    m_writeflags_int[MessageIntData::pair_cpu] = 0;
 }
 
 void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
@@ -157,7 +160,8 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                     parrs.m_rdata[MessageRealData::creation_time][n] = 0.0;
                     parrs.m_idata[MessageIntData::type_id][n] =
                         MessageTypes::MESSAGE;
-                    parrs.m_idata[MessageIntData::pair][n] = -1;
+                    parrs.m_idata[MessageIntData::pair_id][n] = -1;
+                    parrs.m_idata[MessageIntData::pair_cpu][n] = -1;
                 }
             });
 
@@ -371,7 +375,10 @@ void MessageParticleContainer::resolve_pairs()
                 for (int n = 0; n < cnt_arr(iv, MessageTypes::ANTI); n++) {
                     const auto pant_soa = getter(n, MessageTypes::ANTI);
                     AMREX_ASSERT(
-                        parrs.m_idata[MessageIntData::pair][pant_soa] != -1);
+                        parrs.m_idata[MessageIntData::pair_id][pant_soa] != -1);
+                    AMREX_ASSERT(
+                        parrs.m_idata[MessageIntData::pair_cpu][pant_soa] !=
+                        -1);
                     AMREX_ASSERT(
                         parrs.m_idata[MessageIntData::receiver_lp][pant_soa] ==
                         dom.index(iv));
@@ -390,8 +397,13 @@ void MessageParticleContainer::resolve_pairs()
                             continue;
                         }
                         const auto pmsg_soa = getter(m, MessageTypes::MESSAGE);
-                        if ((parrs.m_idata[MessageIntData::pair][pmsg_soa] ==
-                             parrs.m_idata[MessageIntData::pair][pant_soa]) &&
+                        if ((parrs.m_idata[MessageIntData::pair_id][pmsg_soa] ==
+                             parrs
+                                 .m_idata[MessageIntData::pair_id][pant_soa]) &&
+                            (parrs
+                                 .m_idata[MessageIntData::pair_cpu][pmsg_soa] ==
+                             parrs.m_idata[MessageIntData::pair_cpu]
+                                          [pant_soa]) &&
                             (std::abs(
                                  parrs.m_rdata[MessageRealData::timestamp]
                                               [pmsg_soa] -

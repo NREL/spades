@@ -27,7 +27,8 @@ struct MessageIntData
         receiver_lp,
         sender_entity,
         receiver_entity,
-        pair,
+        pair_cpu,
+        pair_id,
         ncomps
     };
 };

@@ -68,7 +68,8 @@ struct MarkMessageUndefined
     operator()(const amrex::Long n, PArrs& parrs) const
     {
         parrs.m_idata[MessageIntData::type_id][n] = MessageTypes::UNDEFINED;
-        parrs.m_idata[MessageIntData::pair][n] = -1;
+        parrs.m_idata[MessageIntData::pair_cpu][n] = -1;
+        parrs.m_idata[MessageIntData::pair_id][n] = -1;
         parrs.m_rdata[MessageRealData::timestamp][n] = 0.0;
         parrs.m_rdata[MessageRealData::old_timestamp][n] = 0.0;
         parrs.m_rdata[MessageRealData::creation_time][n] = 0.0;
