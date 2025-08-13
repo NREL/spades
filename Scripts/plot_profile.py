@@ -9,7 +9,6 @@ import numpy as np
 from cycler import cycler
 from functools import reduce
 import itertools
-import re
 
 plt.style.use(pathlib.Path(__file__).parent.resolve() / "project.mplstyle")
 marker_shapes = ("s", "d", "o", "p", "h")
@@ -42,21 +41,20 @@ if __name__ == "__main__":
         raise AssertionError("Need same number of labels and file names")
 
     df_lst = []
+    mean_data_lst = []
     renames = {
         "::encoded_sort::": "::sort::",
         "::nonencoded_sort::": "::sort::",
     }
-    extra_dct = {}
-    entity_regex = r"^  \d+ entities$"
-    for fname in args.fnames:
+    types = ["message", "processed_message", "conjugate_message", "undefined_message"]
+    n_mean_steps = 100
+    for lbl, fname in zip(args.labels, args.fnames):
         lst = []
         with open(fname, "r") as f:
             logging = False
             for line in f:
                 if "MPI processes" in line and "MPI initialized with" in line:
                     nranks = int(line.split()[3])
-                if re.match(entity_regex, line):
-                    nentities = int(line.split()[0])
                 if line.startswith("Time spent in evolve():"):
                     total_time = float(line.split()[-1])
                 if line.startswith("Name") and ("NCalls" in line):
@@ -86,7 +84,39 @@ if __name__ == "__main__":
             lambda x: reduce(lambda s, kv: s.replace(*kv), renames.items(), x)
         )
         df_lst.append(df)
-        extra_dct[f"average-{fname}"] = {"nranks": nranks, "nentities": nentities}
+
+        # Temporal data
+        dname = fname.replace("phold", "data").replace("log", "csv")
+        data_df = pd.read_csv(dname)
+        mean_data_df = data_df.tail(n_mean_steps).mean()
+        mean_data_df["final_gvt"] = data_df.gvt.iloc[-1]
+        mean_data_df["final_step"] = data_df.step.iloc[-1]
+        mean_data_df["nranks"] = nranks
+        mean_data_df["function"] = f"average-{fname}"
+        mean_data_lst.append(mean_data_df)
+
+        plt.figure("gvt")
+        plt.plot(data_df.step, data_df.gvt, label=lbl)
+
+        plt.figure("rate")
+        plt.plot(data_df.step, data_df.avg_rate, label=lbl)
+
+        plt.figure(f"rlbk")
+        for nrlbk in range(1, 20):
+            if data_df[f"rollback_{nrlbk}"].sum() > 0:
+                plt.semilogy(
+                    data_df.step, data_df[f"rollback_{nrlbk}"], label=f"nrlbk = {nrlbk}"
+                )
+
+        for typ in types:
+            plt.figure(f"{typ}s")
+            plt.plot(data_df.step, data_df[f"{typ}s"] / data_df.lps)
+            plt.fill_between(
+                data_df.step, data_df[f"min_{typ}s"], data_df[f"max_{typ}s"], alpha=0.5
+            )
+
+    mean_data_df = pd.DataFrame(mean_data_lst)
+    print(mean_data_df)
 
     # Make sure all the df have the same reported functions, fill missing ones with 0
     all_functions = list(set([x for df in df_lst for x in df["function"].to_list()]))
@@ -114,21 +144,39 @@ if __name__ == "__main__":
         "amrex::unpackRemotes",
         "ParticleCopyPlan::buildMPIStart",
         "ParticleCopyPlan::build",
+        "ParticleContainer::RedistributeMPI",
+        "ParticleContainer::RedistributeCPU",
     ]
     grouped_data = {
-        "function": ["communication", "computation", "total", "nranks", "nentities"]
+        "function": [
+            "communication",
+            "computation",
+            "total",
+            "nranks",
+            "nentities",
+            "rate",
+            "gvt",
+        ]
     }
     for col in df.select_dtypes(include="number").columns:
         communication_sum = fdf[fdf["function"].isin(communication_functions)][
             col
         ].sum()
         computation_sum = fdf[~fdf["function"].isin(communication_functions)][col].sum()
+        nranks = mean_data_df.loc[mean_data_df["function"] == col, "nranks"].iloc[0]
+        nentities = mean_data_df.loc[mean_data_df["function"] == col, "entities"].iloc[
+            0
+        ]
+        rate = mean_data_df.loc[mean_data_df["function"] == col, "avg_rate"].iloc[0]
+        gvt = mean_data_df.loc[mean_data_df["function"] == col, "final_gvt"].iloc[0]
         grouped_data[col] = [
             communication_sum,
             computation_sum,
             communication_sum + computation_sum,
-            extra_dct[col]["nranks"],
-            extra_dct[col]["nentities"],
+            nranks,
+            nentities,
+            rate,
+            gvt,
         ]
     grouped_df = pd.DataFrame(grouped_data).set_index("function").T
 
@@ -143,6 +191,7 @@ if __name__ == "__main__":
         * grouped_df.entities_per_rank
         / grouped_df.entities_per_rank.iloc[theory_idx]
     )
+    print(grouped_df)
 
     # sort and keep the top consuming functions for the original df
     df["average"] = df[[x for x in df.columns if "function" not in x]].mean(axis=1)
@@ -208,6 +257,48 @@ if __name__ == "__main__":
         grouped_df.nranks, grouped_df.total, label="Total", marker=next(markers)
     )
 
+    plt.figure("scaling-time-gvt")
+    markers = itertools.cycle(marker_shapes)
+    plt.semilogx(
+        grouped_df.nranks,
+        grouped_df.communication / grouped_df.gvt,
+        label="Communication",
+        marker=next(markers),
+    )
+    plt.semilogx(
+        grouped_df.nranks,
+        grouped_df.computation / grouped_df.gvt,
+        label="Computation",
+        marker=next(markers),
+    )
+    plt.semilogx(
+        grouped_df.nranks,
+        grouped_df.total / grouped_df.gvt,
+        label="Total",
+        marker=next(markers),
+    )
+
+    plt.figure("scaling-efficiency")
+    markers = itertools.cycle(marker_shapes)
+    plt.semilogx(
+        grouped_df.nranks,
+        grouped_df.communication.iloc[0] / grouped_df.communication * 100,
+        label="Communication",
+        marker=next(markers),
+    )
+    plt.semilogx(
+        grouped_df.nranks,
+        grouped_df.computation.iloc[0] / grouped_df.computation * 100,
+        label="Computation",
+        marker=next(markers),
+    )
+    plt.semilogx(
+        grouped_df.nranks,
+        grouped_df.total.iloc[0] / grouped_df.total * 100,
+        label="Total",
+        marker=next(markers),
+    )
+
     plt.figure("norm-scaling")
     markers = itertools.cycle(marker_shapes)
     plt.semilogx(
@@ -227,6 +318,7 @@ if __name__ == "__main__":
     )
 
     plt.figure("scaling-entities")
+    markers = itertools.cycle(marker_shapes)
     plt.loglog(
         grouped_df.entities_per_rank,
         grouped_df.communication,
@@ -251,6 +343,48 @@ if __name__ == "__main__":
         label="Perfect scaling",
         color="k",
         ls="-",
+        zorder=0,
+    )
+
+    plt.figure("scaling-entities-gvt")
+    markers = itertools.cycle(marker_shapes)
+    plt.loglog(
+        grouped_df.entities_per_rank,
+        grouped_df.communication / grouped_df.gvt,
+        label="Communication",
+        marker=next(markers),
+    )
+    plt.loglog(
+        grouped_df.entities_per_rank,
+        grouped_df.computation / grouped_df.gvt,
+        label="Computation",
+        marker=next(markers),
+    )
+    plt.loglog(
+        grouped_df.entities_per_rank,
+        grouped_df.total / grouped_df.gvt,
+        label="Total",
+        marker=next(markers),
+    )
+    plt.loglog(
+        grouped_df.entities_per_rank,
+        grouped_df.theory_entities / grouped_df.gvt,
+        label="Perfect scaling",
+        color="k",
+        ls="-",
+        zorder=0,
+    )
+
+    plt.figure("scaling-rate-efficiency")
+    markers = itertools.cycle(marker_shapes)
+    plt.semilogx(
+        grouped_df.nranks,
+        # grouped_df.rate / grouped_df.nentities / ( grouped_df.rate / grouped_df.nentities).iloc[0],
+        (grouped_df.rate / grouped_df.nentities)
+        / (grouped_df.rate / grouped_df.nentities).iloc[0]
+        * 100,
+        label="Rate",
+        marker=next(markers),
     )
 
     # Save the plots
@@ -282,6 +416,21 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
+        plt.figure("scaling-time-gvt")
+        plt.xlabel(f"Number of ranks")
+        plt.ylabel(r"$t / g~[-]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("scaling-efficiency")
+        plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
+        plt.xlabel(f"Number of ranks")
+        plt.ylabel(r"Parallel efficiency$~[\%]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
         plt.figure("norm-scaling")
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"$t~[-]$")
@@ -295,3 +444,47 @@ if __name__ == "__main__":
         legend = plt.legend(loc="best")
         plt.tight_layout()
         pdf.savefig(dpi=300)
+
+        plt.figure("scaling-entities-gvt")
+        plt.xlabel(f"Entities per rank")
+        plt.ylabel(r"$t / g~[-]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("scaling-rate-efficiency")
+        plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
+        plt.xlabel(f"Number of ranks")
+        plt.ylabel(r"Parallel efficiency$~[\%]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("gvt")
+        plt.xlabel(r"$s~[-]$")
+        plt.ylabel(r"$g~[s]$")
+        legend = plt.legend(loc="lower right")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("rate")
+        plt.xlabel(r"$s~[-]$")
+        plt.ylabel(r"$r~[\#/s]$")
+        legend = plt.legend(loc="lower right")
+        # plt.ylim([0, 3e6])
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure(f"rlbk")
+        plt.xlabel(r"$s~[-]$")
+        plt.ylabel(r"$n~[\#]$")
+        legend = plt.legend(loc="upper right")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        for typ in types:
+            plt.figure(f"{typ}s")
+            plt.xlabel(r"$s~[-]$")
+            plt.ylabel(f"$m_{typ[0]}~[\\#]$")
+            plt.tight_layout()
+            pdf.savefig(dpi=300)
