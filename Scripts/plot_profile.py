@@ -156,6 +156,7 @@ if __name__ == "__main__":
             "nentities",
             "rate",
             "gvt",
+            "avg_time"
         ]
     }
     for col in df.select_dtypes(include="number").columns:
@@ -169,6 +170,7 @@ if __name__ == "__main__":
         ]
         rate = mean_data_df.loc[mean_data_df["function"] == col, "avg_rate"].iloc[0]
         gvt = mean_data_df.loc[mean_data_df["function"] == col, "final_gvt"].iloc[0]
+        avg_time = mean_data_df.loc[mean_data_df["function"] == col, "avg_time"].iloc[0]
         grouped_data[col] = [
             communication_sum,
             computation_sum,
@@ -177,6 +179,7 @@ if __name__ == "__main__":
             nentities,
             rate,
             gvt,
+            avg_time,
         ]
     grouped_df = pd.DataFrame(grouped_data).set_index("function").T
 
