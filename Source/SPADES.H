@@ -404,6 +404,11 @@ private:
     //! Random number generator seed (optional user input)
     int m_seed{0};
 
+    //! lambda controlling width of exponential distribution (optional user input)
+    //! smaller values of lambda = larger variance in random values
+    //! larger values of lambda = smaller variance in random values
+    amrex::Real m_lambda{1.0};
+
     //! Initial condition operator
     std::unique_ptr<ic::InitializerBase> m_ic_op;
 

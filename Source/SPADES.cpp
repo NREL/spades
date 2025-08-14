@@ -155,6 +155,7 @@ void SPADES::read_parameters()
         pp.query("lookahead", m_lookahead);
         pp.query("window_size", m_window_size);
         pp.query("messages_per_step", m_messages_per_step);
+        pp.query("lambda", m_lambda);
         pp.query("data_fname", m_data_fname);
         pp.query("entities_per_lp", m_entities_per_lp);
         pp.query("messages_per_lp", m_messages_per_lp);
@@ -371,6 +372,7 @@ void SPADES::process_messages()
     const auto lookahead = m_lookahead;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
+    const auto lambda = m_lambda;
     const auto entities_per_lp = m_entities_per_lp;
 
 #ifdef AMREX_USE_OMP
@@ -465,7 +467,7 @@ void SPADES::process_messages()
                     const int rcv_ent = static_cast<int>(
                         amrex::Random_int(entities_per_lp, engine));
                     const amrex::Real next_ts =
-                        ent_lvt + random_exponential(1.0, engine) + lookahead;
+                        ent_lvt + random_exponential(lambda, engine) + lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     const auto psnd_soa =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);

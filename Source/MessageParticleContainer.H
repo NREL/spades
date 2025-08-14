@@ -88,6 +88,11 @@ public:
 private:
     //! Initial messages per LP
     int m_messages_per_lp{1};
+
+    //! lambda controlling width of exponential distribution (optional user input)
+    //! smaller values of lambda = larger variance in random values
+    //! larger values of lambda = smaller variance in random values
+    amrex::Real m_lambda{1.0};
 };
 } // namespace spades::particles
 #endif

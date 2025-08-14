@@ -32,6 +32,7 @@ void MessageParticleContainer::read_parameters()
     {
         amrex::ParmParse pp("spades");
         pp.query("messages_per_lp", m_messages_per_lp);
+        pp.query("lambda", m_lambda);
     }
 }
 
@@ -82,6 +83,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
     const auto messages_per_lp = m_messages_per_lp;
+    const auto lambda = m_lambda;
     const int total_messages_per_lp = 3 * messages_per_lp;
     AMREX_ALWAYS_ASSERT(total_messages_per_lp > messages_per_lp);
 
@@ -154,7 +156,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
 
                 for (int n = start; n < start + messages_per_lp; n++) {
                     const amrex::Real ts =
-                        random_exponential(1.0, engine) + lookahead;
+                        random_exponential(lambda, engine) + lookahead;
 
                     parrs.m_rdata[MessageRealData::timestamp][n] = ts;
                     parrs.m_rdata[MessageRealData::creation_time][n] = 0.0;
