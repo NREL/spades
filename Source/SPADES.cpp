@@ -467,7 +467,7 @@ void SPADES::process_messages()
                     const int rcv_ent = static_cast<int>(
                         amrex::Random_int(entities_per_lp, engine));
                     const amrex::Real next_ts =
-                        ent_lvt + random_exponential(lambda, engine) + 
+                        ent_lvt + random_exponential(lambda, engine) +
                         lookahead;
                     // FIXME, in general, Create is clunky. Better way?
                     const auto psnd_soa =
