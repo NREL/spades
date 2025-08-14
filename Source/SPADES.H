@@ -404,7 +404,7 @@ private:
     //! Random number generator seed (optional user input)
     int m_seed{0};
 
-    //! lambda controlling width of exponential distribution (optional user input)
+    //! Width of exponential distribution (optional user input)
     //! smaller values of lambda = larger variance in random values
     //! larger values of lambda = smaller variance in random values
     amrex::Real m_lambda{1.0};
