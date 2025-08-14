@@ -723,14 +723,26 @@ void SPADES::rollback()
                                         : ent_parrs.m_rdata
                                               [particles::EntityRealData::
                                                    timestamp][pe_soa];
+
+                                amrex::Real max_ent_lvt = constants::LOW_NUM;
+                                for (int ne = 0;
+                                     ne <
+                                     ent_cnt_arr(
+                                         iv, particles::EntityTypes::ENTITY);
+                                     ne++) {
+                                    const auto pe = ent_getter(
+                                        ne, particles::EntityTypes::ENTITY);
+                                    const auto ent_lvt =
+                                        ent_parrs
+                                            .m_rdata[particles::EntityRealData::
+                                                         timestamp][pe];
+                                    if (ent_lvt > max_ent_lvt) {
+                                        max_ent_lvt = ent_lvt;
+                                    }
+                                }
                                 sarr(iv, constants::LVT_IDX) =
-                                    sarr(iv, constants::LVT_IDX) >
-                                            ent_parrs.m_rdata
-                                                [particles::EntityRealData::
-                                                     timestamp][pe_soa]
-                                        ? ent_parrs.m_rdata
-                                              [particles::EntityRealData::
-                                                   timestamp][pe_soa]
+                                    sarr(iv, constants::LVT_IDX) > max_ent_lvt
+                                        ? max_ent_lvt
                                         : sarr(iv, constants::LVT_IDX);
                             }
                         }
