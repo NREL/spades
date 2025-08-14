@@ -194,6 +194,11 @@ if __name__ == "__main__":
         * grouped_df.entities_per_rank
         / grouped_df.entities_per_rank.iloc[theory_idx]
     )
+    grouped_df["theory_ranks"] = (
+        grouped_df.total.iloc[theory_idx]
+        *
+        grouped_df.nranks.iloc[theory_idx] / grouped_df.nranks
+    )
     print(grouped_df)
 
     # sort and keep the top consuming functions for the original df
@@ -262,23 +267,31 @@ if __name__ == "__main__":
 
     plt.figure("scaling-time-gvt")
     markers = itertools.cycle(marker_shapes)
-    plt.semilogx(
+    plt.loglog(
         grouped_df.nranks,
         grouped_df.communication / grouped_df.gvt,
         label="Communication",
         marker=next(markers),
     )
-    plt.semilogx(
+    plt.loglog(
         grouped_df.nranks,
         grouped_df.computation / grouped_df.gvt,
         label="Computation",
         marker=next(markers),
     )
-    plt.semilogx(
+    plt.loglog(
         grouped_df.nranks,
         grouped_df.total / grouped_df.gvt,
         label="Total",
         marker=next(markers),
+    )
+    plt.loglog(
+        grouped_df.nranks,
+        grouped_df.theory_ranks / grouped_df.gvt,
+        label="Perfect scaling",
+        color="k",
+        ls="-",
+        zorder=0,
     )
 
     plt.figure("scaling-efficiency")
