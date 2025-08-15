@@ -154,9 +154,10 @@ if __name__ == "__main__":
             "total",
             "nranks",
             "nentities",
+            "nlps",
             "rate",
             "gvt",
-            "avg_time"
+            "avg_time",
         ]
     }
     for col in df.select_dtypes(include="number").columns:
@@ -168,6 +169,7 @@ if __name__ == "__main__":
         nentities = mean_data_df.loc[mean_data_df["function"] == col, "entities"].iloc[
             0
         ]
+        nlps = mean_data_df.loc[mean_data_df["function"] == col, "lps"].iloc[0]
         rate = mean_data_df.loc[mean_data_df["function"] == col, "avg_rate"].iloc[0]
         gvt = mean_data_df.loc[mean_data_df["function"] == col, "final_gvt"].iloc[0]
         avg_time = mean_data_df.loc[mean_data_df["function"] == col, "avg_time"].iloc[0]
@@ -177,10 +179,13 @@ if __name__ == "__main__":
             communication_sum + computation_sum,
             nranks,
             nentities,
+            nlps,
             rate,
             gvt,
             avg_time,
         ]
+        print(len(grouped_data[col]))
+    print(grouped_data)
     grouped_df = pd.DataFrame(grouped_data).set_index("function").T
 
     norm = grouped_df.iloc[0]
@@ -196,8 +201,8 @@ if __name__ == "__main__":
     )
     grouped_df["theory_ranks"] = (
         grouped_df.total.iloc[theory_idx]
-        *
-        grouped_df.nranks.iloc[theory_idx] / grouped_df.nranks
+        * grouped_df.nranks.iloc[theory_idx]
+        / grouped_df.nranks
     )
     print(grouped_df)
 
@@ -269,25 +274,25 @@ if __name__ == "__main__":
     markers = itertools.cycle(marker_shapes)
     plt.loglog(
         grouped_df.nranks,
-        grouped_df.communication / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.communication,
         label="Communication",
         marker=next(markers),
     )
     plt.loglog(
         grouped_df.nranks,
-        grouped_df.computation / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.computation,
         label="Computation",
         marker=next(markers),
     )
     plt.loglog(
         grouped_df.nranks,
-        grouped_df.total / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.total,
         label="Total",
         marker=next(markers),
     )
     plt.loglog(
         grouped_df.nranks,
-        grouped_df.theory_ranks / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.theory_ranks,
         label="Perfect scaling",
         color="k",
         ls="-",
@@ -366,25 +371,25 @@ if __name__ == "__main__":
     markers = itertools.cycle(marker_shapes)
     plt.loglog(
         grouped_df.entities_per_rank,
-        grouped_df.communication / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.communication,
         label="Communication",
         marker=next(markers),
     )
     plt.loglog(
         grouped_df.entities_per_rank,
-        grouped_df.computation / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.computation,
         label="Computation",
         marker=next(markers),
     )
     plt.loglog(
         grouped_df.entities_per_rank,
-        grouped_df.total / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.total,
         label="Total",
         marker=next(markers),
     )
     plt.loglog(
         grouped_df.entities_per_rank,
-        grouped_df.theory_entities / grouped_df.gvt,
+        grouped_df.gvt / grouped_df.theory_entities,
         label="Perfect scaling",
         color="k",
         ls="-",
@@ -400,6 +405,24 @@ if __name__ == "__main__":
         / (grouped_df.rate / grouped_df.nentities).iloc[0]
         * 100,
         label="Rate",
+        marker=next(markers),
+    )
+
+    plt.figure("lp-entity-time")
+    markers = itertools.cycle(marker_shapes)
+    plt.semilogx(
+        grouped_df.nentities / grouped_df.nlps,
+        grouped_df.gvt / grouped_df.total,
+        label="A",
+        marker=next(markers),
+    )
+
+    plt.figure("lp-entity-rate")
+    markers = itertools.cycle(marker_shapes)
+    plt.semilogx(
+        grouped_df.nentities / grouped_df.nlps,
+        grouped_df.rate,
+        label="A",
         marker=next(markers),
     )
 
@@ -434,7 +457,7 @@ if __name__ == "__main__":
 
         plt.figure("scaling-time-gvt")
         plt.xlabel(f"Number of ranks")
-        plt.ylabel(r"$t / g~[-]$")
+        plt.ylabel(r"$g / t~[-]$")
         legend = plt.legend(loc="best")
         plt.tight_layout()
         pdf.savefig(dpi=300)
@@ -463,7 +486,7 @@ if __name__ == "__main__":
 
         plt.figure("scaling-entities-gvt")
         plt.xlabel(f"Entities per rank")
-        plt.ylabel(r"$t / g~[-]$")
+        plt.ylabel(r"$g / t~[-]$")
         legend = plt.legend(loc="best")
         plt.tight_layout()
         pdf.savefig(dpi=300)
@@ -472,6 +495,20 @@ if __name__ == "__main__":
         plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"Parallel efficiency$~[\%]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("lp-entity-time")
+        plt.xlabel(r"$n_e / n_{lp}$")
+        plt.ylabel(r"$g / t~[-]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("lp-entity-rate")
+        plt.xlabel(r"$n_e / n_{lp}$")
+        plt.ylabel(r"$r~[\#/s]$")
         legend = plt.legend(loc="best")
         plt.tight_layout()
         pdf.savefig(dpi=300)
