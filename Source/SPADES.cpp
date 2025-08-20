@@ -414,7 +414,7 @@ void SPADES::process_messages()
                         msg_parrs.m_rdata[particles::MessageRealData::timestamp]
                                          [prcv_soa];
                     if (ts >= lbts + lookahead + window_size) {
-                        return;
+                        break;
                     }
 
                     AMREX_ASSERT(sarr(iv, constants::LVT_IDX) < ts);
