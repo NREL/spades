@@ -20,7 +20,7 @@ spades.write_entities = t
 spades.seed = 42
 spades.messages_per_step = 1000
 spades.window_size = 2
-spades.sort_type = "nonencoded"
+spades.sort_type = "encoded"
 
 amrex.fpe_trap_invalid = 1
 amrex.fpe_trap_zero = 1

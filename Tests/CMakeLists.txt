@@ -130,6 +130,7 @@ endfunction(add_test_seed)
 #=============================================================================
 add_test_r(phold)
 add_test_r(phold-greedy)
+add_test_r(phold-greedy-ws)
 add_test_r(phold-conservative)
 add_test_r(phold-multi-entity)
 add_test_r(phold-encoded)
