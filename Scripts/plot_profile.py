@@ -50,6 +50,8 @@ if __name__ == "__main__":
     n_mean_steps = 100
     for lbl, fname in zip(args.labels, args.fnames):
         lst = []
+        arch = "CPU"
+        basename = pathlib.Path(fname).name
         with open(fname, "r") as f:
             logging = False
             for line in f:
@@ -57,6 +59,8 @@ if __name__ == "__main__":
                     nranks = int(line.split()[3])
                 if line.startswith("Time spent in evolve():"):
                     total_time = float(line.split()[-1])
+                if line.startswith("CUDA initialized with"):
+                    arch = "GPU"
                 if line.startswith("Name") and ("NCalls" in line):
                     line = next(f)
                     line = next(f)
@@ -92,6 +96,7 @@ if __name__ == "__main__":
         mean_data_df["final_gvt"] = data_df.gvt.iloc[-1]
         mean_data_df["final_step"] = data_df.step.iloc[-1]
         mean_data_df["nranks"] = nranks
+        mean_data_df["arch"] = arch
         mean_data_df["function"] = f"average-{fname}"
         mean_data_lst.append(mean_data_df)
 
@@ -158,6 +163,7 @@ if __name__ == "__main__":
             "rate",
             "gvt",
             "avg_time",
+            "arch",
         ]
     }
     for col in df.select_dtypes(include="number").columns:
@@ -173,6 +179,7 @@ if __name__ == "__main__":
         rate = mean_data_df.loc[mean_data_df["function"] == col, "avg_rate"].iloc[0]
         gvt = mean_data_df.loc[mean_data_df["function"] == col, "final_gvt"].iloc[0]
         avg_time = mean_data_df.loc[mean_data_df["function"] == col, "avg_time"].iloc[0]
+        arch = mean_data_df.loc[mean_data_df["function"] == col, "arch"].iloc[0]
         grouped_data[col] = [
             communication_sum,
             computation_sum,
@@ -183,9 +190,8 @@ if __name__ == "__main__":
             rate,
             gvt,
             avg_time,
+            arch,
         ]
-        print(len(grouped_data[col]))
-    print(grouped_data)
     grouped_df = pd.DataFrame(grouped_data).set_index("function").T
 
     norm = grouped_df.iloc[0]
@@ -193,17 +199,6 @@ if __name__ == "__main__":
     for col in norm_cols:
         grouped_df[f"norm-{col}"] = grouped_df[col] / norm[col]
     grouped_df["entities_per_rank"] = grouped_df.nentities / grouped_df.nranks
-    theory_idx = 0
-    grouped_df["theory_entities"] = (
-        grouped_df.total.iloc[theory_idx]
-        * grouped_df.entities_per_rank
-        / grouped_df.entities_per_rank.iloc[theory_idx]
-    )
-    grouped_df["theory_ranks"] = (
-        grouped_df.total.iloc[theory_idx]
-        * grouped_df.nranks.iloc[theory_idx]
-        / grouped_df.nranks
-    )
     print(grouped_df)
 
     # sort and keep the top consuming functions for the original df
@@ -253,178 +248,186 @@ if __name__ == "__main__":
     ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
     ax.invert_yaxis()
 
-    plt.figure("scaling")
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df.communication,
-        label="Communication",
-        marker=next(markers),
-    )
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df.computation,
-        label="Computation",
-        marker=next(markers),
-    )
-    plt.semilogx(
-        grouped_df.nranks, grouped_df.total, label="Total", marker=next(markers)
-    )
+    for arch in grouped_df["arch"].unique():
+        sg = grouped_df[grouped_df["arch"] == arch].copy()
+        theory_idx = 0
+        sg["theory_entities"] = (
+            sg.total.iloc[theory_idx]
+            * sg.entities_per_rank
+            / sg.entities_per_rank.iloc[theory_idx]
+        )
+        sg["theory_ranks"] = (
+            sg.total.iloc[theory_idx] * sg.nranks.iloc[theory_idx] / sg.nranks
+        )
 
-    plt.figure("scaling-time-gvt")
-    markers = itertools.cycle(marker_shapes)
-    plt.loglog(
-        grouped_df.nranks,
-        grouped_df.gvt / grouped_df.communication,
-        label="Communication",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.nranks,
-        grouped_df.gvt / grouped_df.computation,
-        label="Computation",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.nranks,
-        grouped_df.gvt / grouped_df.total,
-        label="Total",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.nranks,
-        grouped_df.gvt / grouped_df.theory_ranks,
-        label="Perfect scaling",
-        color="k",
-        ls="-",
-        zorder=0,
-    )
+        plt.figure("scaling")
+        plt.semilogx(
+            sg.nranks,
+            sg.communication,
+            label=f"{arch} communication",
+            marker=next(markers),
+        )
+        plt.semilogx(
+            sg.nranks,
+            sg.computation,
+            label=f"{arch} computation",
+            marker=next(markers),
+        )
+        plt.semilogx(sg.nranks, sg.total, label=f"{arch} total", marker=next(markers))
 
-    plt.figure("scaling-efficiency")
-    markers = itertools.cycle(marker_shapes)
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df.communication.iloc[0] / grouped_df.communication * 100,
-        label="Communication",
-        marker=next(markers),
-    )
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df.computation.iloc[0] / grouped_df.computation * 100,
-        label="Computation",
-        marker=next(markers),
-    )
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df.total.iloc[0] / grouped_df.total * 100,
-        label="Total",
-        marker=next(markers),
-    )
+        plt.figure("scaling-time-gvt")
+        markers = itertools.cycle(marker_shapes)
+        plt.loglog(
+            sg.nranks,
+            sg.gvt / sg.communication,
+            label=f"{arch} communication",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.nranks,
+            sg.gvt / sg.computation,
+            label=f"{arch} computation",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.nranks,
+            sg.gvt / sg.total,
+            label=f"{arch} total",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.nranks,
+            sg.gvt / sg.theory_ranks,
+            label=f"{arch} perfect scaling",
+            color="k",
+            ls="-",
+            zorder=0,
+        )
 
-    plt.figure("norm-scaling")
-    markers = itertools.cycle(marker_shapes)
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df["norm-communication"],
-        label="Communication",
-        marker=next(markers),
-    )
-    plt.semilogx(
-        grouped_df.nranks,
-        grouped_df["norm-computation"],
-        label="Computation",
-        marker=next(markers),
-    )
-    plt.semilogx(
-        grouped_df.nranks, grouped_df["norm-total"], label="Total", marker=next(markers)
-    )
+        plt.figure("scaling-efficiency")
+        markers = itertools.cycle(marker_shapes)
+        plt.semilogx(
+            sg.nranks,
+            sg.communication.iloc[0] / sg.communication * 100,
+            label=f"{arch} communication",
+            marker=next(markers),
+        )
+        plt.semilogx(
+            sg.nranks,
+            sg.computation.iloc[0] / sg.computation * 100,
+            label=f"{arch} computation",
+            marker=next(markers),
+        )
+        plt.semilogx(
+            sg.nranks,
+            sg.total.iloc[0] / sg.total * 100,
+            label=f"{arch} total",
+            marker=next(markers),
+        )
 
-    plt.figure("scaling-entities")
-    markers = itertools.cycle(marker_shapes)
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.communication,
-        label="Communication",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.computation,
-        label="Computation",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.total,
-        label="Total",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.theory_entities,
-        label="Perfect scaling",
-        color="k",
-        ls="-",
-        zorder=0,
-    )
+        plt.figure("norm-scaling")
+        markers = itertools.cycle(marker_shapes)
+        plt.semilogx(
+            sg.nranks,
+            sg["norm-communication"],
+            label=f"{arch} communication",
+            marker=next(markers),
+        )
+        plt.semilogx(
+            sg.nranks,
+            sg["norm-computation"],
+            label=f"{arch} computation",
+            marker=next(markers),
+        )
+        plt.semilogx(
+            sg.nranks, sg["norm-total"], label=f"{arch} total", marker=next(markers)
+        )
 
-    plt.figure("scaling-entities-gvt")
-    markers = itertools.cycle(marker_shapes)
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.gvt / grouped_df.communication,
-        label="Communication",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.gvt / grouped_df.computation,
-        label="Computation",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.gvt / grouped_df.total,
-        label="Total",
-        marker=next(markers),
-    )
-    plt.loglog(
-        grouped_df.entities_per_rank,
-        grouped_df.gvt / grouped_df.theory_entities,
-        label="Perfect scaling",
-        color="k",
-        ls="-",
-        zorder=0,
-    )
+        plt.figure("scaling-entities")
+        markers = itertools.cycle(marker_shapes)
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.communication,
+            label=f"{arch} communication",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.computation,
+            label=f"{arch} computation",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.total,
+            label=f"{arch} total",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.theory_entities,
+            label=f"{arch} perfect scaling",
+            color="k",
+            ls="-",
+            zorder=0,
+        )
 
-    plt.figure("scaling-rate-efficiency")
-    markers = itertools.cycle(marker_shapes)
-    plt.semilogx(
-        grouped_df.nranks,
-        # grouped_df.rate / grouped_df.nentities / ( grouped_df.rate / grouped_df.nentities).iloc[0],
-        (grouped_df.rate / grouped_df.nentities)
-        / (grouped_df.rate / grouped_df.nentities).iloc[0]
-        * 100,
-        label="Rate",
-        marker=next(markers),
-    )
+        plt.figure("scaling-entities-gvt")
+        markers = itertools.cycle(marker_shapes)
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.gvt / sg.communication,
+            label=f"{arch} communication",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.gvt / sg.computation,
+            label=f"{arch} computation",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.gvt / sg.total,
+            label=f"{arch} total",
+            marker=next(markers),
+        )
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.gvt / sg.theory_entities,
+            label=f"{arch} perfect scaling",
+            color="k",
+            ls="-",
+            zorder=0,
+        )
 
-    plt.figure("lp-entity-time")
-    markers = itertools.cycle(marker_shapes)
-    plt.semilogx(
-        grouped_df.nentities / grouped_df.nlps,
-        grouped_df.gvt / grouped_df.total,
-        label="A",
-        marker=next(markers),
-    )
+        plt.figure("scaling-rate-efficiency")
+        markers = itertools.cycle(marker_shapes)
+        plt.semilogx(
+            sg.nranks,
+            # sg.rate / sg.nentities / ( sg.rate / sg.nentities).iloc[0],
+            (sg.rate / sg.nentities) / (sg.rate / sg.nentities).iloc[0] * 100,
+            label=f"{arch}",
+            marker=next(markers),
+        )
 
-    plt.figure("lp-entity-rate")
-    markers = itertools.cycle(marker_shapes)
-    plt.semilogx(
-        grouped_df.nentities / grouped_df.nlps,
-        grouped_df.rate,
-        label="A",
-        marker=next(markers),
-    )
+        plt.figure("lp-entity-time")
+        markers = itertools.cycle(marker_shapes)
+        plt.semilogx(
+            sg.nentities / sg.nlps,
+            sg.gvt / sg.total,
+            label=f"{arch}",
+            marker=next(markers),
+        )
+
+        plt.figure("lp-entity-rate")
+        markers = itertools.cycle(marker_shapes)
+        plt.semilogx(
+            sg.nentities / sg.nlps,
+            sg.rate,
+            label=f"{arch}",
+            marker=next(markers),
+        )
 
     # Save the plots
     with PdfPages(pname) as pdf:
