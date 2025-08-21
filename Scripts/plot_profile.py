@@ -128,7 +128,6 @@ if __name__ == "__main__":
             )
 
     mean_data_df = pd.DataFrame(mean_data_lst)
-    print(mean_data_df)
 
     # Make sure all the df have the same reported functions, fill missing ones with 0
     all_functions = list(set([x for df in df_lst for x in df["function"].to_list()]))
@@ -207,14 +206,24 @@ if __name__ == "__main__":
         grouped_df[f"norm-{col}"] = grouped_df[col] / norm[col]
     grouped_df["entities_per_rank"] = grouped_df.nentities / grouped_df.nranks
     grouped_df["entities_per_lp"] = grouped_df.nentities / grouped_df.nlps
-    print(grouped_df)
 
     # sort and keep the top consuming functions for the original df
     df["average"] = df[[x for x in df.columns if "function" not in x]].mean(axis=1)
     df = df.sort_values(by="average", ascending=False).head(8)
 
+    # get and sort the fnames/labels based on the number of ranks
+    fnames_df = pd.DataFrame(
+        {
+            "fname": grouped_df.index,
+            "nranks": grouped_df["nranks"],
+            "label": args.labels,
+        }
+    ).reset_index(drop=True)
+
     # normalize the data by the first entry
-    norm = df.loc[df.function == "spades::Total"][f"average-{args.fnames[0]}"].values[0]
+    norm = df.loc[df.function == "spades::Total"][
+        f"average-{fnames_df["fname"].iloc[0]}"
+    ].values[0]
     norm_cols = df.columns.difference(["function"])
     for col in norm_cols:
         df[f"norm-{col}"] = df[col] / norm
@@ -229,13 +238,13 @@ if __name__ == "__main__":
     ind = np.arange(len(df))
     width = 0.8 / (len(args.fnames))
     offset = 0.5 * (len(args.fnames) - 1) * width
-    for k, fname in enumerate(args.fnames):
+    for k, fname in enumerate(fnames_df["fname"]):
         ax.barh(
             ind - offset + k * width,
             df[f"average-{fname}"],
             width,
             align="center",
-            label=args.labels[k],
+            label=fnames_df["label"].iloc[k],
         )
     ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
     ax.invert_yaxis()
@@ -245,13 +254,13 @@ if __name__ == "__main__":
     ind = np.arange(len(df))
     width = 0.8 / (len(args.fnames))
     offset = 0.5 * (len(args.fnames) - 1) * width
-    for k, fname in enumerate(args.fnames):
+    for k, fname in enumerate(fnames_df["fname"]):
         ax.barh(
             ind - offset + k * width,
             df[f"norm-average-{fname}"],
             width,
             align="center",
-            label=args.labels[k],
+            label=fnames_df["label"].iloc[k],
         )
     ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
     ax.invert_yaxis()
@@ -259,7 +268,7 @@ if __name__ == "__main__":
     for arch in grouped_df["arch"].unique():
         sg = grouped_df[grouped_df["arch"] == arch].copy()
         theory_idx = 0
-        sg.sort_values(by=["nranks"], inplace=True, ignore_index=True, ascending=False)
+        sg.sort_values(by=["nranks"], inplace=True, ignore_index=True, ascending=True)
         sg["theory_ranks"] = (
             sg.total.iloc[theory_idx] * sg.nranks.iloc[theory_idx] / sg.nranks
         )
@@ -275,19 +284,27 @@ if __name__ == "__main__":
         plt.figure("scaling")
         sg.sort_values(by=["nranks"], inplace=True)
         if args.breakdown:
-            plt.semilogx(
+            plt.loglog(
                 sg.nranks,
                 sg.communication,
                 label=f"{arch} communication",
                 marker=next(markers),
             )
-            plt.semilogx(
+            plt.loglog(
                 sg.nranks,
                 sg.computation,
                 label=f"{arch} computation",
                 marker=next(markers),
             )
-        plt.semilogx(sg.nranks, sg.total, label=f"{arch} total", marker=next(markers))
+        plt.loglog(sg.nranks, sg.total, label=f"{arch} total", marker=next(markers))
+        plt.loglog(
+            sg.nranks,
+            sg.theory_ranks,
+            label=f"{arch} perfect scaling",
+            color="k",
+            ls="-",
+            zorder=0,
+        )
 
         plt.figure("scaling-time-gvt")
         markers = itertools.cycle(marker_shapes)
