@@ -35,6 +35,11 @@ if __name__ == "__main__":
         nargs="+",
         type=str,
     )
+    parser.add_argument(
+        "--breakdown",
+        action="store_true",
+        help="Show communication/computation breakdown",
+    )
     args = parser.parse_args()
 
     if not len(args.labels) == len(args.fnames):
@@ -50,7 +55,7 @@ if __name__ == "__main__":
     n_mean_steps = 100
     for lbl, fname in zip(args.labels, args.fnames):
         lst = []
-        arch = "CPU"
+        arch = "Intel CPU"
         basename = pathlib.Path(fname).name
         with open(fname, "r") as f:
             logging = False
@@ -60,7 +65,9 @@ if __name__ == "__main__":
                 if line.startswith("Time spent in evolve():"):
                     total_time = float(line.split()[-1])
                 if line.startswith("CUDA initialized with"):
-                    arch = "GPU"
+                    arch = "NVIDIA GPU"
+                if line.startswith("HIP initialized with"):
+                    arch = "AMD GPU"
                 if line.startswith("Name") and ("NCalls" in line):
                     line = next(f)
                     line = next(f)
@@ -199,6 +206,7 @@ if __name__ == "__main__":
     for col in norm_cols:
         grouped_df[f"norm-{col}"] = grouped_df[col] / norm[col]
     grouped_df["entities_per_rank"] = grouped_df.nentities / grouped_df.nranks
+    grouped_df["entities_per_lp"] = grouped_df.nentities / grouped_df.nlps
     print(grouped_df)
 
     # sort and keep the top consuming functions for the original df
@@ -251,44 +259,52 @@ if __name__ == "__main__":
     for arch in grouped_df["arch"].unique():
         sg = grouped_df[grouped_df["arch"] == arch].copy()
         theory_idx = 0
+        sg.sort_values(by=["nranks"], inplace=True, ignore_index=True, ascending=False)
+        sg["theory_ranks"] = (
+            sg.total.iloc[theory_idx] * sg.nranks.iloc[theory_idx] / sg.nranks
+        )
+        sg.sort_values(
+            by=["entities_per_rank"], inplace=True, ignore_index=True, ascending=False
+        )
         sg["theory_entities"] = (
             sg.total.iloc[theory_idx]
             * sg.entities_per_rank
             / sg.entities_per_rank.iloc[theory_idx]
         )
-        sg["theory_ranks"] = (
-            sg.total.iloc[theory_idx] * sg.nranks.iloc[theory_idx] / sg.nranks
-        )
 
         plt.figure("scaling")
-        plt.semilogx(
-            sg.nranks,
-            sg.communication,
-            label=f"{arch} communication",
-            marker=next(markers),
-        )
-        plt.semilogx(
-            sg.nranks,
-            sg.computation,
-            label=f"{arch} computation",
-            marker=next(markers),
-        )
+        sg.sort_values(by=["nranks"], inplace=True)
+        if args.breakdown:
+            plt.semilogx(
+                sg.nranks,
+                sg.communication,
+                label=f"{arch} communication",
+                marker=next(markers),
+            )
+            plt.semilogx(
+                sg.nranks,
+                sg.computation,
+                label=f"{arch} computation",
+                marker=next(markers),
+            )
         plt.semilogx(sg.nranks, sg.total, label=f"{arch} total", marker=next(markers))
 
         plt.figure("scaling-time-gvt")
         markers = itertools.cycle(marker_shapes)
-        plt.loglog(
-            sg.nranks,
-            sg.gvt / sg.communication,
-            label=f"{arch} communication",
-            marker=next(markers),
-        )
-        plt.loglog(
-            sg.nranks,
-            sg.gvt / sg.computation,
-            label=f"{arch} computation",
-            marker=next(markers),
-        )
+        sg.sort_values(by=["nranks"], inplace=True)
+        if args.breakdown:
+            plt.loglog(
+                sg.nranks,
+                sg.gvt / sg.communication,
+                label=f"{arch} communication",
+                marker=next(markers),
+            )
+            plt.loglog(
+                sg.nranks,
+                sg.gvt / sg.computation,
+                label=f"{arch} computation",
+                marker=next(markers),
+            )
         plt.loglog(
             sg.nranks,
             sg.gvt / sg.total,
@@ -306,18 +322,20 @@ if __name__ == "__main__":
 
         plt.figure("scaling-efficiency")
         markers = itertools.cycle(marker_shapes)
-        plt.semilogx(
-            sg.nranks,
-            sg.communication.iloc[0] / sg.communication * 100,
-            label=f"{arch} communication",
-            marker=next(markers),
-        )
-        plt.semilogx(
-            sg.nranks,
-            sg.computation.iloc[0] / sg.computation * 100,
-            label=f"{arch} computation",
-            marker=next(markers),
-        )
+        sg.sort_values(by=["nranks"], inplace=True)
+        if args.breakdown:
+            plt.semilogx(
+                sg.nranks,
+                sg.communication.iloc[0] / sg.communication * 100,
+                label=f"{arch} communication",
+                marker=next(markers),
+            )
+            plt.semilogx(
+                sg.nranks,
+                sg.computation.iloc[0] / sg.computation * 100,
+                label=f"{arch} computation",
+                marker=next(markers),
+            )
         plt.semilogx(
             sg.nranks,
             sg.total.iloc[0] / sg.total * 100,
@@ -327,36 +345,40 @@ if __name__ == "__main__":
 
         plt.figure("norm-scaling")
         markers = itertools.cycle(marker_shapes)
-        plt.semilogx(
-            sg.nranks,
-            sg["norm-communication"],
-            label=f"{arch} communication",
-            marker=next(markers),
-        )
-        plt.semilogx(
-            sg.nranks,
-            sg["norm-computation"],
-            label=f"{arch} computation",
-            marker=next(markers),
-        )
+        sg.sort_values(by=["nranks"], inplace=True)
+        if args.breakdown:
+            plt.semilogx(
+                sg.nranks,
+                sg["norm-communication"],
+                label=f"{arch} communication",
+                marker=next(markers),
+            )
+            plt.semilogx(
+                sg.nranks,
+                sg["norm-computation"],
+                label=f"{arch} computation",
+                marker=next(markers),
+            )
         plt.semilogx(
             sg.nranks, sg["norm-total"], label=f"{arch} total", marker=next(markers)
         )
 
         plt.figure("scaling-entities")
         markers = itertools.cycle(marker_shapes)
-        plt.loglog(
-            sg.entities_per_rank,
-            sg.communication,
-            label=f"{arch} communication",
-            marker=next(markers),
-        )
-        plt.loglog(
-            sg.entities_per_rank,
-            sg.computation,
-            label=f"{arch} computation",
-            marker=next(markers),
-        )
+        sg.sort_values(by=["entities_per_rank"], inplace=True)
+        if args.breakdown:
+            plt.loglog(
+                sg.entities_per_rank,
+                sg.communication,
+                label=f"{arch} communication",
+                marker=next(markers),
+            )
+            plt.loglog(
+                sg.entities_per_rank,
+                sg.computation,
+                label=f"{arch} computation",
+                marker=next(markers),
+            )
         plt.loglog(
             sg.entities_per_rank,
             sg.total,
@@ -374,18 +396,20 @@ if __name__ == "__main__":
 
         plt.figure("scaling-entities-gvt")
         markers = itertools.cycle(marker_shapes)
-        plt.loglog(
-            sg.entities_per_rank,
-            sg.gvt / sg.communication,
-            label=f"{arch} communication",
-            marker=next(markers),
-        )
-        plt.loglog(
-            sg.entities_per_rank,
-            sg.gvt / sg.computation,
-            label=f"{arch} computation",
-            marker=next(markers),
-        )
+        sg.sort_values(by=["entities_per_rank"], inplace=True)
+        if args.breakdown:
+            plt.loglog(
+                sg.entities_per_rank,
+                sg.gvt / sg.communication,
+                label=f"{arch} communication",
+                marker=next(markers),
+            )
+            plt.loglog(
+                sg.entities_per_rank,
+                sg.gvt / sg.computation,
+                label=f"{arch} computation",
+                marker=next(markers),
+            )
         plt.loglog(
             sg.entities_per_rank,
             sg.gvt / sg.total,
@@ -401,8 +425,27 @@ if __name__ == "__main__":
             zorder=0,
         )
 
+        plt.figure("scaling-entities-rate")
+        markers = itertools.cycle(marker_shapes)
+        sg.sort_values(by=["entities_per_rank"], inplace=True)
+        plt.loglog(
+            sg.entities_per_rank,
+            sg.rate,
+            label=f"{arch} total",
+            marker=next(markers),
+        )
+        # plt.loglog(
+        #     sg.entities_per_rank,
+        #     sg.gvt / sg.theory_entities,
+        #     label=f"{arch} perfect scaling",
+        #     color="k",
+        #     ls="-",
+        #     zorder=0,
+        # )
+
         plt.figure("scaling-rate-efficiency")
         markers = itertools.cycle(marker_shapes)
+        sg.sort_values(by=["nranks"], inplace=True)
         plt.semilogx(
             sg.nranks,
             # sg.rate / sg.nentities / ( sg.rate / sg.nentities).iloc[0],
@@ -413,8 +456,9 @@ if __name__ == "__main__":
 
         plt.figure("lp-entity-time")
         markers = itertools.cycle(marker_shapes)
+        sg.sort_values(by=["entities_per_lp"], inplace=True)
         plt.semilogx(
-            sg.nentities / sg.nlps,
+            sg["entities_per_lp"],
             sg.gvt / sg.total,
             label=f"{arch}",
             marker=next(markers),
@@ -422,8 +466,9 @@ if __name__ == "__main__":
 
         plt.figure("lp-entity-rate")
         markers = itertools.cycle(marker_shapes)
+        sg.sort_values(by=["entities_per_lp"], inplace=True)
         plt.semilogx(
-            sg.nentities / sg.nlps,
+            sg["entities_per_lp"],
             sg.rate,
             label=f"{arch}",
             marker=next(markers),
@@ -490,6 +535,13 @@ if __name__ == "__main__":
         plt.figure("scaling-entities-gvt")
         plt.xlabel(f"Entities per rank")
         plt.ylabel(r"$g / t~[-]$")
+        legend = plt.legend(loc="best")
+        plt.tight_layout()
+        pdf.savefig(dpi=300)
+
+        plt.figure("scaling-entities-rate")
+        plt.xlabel(f"Entities per rank")
+        plt.ylabel(r"$r~[\#/s]$")
         legend = plt.legend(loc="best")
         plt.tight_layout()
         pdf.savefig(dpi=300)
