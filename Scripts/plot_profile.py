@@ -219,6 +219,8 @@ if __name__ == "__main__":
             "label": args.labels,
         }
     ).reset_index(drop=True)
+    fnames_df["fname"] = fnames_df["fname"].str.replace("average-", "")
+    fnames_df.sort_values(by=["nranks"], inplace=True)
 
     # normalize the data by the first entry
     norm = df.loc[df.function == "spades::Total"][
