@@ -11,8 +11,27 @@ from functools import reduce
 import itertools
 
 plt.style.use(pathlib.Path(__file__).parent.resolve() / "project.mplstyle")
+plt.rcParams.update({"figure.max_open_warning": 0})
 marker_shapes = ("s", "d", "o", "p", "h")
 markers = itertools.cycle(marker_shapes)
+
+
+def legend_without_duplicates(ax):
+    handles, labels = ax.get_legend_handles_labels()
+    unique_labels = dict(zip(labels, handles))
+
+    handles = list(unique_labels.values())
+    labels = list(unique_labels.keys())
+
+    # Move a label to the end
+    last_label = "perfect scaling"
+    if last_label in labels:
+        last_index = labels.index(last_label)
+        handles.append(handles.pop(last_index))
+        labels.append(labels.pop(last_index))
+
+    return plt.legend(handles, labels, loc="best")
+
 
 if __name__ == "__main__":
     # Parse arguments
@@ -55,7 +74,7 @@ if __name__ == "__main__":
     n_mean_steps = 100
     for lbl, fname in zip(args.labels, args.fnames):
         lst = []
-        arch = "Intel CPU"
+        arch = "Intel CPU node"
         basename = pathlib.Path(fname).name
         with open(fname, "r") as f:
             logging = False
@@ -164,12 +183,16 @@ if __name__ == "__main__":
             "computation",
             "total",
             "nranks",
-            "nentities",
-            "nlps",
-            "rate",
+            "entities",
+            "lps",
+            "avg_rate",
             "gvt",
             "avg_time",
             "arch",
+            "rollback_1",
+            "rollback_2",
+            "rollback_3",
+            "rollback_4",
         ]
     }
     for col in df.select_dtypes(include="number").columns:
@@ -177,35 +200,26 @@ if __name__ == "__main__":
             col
         ].sum()
         computation_sum = fdf[~fdf["function"].isin(communication_functions)][col].sum()
-        nranks = mean_data_df.loc[mean_data_df["function"] == col, "nranks"].iloc[0]
-        nentities = mean_data_df.loc[mean_data_df["function"] == col, "entities"].iloc[
-            0
-        ]
-        nlps = mean_data_df.loc[mean_data_df["function"] == col, "lps"].iloc[0]
-        rate = mean_data_df.loc[mean_data_df["function"] == col, "avg_rate"].iloc[0]
-        gvt = mean_data_df.loc[mean_data_df["function"] == col, "final_gvt"].iloc[0]
-        avg_time = mean_data_df.loc[mean_data_df["function"] == col, "avg_time"].iloc[0]
-        arch = mean_data_df.loc[mean_data_df["function"] == col, "arch"].iloc[0]
+
+        lst = []
+        for name in grouped_data["function"]:
+            if name not in ["communication", "computation", "total"]:
+                lst.append(
+                    mean_data_df.loc[mean_data_df["function"] == col, name].iloc[0]
+                )
         grouped_data[col] = [
             communication_sum,
             computation_sum,
             communication_sum + computation_sum,
-            nranks,
-            nentities,
-            nlps,
-            rate,
-            gvt,
-            avg_time,
-            arch,
-        ]
+        ] + lst
     grouped_df = pd.DataFrame(grouped_data).set_index("function").T
 
     norm = grouped_df.iloc[0]
     norm_cols = ["total", "communication", "computation"]
     for col in norm_cols:
         grouped_df[f"norm-{col}"] = grouped_df[col] / norm[col]
-    grouped_df["entities_per_rank"] = grouped_df.nentities / grouped_df.nranks
-    grouped_df["entities_per_lp"] = grouped_df.nentities / grouped_df.nlps
+    grouped_df["entities_per_rank"] = grouped_df.entities / grouped_df.nranks
+    grouped_df["entities_per_lp"] = grouped_df.entities / grouped_df.lps
 
     # sort and keep the top consuming functions for the original df
     df["average"] = df[[x for x in df.columns if "function" not in x]].mean(axis=1)
@@ -267,7 +281,9 @@ if __name__ == "__main__":
     ax.set(yticks=ind, yticklabels=df.function, ylim=[2 * width - 1, len(df)])
     ax.invert_yaxis()
 
-    for arch in grouped_df["arch"].unique():
+    markers = itertools.cycle(marker_shapes)
+    for cnt, arch in enumerate(grouped_df["arch"].unique()):
+        mkr = marker_shapes[cnt]
         sg = grouped_df[grouped_df["arch"] == arch].copy()
         theory_idx = 0
         sg.sort_values(by=["nranks"], inplace=True, ignore_index=True, ascending=True)
@@ -290,50 +306,49 @@ if __name__ == "__main__":
                 sg.nranks,
                 sg.communication,
                 label=f"{arch} communication",
-                marker=next(markers),
+                marker=mkr,
             )
             plt.loglog(
                 sg.nranks,
                 sg.computation,
                 label=f"{arch} computation",
-                marker=next(markers),
+                marker=mkr,
             )
-        plt.loglog(sg.nranks, sg.total, label=f"{arch} total", marker=next(markers))
+        plt.loglog(sg.nranks, sg.total, label=f"{arch}", marker=next(markers))
         plt.loglog(
             sg.nranks,
             sg.theory_ranks,
-            label=f"{arch} perfect scaling",
+            label="perfect scaling",
             color="k",
             ls="-",
             zorder=0,
         )
 
         plt.figure("scaling-time-gvt")
-        markers = itertools.cycle(marker_shapes)
         sg.sort_values(by=["nranks"], inplace=True)
         if args.breakdown:
             plt.loglog(
                 sg.nranks,
                 sg.gvt / sg.communication,
                 label=f"{arch} communication",
-                marker=next(markers),
+                marker=mkr,
             )
             plt.loglog(
                 sg.nranks,
                 sg.gvt / sg.computation,
                 label=f"{arch} computation",
-                marker=next(markers),
+                marker=mkr,
             )
         plt.loglog(
             sg.nranks,
             sg.gvt / sg.total,
-            label=f"{arch} total",
-            marker=next(markers),
+            label=f"{arch}",
+            marker=mkr,
         )
         plt.loglog(
             sg.nranks,
             sg.gvt / sg.theory_ranks,
-            label=f"{arch} perfect scaling",
+            label="perfect scaling",
             color="k",
             ls="-",
             zorder=0,
@@ -347,19 +362,19 @@ if __name__ == "__main__":
                 sg.nranks,
                 sg.communication.iloc[0] / sg.communication * 100,
                 label=f"{arch} communication",
-                marker=next(markers),
+                marker=mkr,
             )
             plt.semilogx(
                 sg.nranks,
                 sg.computation.iloc[0] / sg.computation * 100,
                 label=f"{arch} computation",
-                marker=next(markers),
+                marker=mkr,
             )
         plt.semilogx(
             sg.nranks,
             sg.total.iloc[0] / sg.total * 100,
-            label=f"{arch} total",
-            marker=next(markers),
+            label=f"{arch}",
+            marker=mkr,
         )
 
         plt.figure("norm-scaling")
@@ -370,17 +385,15 @@ if __name__ == "__main__":
                 sg.nranks,
                 sg["norm-communication"],
                 label=f"{arch} communication",
-                marker=next(markers),
+                marker=mkr,
             )
             plt.semilogx(
                 sg.nranks,
                 sg["norm-computation"],
                 label=f"{arch} computation",
-                marker=next(markers),
+                marker=mkr,
             )
-        plt.semilogx(
-            sg.nranks, sg["norm-total"], label=f"{arch} total", marker=next(markers)
-        )
+        plt.semilogx(sg.nranks, sg["norm-total"], label=f"{arch}", marker=mkr)
 
         plt.figure("scaling-entities")
         markers = itertools.cycle(marker_shapes)
@@ -390,24 +403,24 @@ if __name__ == "__main__":
                 sg.entities_per_rank,
                 sg.communication,
                 label=f"{arch} communication",
-                marker=next(markers),
+                marker=mkr,
             )
             plt.loglog(
                 sg.entities_per_rank,
                 sg.computation,
                 label=f"{arch} computation",
-                marker=next(markers),
+                marker=mkr,
             )
         plt.loglog(
             sg.entities_per_rank,
             sg.total,
-            label=f"{arch} total",
-            marker=next(markers),
+            label=f"{arch}",
+            marker=mkr,
         )
         plt.loglog(
             sg.entities_per_rank,
             sg.theory_entities,
-            label=f"{arch} perfect scaling",
+            label="perfect scaling",
             color="k",
             ls="-",
             zorder=0,
@@ -421,24 +434,24 @@ if __name__ == "__main__":
                 sg.entities_per_rank,
                 sg.gvt / sg.communication,
                 label=f"{arch} communication",
-                marker=next(markers),
+                marker=mkr,
             )
             plt.loglog(
                 sg.entities_per_rank,
                 sg.gvt / sg.computation,
                 label=f"{arch} computation",
-                marker=next(markers),
+                marker=mkr,
             )
         plt.loglog(
             sg.entities_per_rank,
             sg.gvt / sg.total,
-            label=f"{arch} total",
-            marker=next(markers),
+            label=f"{arch}",
+            marker=mkr,
         )
         plt.loglog(
             sg.entities_per_rank,
             sg.gvt / sg.theory_entities,
-            label=f"{arch} perfect scaling",
+            label="perfect scaling",
             color="k",
             ls="-",
             zorder=0,
@@ -449,14 +462,14 @@ if __name__ == "__main__":
         sg.sort_values(by=["entities_per_rank"], inplace=True)
         plt.loglog(
             sg.entities_per_rank,
-            sg.rate,
-            label=f"{arch} total",
-            marker=next(markers),
+            sg.avg_rate,
+            label=f"{arch}",
+            marker=mkr,
         )
         # plt.loglog(
         #     sg.entities_per_rank,
         #     sg.gvt / sg.theory_entities,
-        #     label=f"{arch} perfect scaling",
+        #     label="perfect scaling",
         #     color="k",
         #     ls="-",
         #     zorder=0,
@@ -467,10 +480,10 @@ if __name__ == "__main__":
         sg.sort_values(by=["nranks"], inplace=True)
         plt.semilogx(
             sg.nranks,
-            # sg.rate / sg.nentities / ( sg.rate / sg.nentities).iloc[0],
-            (sg.rate / sg.nentities) / (sg.rate / sg.nentities).iloc[0] * 100,
+            # sg.avg_rate / sg.entities / ( sg.avg_rate / sg.entities).iloc[0],
+            (sg.avg_rate / sg.entities) / (sg.avg_rate / sg.entities).iloc[0] * 100,
             label=f"{arch}",
-            marker=next(markers),
+            marker=mkr,
         )
 
         plt.figure("lp-entity-time")
@@ -480,7 +493,7 @@ if __name__ == "__main__":
             sg["entities_per_lp"],
             sg.gvt / sg.total,
             label=f"{arch}",
-            marker=next(markers),
+            marker=mkr,
         )
 
         plt.figure("lp-entity-rate")
@@ -488,10 +501,21 @@ if __name__ == "__main__":
         sg.sort_values(by=["entities_per_lp"], inplace=True)
         plt.semilogx(
             sg["entities_per_lp"],
-            sg.rate,
+            sg.avg_rate,
             label=f"{arch}",
-            marker=next(markers),
+            marker=mkr,
         )
+
+        for rlb in range(1, 5):
+            plt.figure(f"rollback_{rlb}")
+            markers = itertools.cycle(marker_shapes)
+            sg.sort_values(by=["entities_per_lp"], inplace=True)
+            plt.semilogx(
+                sg["entities_per_lp"],
+                sg[f"rollback_{rlb}"],
+                label=f"{arch}",
+                marker=mkr,
+            )
 
     # Save the plots
     with PdfPages(pname) as pdf:
@@ -518,14 +542,14 @@ if __name__ == "__main__":
         plt.figure("scaling")
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"$t~[s]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("scaling-time-gvt")
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"$g / t~[-]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
@@ -533,35 +557,35 @@ if __name__ == "__main__":
         plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"Parallel efficiency$~[\%]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("norm-scaling")
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"$t~[-]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("scaling-entities")
         plt.xlabel(f"Entities per rank")
         plt.ylabel(r"$t~[s]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("scaling-entities-gvt")
         plt.xlabel(f"Entities per rank")
         plt.ylabel(r"$g / t~[-]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("scaling-entities-rate")
         plt.xlabel(f"Entities per rank")
         plt.ylabel(r"$r~[\#/s]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
@@ -569,35 +593,43 @@ if __name__ == "__main__":
         plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"Parallel efficiency$~[\%]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("lp-entity-time")
         plt.xlabel(r"$n_e / n_{lp}$")
         plt.ylabel(r"$g / t~[-]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("lp-entity-rate")
         plt.xlabel(r"$n_e / n_{lp}$")
         plt.ylabel(r"$r~[\#/s]$")
-        legend = plt.legend(loc="best")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
+
+        for rlb in range(1, 5):
+            plt.figure(f"rollback_{rlb}")
+            plt.xlabel(r"$n_e / n_{lp}$")
+            plt.ylabel(f"{rlb} rollback $~[\#]$")
+            legend = legend_without_duplicates(plt.gca())
+            plt.tight_layout()
+            pdf.savefig(dpi=300)
 
         plt.figure("gvt")
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$g~[s]$")
-        legend = plt.legend(loc="lower right")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
         plt.figure("rate")
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$r~[\#/s]$")
-        legend = plt.legend(loc="lower right")
+        legend = legend_without_duplicates(plt.gca())
         # plt.ylim([0, 3e6])
         plt.tight_layout()
         pdf.savefig(dpi=300)
@@ -605,7 +637,7 @@ if __name__ == "__main__":
         plt.figure(f"rlbk")
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$n~[\#]$")
-        legend = plt.legend(loc="upper right")
+        legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
