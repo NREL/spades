@@ -1,0 +1,14 @@
+.. meta::b38ef51bbcf53aa3a41ab8495393bd66089bbca42c61bbd5e10a9dce879e3a0224c563213938b4bbbd5d2d4761c98f5ac8ee0e599988fcf2996271eb0fa01e2b
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Docs/doxygen/main_page.md File Reference
+
+/home/runner/work/spades/spades/Docs/doxygen/main\_page.md File Reference
+=========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: main__page_8md.html

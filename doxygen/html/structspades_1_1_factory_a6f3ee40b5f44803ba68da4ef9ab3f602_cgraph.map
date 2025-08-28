@@ -1,0 +1,8 @@
+<map id="spades::Factory::key_exists_or_error" name="spades::Factory::key_exists_or_error">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,23,159,63"/>
+<area shape="rect" id="Node000002" href="$structspades_1_1_factory.html#a45a688718580d050933ca3be4f591e42" title=" " alt="" coords="207,5,367,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="159,31,193,27,193,32,159,36"/>
+<area shape="rect" id="Node000003" href="$structspades_1_1_factory.html#ae6b81c2816190726e6e57c835145ad17" title="Lookup table containing all registered instances." alt="" coords="415,31,577,56"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="159,41,401,41,401,46,159,46"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="367,25,401,29,401,35,366,30"/>
+</map>

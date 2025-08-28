@@ -1,0 +1,14 @@
+.. meta::e0c4e07a7388040fa95a9daf3aaf947d81b9147e7d65443515fb4a2fab62225fd6dcf1a18073fe17053c4aeee3fac740c2babccdf2044c2a41b7149ee5ae68cb
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::CompareParticle Struct Reference
+
+CompareParticle Struct Reference
+================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_compare_particle.html

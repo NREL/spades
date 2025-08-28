@@ -1,0 +1,14 @@
+.. meta::178fd169641c17f337ed1ce343fb482bdb39d35c46067cc3f9cb0c51b64a3352e93733a4231600f5630b9153e61d98fa6820ed0efea291b6bdc18a0e54d4c16c
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/MessageData.H Source File
+
+/home/runner/work/spades/spades/Source/MessageData.H Source File
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _message_data_8_h_source.html

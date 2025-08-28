@@ -1,0 +1,7 @@
+<map id="spades::particles::MessageParticleContainer::initialize_messages" name="spades::particles::MessageParticleContainer::initialize_messages">
+<area shape="rect" id="Node000001" title="Initialize the messages." alt="" coords="5,71,196,126"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_spades_particle_container.html#a1a67a6e5761ea7ba5a0d2ec147737225" title=" " alt="" coords="244,5,491,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="196,80,230,75,231,80,197,86"/>
+<area shape="rect" id="Node000003" href="$namespacespades.html#af26487ec3507565fa67121a8663f2429" title="Exponential distribution." alt="" coords="262,129,473,154"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="197,111,275,124,274,129,196,117"/>
+</map>

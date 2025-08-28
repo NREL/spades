@@ -1,0 +1,14 @@
+.. meta::0aded69f2d50ec32934603f2352d88c940866216ea8d98ae5bb91dba433ba5b3ed2203259f3ae6906bd569e49b474f56c986d1f1fac8e647f33d2ef0a4140773
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source Directory Reference
+
+/home/runner/work/spades/spades/Source Directory Reference
+==========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: dir_49530cec0d50c554779629e2df68719c.html

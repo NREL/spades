@@ -1,0 +1,20 @@
+<map id="spades::SPADES::time_step" name="spades::SPADES::time_step">
+<area shape="rect" id="Node000001" title="Advance by the time step." alt="" coords="5,145,204,170"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1_s_p_a_d_e_s.html#a0b81ab952fa2884baa10af3a0c79de6e" title="Advance for a single time step." alt="" coords="255,119,445,145"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="204,144,241,141,242,146,204,150"/>
+<area shape="rect" id="Node000009" href="$classspades_1_1_s_p_a_d_e_s.html#a9736b6ab6437acce27bb8b8ace6f0a0f" title="Compute summary data." alt="" coords="252,169,448,194"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="204,164,239,168,238,173,204,170"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1_s_p_a_d_e_s.html#ac061c297f58d191b31b5ff6529a03e87" title="Process messages." alt="" coords="509,5,693,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="373,117,428,88,495,56,518,48,520,52,497,61,430,92,375,122"/>
+<area shape="rect" id="Node000005" href="$classspades_1_1_s_p_a_d_e_s.html#ae394ed7dee73e2bee962cf3eead24cc4" title="Perform rollback." alt="" coords="508,94,695,119"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="445,120,494,115,494,120,445,125"/>
+<area shape="rect" id="Node000007" href="$classspades_1_1_s_p_a_d_e_s.html#afaac93099a04dc1dbabe0f3fbf7dc553" title="Update the global virtual time." alt="" coords="498,143,705,169"/>
+<area shape="poly" id="edge7_Node000002_Node000007" title=" " alt="" coords="445,138,484,142,484,147,445,144"/>
+<area shape="rect" id="Node000008" href="$classspades_1_1_s_p_a_d_e_s.html#a9dadb2f517014aa3fe8e9f841535e836" title="Update the Lower Bound on Incoming Time Stamp." alt="" coords="496,193,707,218"/>
+<area shape="poly" id="edge8_Node000002_Node000008" title=" " alt="" coords="409,142,449,155,473,167,497,179,521,187,520,192,495,184,471,172,447,160,407,147"/>
+<area shape="rect" id="Node000004" href="$namespacespades.html#af26487ec3507565fa67121a8663f2429" title="Exponential distribution." alt="" coords="755,13,965,38"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="694,23,741,23,741,28,694,28"/>
+<area shape="poly" id="edge5_Node000005_Node000005" title=" " alt="" coords="561,96,552,86,556,76,573,70,601,67,637,71,647,76,651,82,646,85,643,80,635,76,601,73,574,75,560,80,557,85,565,92"/>
+<area shape="rect" id="Node000006" href="$classspades_1_1_s_p_a_d_e_s.html#a4f9fe635aff84c88ddbc02fe531a0efc" title="Print rollback statistics." alt="" coords="767,87,953,127"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="695,104,753,104,753,109,695,109"/>
+</map>

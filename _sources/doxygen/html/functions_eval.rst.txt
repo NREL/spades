@@ -1,0 +1,14 @@
+.. meta::c0313416a8297105994268e47e4132e9f59fe9f1de631ba4d86896c66754dc406ff3c48669278590be5aeae58fd598e69afde15e90cd54bf42c73be962b57c69
+
+:orphan:
+
+.. title:: SPADES API: Class Members - Enumerator
+
+Class Members - Enumerator
+==========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_eval.html

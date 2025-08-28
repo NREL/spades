@@ -1,0 +1,14 @@
+.. meta::623ce78439eafeb0cfc6138eb7bb59ff646d62a9c56caf2ecdc1b003b66d95d5393b56d0c621fcb522cf27f25fd8c020136c2f2d18b5fd83c0f649d10bd45f65
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::CreateMessage Struct Reference
+
+CreateMessage Struct Reference
+==============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_create_message.html
