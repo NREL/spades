@@ -11,6 +11,16 @@ from functools import reduce
 
 plt.style.use(pathlib.Path(__file__).parent.resolve() / "project.mplstyle")
 
+
+def parse_nranks(fname):
+    pname = fname.replace("data", "phold").replace("csv", "log")
+    with open(pname, "r") as f:
+        for line in f:
+            if "MPI processes" in line and "MPI initialized with" in line:
+                return int(line.split()[3])
+    return 0
+
+
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(description="Plot simulation data output")
@@ -36,8 +46,11 @@ if __name__ == "__main__":
         raise AssertionError("Need same number of labels and file names")
 
     types = ["message", "processed_message", "conjugate_message", "undefined_message"]
+    n_mean_steps = 100
+    lst = []
     for lbl, fname in zip(args.labels, args.fnames):
         df = pd.read_csv(fname)
+        nranks = parse_nranks(fname)
 
         plt.figure("gvt")
         plt.plot(df.step, df.gvt, label=lbl)
@@ -55,6 +68,21 @@ if __name__ == "__main__":
             plt.plot(df.step, df[f"{typ}s"] / df.lps)
             plt.fill_between(df.step, df[f"min_{typ}s"], df[f"max_{typ}s"], alpha=0.5)
 
+        mean_df = df.tail(n_mean_steps).mean()
+        mean_df["final_gvt"] = df.gvt.iloc[-1]
+        mean_df["final_step"] = df.step.iloc[-1]
+        mean_df["nranks"] = nranks
+        lst.append(mean_df)
+        print(f"Data for {fname}:")
+        print(f"  GVT at the last step = {df.gvt.iloc[-1]}")
+
+    df = pd.DataFrame(lst)
+    print(df)
+    print(df.rollback_1)
+    print(df.rollback_2)
+    print(df.rollback_3)
+    print(df.rollback_4)
+
     pname = "profile_data.pdf"
     with PdfPages(pname) as pdf:
         plt.figure("gvt")
@@ -68,7 +96,7 @@ if __name__ == "__main__":
         plt.xlabel(r"$s~[-]$")
         plt.ylabel(r"$r~[\#/s]$")
         legend = plt.legend(loc="lower right")
-        plt.ylim([0, 3e6])
+        # plt.ylim([0, 3e6])
         plt.tight_layout()
         pdf.savefig(dpi=300)
 
@@ -82,6 +110,6 @@ if __name__ == "__main__":
         for typ in types:
             plt.figure(f"{typ}s")
             plt.xlabel(r"$s~[-]$")
-            plt.ylabel(f"$m_{typ[0]}~[\#]$")
+            plt.ylabel(f"$m_{typ[0]}~[\\#]$")
             plt.tight_layout()
             pdf.savefig(dpi=300)
