@@ -33,6 +33,15 @@ def legend_without_duplicates(ax):
     return plt.legend(handles, labels, loc="best")
 
 
+def power_two_xticks(ax, num):
+    xticks = np.arange(0, num - 1)
+    xticks = 2.0**xticks
+    xticklabels = [f"$2^{{{k}}}$" for k in range(num - 1)]
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticklabels)
+    ax.minorticks_off()
+
+
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(
@@ -480,7 +489,6 @@ if __name__ == "__main__":
         sg.sort_values(by=["nranks"], inplace=True)
         plt.semilogx(
             sg.nranks,
-            # sg.avg_rate / sg.entities / ( sg.avg_rate / sg.entities).iloc[0],
             (sg.avg_rate / sg.entities) / (sg.avg_rate / sg.entities).iloc[0] * 100,
             label=f"{arch}",
             marker=mkr,
@@ -495,6 +503,7 @@ if __name__ == "__main__":
             label=f"{arch}",
             marker=mkr,
         )
+        power_two_xticks(plt.gca(), len(sg["entities_per_lp"]) + 1)
 
         plt.figure("lp-entity-rate")
         markers = itertools.cycle(marker_shapes)
@@ -505,6 +514,7 @@ if __name__ == "__main__":
             label=f"{arch}",
             marker=mkr,
         )
+        power_two_xticks(plt.gca(), len(sg["entities_per_lp"]) + 1)
 
         for rlb in range(1, 5):
             plt.figure(f"rollback_{rlb}")
@@ -512,7 +522,18 @@ if __name__ == "__main__":
             sg.sort_values(by=["entities_per_lp"], inplace=True)
             plt.semilogx(
                 sg["entities_per_lp"],
-                sg[f"rollback_{rlb}"],
+                sg[f"rollback_{rlb}"] / sg["lps"] * 100,
+                label=f"{arch}",
+                marker=mkr,
+            )
+            power_two_xticks(plt.gca(), len(sg["entities_per_lp"]) + 1)
+
+            plt.figure(f"rollback_{rlb}_ranks")
+            markers = itertools.cycle(marker_shapes)
+            sg.sort_values(by=["nranks"], inplace=True)
+            plt.semilogx(
+                sg.nranks,
+                sg[f"rollback_{rlb}"] / sg["lps"] * 100,
                 label=f"{arch}",
                 marker=mkr,
             )
@@ -557,6 +578,7 @@ if __name__ == "__main__":
         plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"Parallel efficiency$~[\%]$")
+        plt.ylim(0, 110)
         legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
@@ -593,6 +615,7 @@ if __name__ == "__main__":
         plt.axhline(y=100, color="k", ls="-", label="Perfect scaling", zorder=0)
         plt.xlabel(f"Number of ranks")
         plt.ylabel(r"Parallel efficiency$~[\%]$")
+        plt.ylim(0, 110)
         legend = legend_without_duplicates(plt.gca())
         plt.tight_layout()
         pdf.savefig(dpi=300)
@@ -614,7 +637,15 @@ if __name__ == "__main__":
         for rlb in range(1, 5):
             plt.figure(f"rollback_{rlb}")
             plt.xlabel(r"$n_e / n_{lp}$")
-            plt.ylabel(f"{rlb} rollback $~[\#]$")
+            plt.ylabel(f"{rlb} rollback" + r"$~[\%]$")
+            legend = legend_without_duplicates(plt.gca())
+            plt.tight_layout()
+            pdf.savefig(dpi=300)
+
+        for rlb in range(1, 5):
+            plt.figure(f"rollback_{rlb}_ranks")
+            plt.xlabel(f"Number of ranks")
+            plt.ylabel(f"{rlb} rollback" + r"$~[\%]$")
             legend = legend_without_duplicates(plt.gca())
             plt.tight_layout()
             pdf.savefig(dpi=300)
