@@ -7,7 +7,7 @@ SPADES: Solver for PArallel Discrete Event Simulation
    :target: https://github.com/NREL/spades/actions
 
 .. |Documentation Badge| image:: https://github.com/NREL/spades/actions/workflows/docs.yml/badge.svg
-   :target: https://https://nrel.github.io/spades
+   :target: https://nrel.github.io/spades/
 
 .. |License Badge| image:: https://img.shields.io/badge/License-Apache%20v2.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
