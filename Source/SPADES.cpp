@@ -469,7 +469,7 @@ void SPADES::process_messages()
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(lambda, engine) +
                         lookahead;
-                    // FIXME, in general, Create is clunky. Better way?
+
                     const auto psnd_soa =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::CreateMessage()(
@@ -491,7 +491,6 @@ void SPADES::process_messages()
                     const auto pcnj_soa = msg_getter(
                         2 * n + 1, particles::MessageTypes::UNDEFINED);
 
-                    // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
                     // position is iv but the receiver_lp is
                     // still updated (we need to know who to

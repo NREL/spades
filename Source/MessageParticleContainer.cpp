@@ -225,9 +225,6 @@ void MessageParticleContainer::update_undefined()
         const auto parrs = particle_arrays(pti);
 
         // remove particles
-        // BL_PROFILE_VAR(
-        //     "spades::MessageParticleContainer::update_undefined::remove",
-        //     remove);
         const auto ncells = static_cast<int>(box.numPts());
         amrex::Gpu::DeviceVector<int> removals(ncells, 0);
         auto* p_removals = removals.data();
@@ -255,12 +252,7 @@ void MessageParticleContainer::update_undefined()
                     parrs.m_aos[pidx].id() = -1;
                 }
             });
-        // amrex::Gpu::streamSynchronize();
-        // BL_PROFILE_VAR_STOP(remove);
 
-        // BL_PROFILE_VAR(
-        //     "spades::MessageParticleContainer::update_undefined::compute_add",
-        //     compute_add);
         amrex::Gpu::DeviceVector<int> additions(ncells, 0);
         auto* p_additions = additions.data();
         amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(long icell) noexcept {
@@ -333,8 +325,6 @@ void MessageParticleContainer::update_undefined()
                              parrs_adds.m_idata[MessageIntData::k][n] = iv[2];)
             }
         });
-        // amrex::Gpu::streamSynchronize();
-        // BL_PROFILE_VAR_STOP(compute_add);
 
         // This is necessary
         amrex::Gpu::streamSynchronize();
