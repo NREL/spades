@@ -37,17 +37,17 @@ struct CreateMessage
         const int receiver_entity) const
     {
         AMREX_ASSERT(
-            parrs.m_idata[MessageIntData::type_id][n] ==
+            parrs.m_idata[CommonIntData::type_id][n] ==
             MessageTypes::UNDEFINED);
 
-        parrs.m_idata[MessageIntData::type_id][n] = MessageTypes::MESSAGE;
-        parrs.m_rdata[MessageRealData::timestamp][n] = timestamp;
+        parrs.m_idata[CommonIntData::type_id][n] = MessageTypes::MESSAGE;
+        parrs.m_rdata[CommonRealData::timestamp][n] = timestamp;
 
         auto& p = parrs.m_aos[n];
         AMREX_D_TERM(p.pos(0) = pos[0];, p.pos(1) = pos[1];, p.pos(2) = pos[2];)
-        AMREX_D_TERM(parrs.m_idata[MessageIntData::i][n] = iv[0];
-                     , parrs.m_idata[MessageIntData::j][n] = iv[1];
-                     , parrs.m_idata[MessageIntData::k][n] = iv[2];)
+        AMREX_D_TERM(parrs.m_idata[CommonIntData::i][n] = iv[0];
+                     , parrs.m_idata[CommonIntData::j][n] = iv[1];
+                     , parrs.m_idata[CommonIntData::k][n] = iv[2];)
         parrs.m_idata[MessageIntData::sender_lp][n] = sender_lp;
         parrs.m_idata[MessageIntData::sender_entity][n] = sender_entity;
         parrs.m_idata[MessageIntData::receiver_lp][n] = receiver_lp;
@@ -67,10 +67,10 @@ struct MarkMessageUndefined
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
     operator()(const amrex::Long n, PArrs& parrs) const
     {
-        parrs.m_idata[MessageIntData::type_id][n] = MessageTypes::UNDEFINED;
+        parrs.m_idata[CommonIntData::type_id][n] = MessageTypes::UNDEFINED;
         parrs.m_idata[MessageIntData::pair_cpu][n] = -1;
         parrs.m_idata[MessageIntData::pair_id][n] = -1;
-        parrs.m_rdata[MessageRealData::timestamp][n] = 0.0;
+        parrs.m_rdata[CommonRealData::timestamp][n] = 0.0;
         parrs.m_rdata[MessageRealData::old_timestamp][n] = 0.0;
         parrs.m_rdata[MessageRealData::creation_time][n] = 0.0;
     }

@@ -52,7 +52,6 @@ void read_file(
     }
 
     file_length_padded = file_length + 1;
-    //    file_length_padded += file_length_padded % 8;
     charBuf.resize(file_length_padded);
 
     iss.read(charBuf.dataPtr(), file_length);

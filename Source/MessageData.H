@@ -9,8 +9,7 @@ namespace spades::particles {
 struct MessageRealData
 {
     enum : std::uint8_t {
-        timestamp = CommonRealData::timestamp,
-        old_timestamp,
+        old_timestamp = CommonRealData::ncomps,
         creation_time,
         ncomps
     };
@@ -20,10 +19,7 @@ struct MessageRealData
 struct MessageIntData
 {
     enum : std::uint8_t {
-        AMREX_D_DECL(
-            i = CommonIntData::i, j = CommonIntData::j, k = CommonIntData::k),
-        type_id = CommonIntData::type_id,
-        sender_lp,
+        sender_lp = CommonIntData::ncomps,
         receiver_lp,
         sender_entity,
         receiver_entity,

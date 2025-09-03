@@ -44,18 +44,18 @@ void EntityParticleContainer::initialize_variable_names()
     m_int_data_names.resize(EntityIntData::ncomps, "");
     m_writeflags_int.resize(EntityIntData::ncomps, 0);
 
-    m_real_data_names[EntityRealData::timestamp] = "timestamp";
-    m_writeflags_real[EntityRealData::timestamp] = 1;
+    m_real_data_names[CommonRealData::timestamp] = "timestamp";
+    m_writeflags_real[CommonRealData::timestamp] = 1;
 
     AMREX_D_TERM(
-        m_int_data_names[EntityIntData::i] = "i";
-        m_writeflags_int[EntityIntData::i] = 1;
-        , m_int_data_names[EntityIntData::j] = "j";
-        m_writeflags_int[EntityIntData::j] = 1;
-        , m_int_data_names[EntityIntData::k] = "k";
-        m_writeflags_int[EntityIntData::k] = 1;)
-    m_int_data_names[EntityIntData::type_id] = "type_id";
-    m_writeflags_int[EntityIntData::type_id] = 1;
+        m_int_data_names[CommonIntData::i] = "i";
+        m_writeflags_int[CommonIntData::i] = 1;
+        , m_int_data_names[CommonIntData::j] = "j";
+        m_writeflags_int[CommonIntData::j] = 1;
+        , m_int_data_names[CommonIntData::k] = "k";
+        m_writeflags_int[CommonIntData::k] = 1;)
+    m_int_data_names[CommonIntData::type_id] = "type_id";
+    m_writeflags_int[CommonIntData::type_id] = 1;
     m_int_data_names[EntityIntData::owner] = "owner";
     m_writeflags_int[EntityIntData::owner] = 1;
 }
@@ -127,16 +127,16 @@ void EntityParticleContainer::initialize_entities()
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(parrs.m_idata[EntityIntData::i][n] = iv[0];
-                                 , parrs.m_idata[EntityIntData::j][n] = iv[1];
-                                 , parrs.m_idata[EntityIntData::k][n] = iv[2];)
+                    AMREX_D_TERM(parrs.m_idata[CommonIntData::i][n] = iv[0];
+                                 , parrs.m_idata[CommonIntData::j][n] = iv[1];
+                                 , parrs.m_idata[CommonIntData::k][n] = iv[2];)
                 }
 
                 for (int n = start; n < start + entities_per_lp; n++) {
                     const amrex::Real ts = 0.0;
 
-                    parrs.m_rdata[EntityRealData::timestamp][n] = ts;
-                    parrs.m_idata[EntityIntData::type_id][n] =
+                    parrs.m_rdata[CommonRealData::timestamp][n] = ts;
+                    parrs.m_idata[CommonIntData::type_id][n] =
                         EntityTypes::ENTITY;
                 }
             });
@@ -157,7 +157,7 @@ void EntityParticleContainer::initialize_entities()
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             bool valid_type = false;
             for (int typ = 0; typ < EntityTypes::NTYPES; typ++) {
-                valid_type = parrs.m_idata[EntityIntData::type_id][pidx] == typ;
+                valid_type = parrs.m_idata[CommonIntData::type_id][pidx] == typ;
                 if (valid_type) {
                     break;
                 }

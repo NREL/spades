@@ -411,7 +411,7 @@ void SPADES::process_messages()
                     const auto prcv_soa =
                         msg_getter(n, particles::MessageTypes::MESSAGE);
                     const auto ts =
-                        msg_parrs.m_rdata[particles::MessageRealData::timestamp]
+                        msg_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [prcv_soa];
                     if (ts >= lbts + lookahead + window_size) {
                         break;
@@ -430,7 +430,7 @@ void SPADES::process_messages()
                             ent_parrs.m_idata[particles::EntityIntData::owner]
                                              [pe_soa]) == iv);
                     AMREX_ASSERT(
-                        ent_parrs.m_rdata[particles::EntityRealData::timestamp]
+                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [pe_soa] < ts);
 
                     // process the event
@@ -441,18 +441,18 @@ void SPADES::process_messages()
                                         [prcv_soa]) == iv);
                     msg_parrs.m_rdata[particles::MessageRealData::old_timestamp]
                                      [prcv_soa] =
-                        ent_parrs.m_rdata[particles::EntityRealData::timestamp]
+                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [pe_soa];
                     ent_parrs
-                        .m_rdata[particles::EntityRealData::timestamp][pe_soa] =
+                        .m_rdata[particles::CommonRealData::timestamp][pe_soa] =
                         ts;
                     msg_parrs
-                        .m_idata[particles::MessageIntData::type_id][prcv_soa] =
+                        .m_idata[particles::CommonIntData::type_id][prcv_soa] =
                         particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
                     const auto ent_lvt =
-                        ent_parrs.m_rdata[particles::EntityRealData::timestamp]
+                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [pe_soa];
                     const amrex::IntVect iv_dest(AMREX_D_DECL(
                         amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
@@ -469,7 +469,7 @@ void SPADES::process_messages()
                     const amrex::Real next_ts =
                         ent_lvt + random_exponential(lambda, engine) +
                         lookahead;
-                    // FIXME, in general, Create is clunky. Better way?
+
                     const auto psnd_soa =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
                     particles::CreateMessage()(
@@ -491,7 +491,6 @@ void SPADES::process_messages()
                     const auto pcnj_soa = msg_getter(
                         2 * n + 1, particles::MessageTypes::UNDEFINED);
 
-                    // FIXME, could do a copy. Or just pass p.pos to Create
                     // This is weird. The conjugate
                     // position is iv but the receiver_lp is
                     // still updated (we need to know who to
@@ -514,7 +513,7 @@ void SPADES::process_messages()
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
                                      [pcnj_soa] = ent_lvt;
                     msg_parrs
-                        .m_idata[particles::MessageIntData::type_id][pcnj_soa] =
+                        .m_idata[particles::CommonIntData::type_id][pcnj_soa] =
                         particles::MessageTypes::CONJUGATE;
                 }
 
@@ -526,7 +525,7 @@ void SPADES::process_messages()
                         ent_getter(n, particles::EntityTypes::ENTITY);
                     const auto ent_lvt =
                         ent_parrs
-                            .m_rdata[particles::EntityRealData::timestamp][pe];
+                            .m_rdata[particles::CommonRealData::timestamp][pe];
                     if (ent_lvt > max_ent_lvt) {
                         max_ent_lvt = ent_lvt;
                     }
@@ -587,15 +586,18 @@ void SPADES::rollback()
 
                     const amrex::Real msg_lvt =
                         msg_cnt_arr(iv, particles::MessageTypes::MESSAGE) > 0
-                            ? msg_parrs.m_rdata[particles::MessageRealData::
-                                                    timestamp][msg_getter(
-                                  0, particles::MessageTypes::MESSAGE)]
+                            ? msg_parrs
+                                  .m_rdata[particles::CommonRealData::timestamp]
+                                          [msg_getter(
+                                              0,
+                                              particles::MessageTypes::MESSAGE)]
                             : constants::LARGE_NUM;
                     const amrex::Real ant_lvt =
                         msg_cnt_arr(iv, particles::MessageTypes::ANTI) > 0
-                            ? msg_parrs.m_rdata
-                                  [particles::MessageRealData::timestamp]
-                                  [msg_getter(0, particles::MessageTypes::ANTI)]
+                            ? msg_parrs
+                                  .m_rdata[particles::CommonRealData::timestamp]
+                                          [msg_getter(
+                                              0, particles::MessageTypes::ANTI)]
                             : constants::LARGE_NUM;
                     const amrex::Real rollback_timestamp =
                         amrex::min<amrex::Real>(msg_lvt, ant_lvt);
@@ -615,7 +617,7 @@ void SPADES::rollback()
                             const auto pprd_soa = msg_getter(
                                 n, particles::MessageTypes::PROCESSED);
                             if (msg_parrs.m_rdata
-                                    [particles::MessageRealData::timestamp]
+                                    [particles::CommonRealData::timestamp]
                                     [pprd_soa] >= rollback_timestamp) {
 
                                 auto& pprd = msg_parrs.m_aos[pprd_soa];
@@ -653,10 +655,8 @@ void SPADES::rollback()
                                         AMREX_ASSERT(
                                             std::abs(
                                                 msg_parrs.m_rdata
-                                                    [particles::
-                                                         MessageRealData::
-                                                             timestamp]
-                                                    [pprd_soa] -
+                                                    [particles::CommonRealData::
+                                                         timestamp][pprd_soa] -
                                                 msg_parrs.m_rdata
                                                     [particles::
                                                          MessageRealData::
@@ -664,7 +664,7 @@ void SPADES::rollback()
                                                     [pcnj_soa]) <
                                             constants::EPS);
                                         msg_parrs.m_idata
-                                            [particles::MessageIntData::type_id]
+                                            [particles::CommonIntData::type_id]
                                             [pcnj_soa] =
                                             particles::MessageTypes::ANTI;
                                         const auto piv_soa = dom.atOffset(
@@ -687,19 +687,19 @@ void SPADES::rollback()
                                                                dx[2];)
                                         AMREX_D_TERM(
                                             msg_parrs.m_idata
-                                                [particles::MessageIntData::i]
+                                                [particles::CommonIntData::i]
                                                 [pcnj_soa] = piv_soa[0];
                                             , msg_parrs.m_idata
-                                                  [particles::MessageIntData::j]
+                                                  [particles::CommonIntData::j]
                                                   [pcnj_soa] = piv_soa[1];
                                             , msg_parrs.m_idata
-                                                  [particles::MessageIntData::k]
+                                                  [particles::CommonIntData::k]
                                                   [pcnj_soa] = piv_soa[2];)
                                     }
                                 }
 
                                 msg_parrs
-                                    .m_idata[particles::MessageIntData::type_id]
+                                    .m_idata[particles::CommonIntData::type_id]
                                             [pprd_soa] =
                                     particles::MessageTypes::MESSAGE;
 
@@ -712,10 +712,10 @@ void SPADES::rollback()
                                         .m_idata[particles::MessageIntData::
                                                      receiver_entity][pprd_soa],
                                     particles::EntityTypes::ENTITY);
-                                ent_parrs.m_rdata[particles::EntityRealData::
+                                ent_parrs.m_rdata[particles::CommonRealData::
                                                       timestamp][pe_soa] =
                                     ent_parrs.m_rdata
-                                                [particles::EntityRealData::
+                                                [particles::CommonRealData::
                                                      timestamp][pe_soa] >
                                             msg_parrs.m_rdata
                                                 [particles::MessageRealData::
@@ -724,7 +724,7 @@ void SPADES::rollback()
                                               [particles::MessageRealData::
                                                    old_timestamp][pprd_soa]
                                         : ent_parrs.m_rdata
-                                              [particles::EntityRealData::
+                                              [particles::CommonRealData::
                                                    timestamp][pe_soa];
 
                                 amrex::Real max_ent_lvt = constants::LOW_NUM;
@@ -737,7 +737,7 @@ void SPADES::rollback()
                                         ne, particles::EntityTypes::ENTITY);
                                     const auto ent_lvt =
                                         ent_parrs
-                                            .m_rdata[particles::EntityRealData::
+                                            .m_rdata[particles::CommonRealData::
                                                          timestamp][pe];
                                     if (ent_lvt > max_ent_lvt) {
                                         max_ent_lvt = ent_lvt;
@@ -858,7 +858,7 @@ void SPADES::update_lbts()
                     const auto prcv_soa =
                         msg_getter(0, particles::MessageTypes::MESSAGE);
                     lbts_arr(iv) =
-                        msg_parrs.m_rdata[particles::MessageRealData::timestamp]
+                        msg_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [prcv_soa];
                 }
             });
