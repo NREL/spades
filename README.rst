@@ -64,6 +64,24 @@ The full documentation for `SPADES` exists in the Docs directory; at present thi
 
     $ cd Build && cmake -DSPADES_ENABLE_DOCUMENTATION:BOOL=ON .. && cmake --build . -t docs
 
+Contributing, reporting bugs, and requesting help
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To report issues or bugs please `create a new issue <https://github.com/NREL/spades/issues>`_ on GitHub.
+
+We welcome contributions from the community in form of bug fixes,
+feature enhancements, documentation updates, etc. Please refer to the
+`contributing guidelines
+<https://github.com/NREL/spades/blob/main/CONTRIBUTING.md>`_ for more
+information. All contributions are processed through pull-requests on
+GitHub. Please refer to the `style guide
+<https://nrel.github.io/spades/StyleGuide.html>`_ as a reference for
+the best practices currently used to develop SPADES.
+
+Please acknowledge as a publication co-author any developer that has
+significantly contributed to implementing or improving specific
+capability that was used for that publication.
+
 Funding
 ~~~~~~~
 
