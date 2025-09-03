@@ -45,22 +45,22 @@ void MessageParticleContainer::initialize_variable_names()
     m_int_data_names.resize(MessageIntData::ncomps, "");
     m_writeflags_int.resize(MessageIntData::ncomps, 0);
 
-    m_real_data_names[MessageRealData::timestamp] = "timestamp";
-    m_writeflags_real[MessageRealData::timestamp] = 1;
+    m_real_data_names[CommonRealData::timestamp] = "timestamp";
+    m_writeflags_real[CommonRealData::timestamp] = 1;
     m_real_data_names[MessageRealData::old_timestamp] = "old_timestamp";
     m_writeflags_real[MessageRealData::old_timestamp] = 1;
     m_real_data_names[MessageRealData::creation_time] = "creation_time";
     m_writeflags_real[MessageRealData::creation_time] = 1;
 
     AMREX_D_TERM(
-        m_int_data_names[MessageIntData::i] = "i";
-        m_writeflags_int[MessageIntData::i] = 1;
-        , m_int_data_names[MessageIntData::j] = "j";
-        m_writeflags_int[MessageIntData::j] = 1;
-        , m_int_data_names[MessageIntData::k] = "k";
-        m_writeflags_int[MessageIntData::k] = 1;)
-    m_int_data_names[MessageIntData::type_id] = "type_id";
-    m_writeflags_int[MessageIntData::type_id] = 1;
+        m_int_data_names[CommonIntData::i] = "i";
+        m_writeflags_int[CommonIntData::i] = 1;
+        , m_int_data_names[CommonIntData::j] = "j";
+        m_writeflags_int[CommonIntData::j] = 1;
+        , m_int_data_names[CommonIntData::k] = "k";
+        m_writeflags_int[CommonIntData::k] = 1;)
+    m_int_data_names[CommonIntData::type_id] = "type_id";
+    m_writeflags_int[CommonIntData::type_id] = 1;
     m_int_data_names[MessageIntData::sender_lp] = "sender_lp";
     m_writeflags_int[MessageIntData::sender_lp] = 1;
     m_int_data_names[MessageIntData::sender_entity] = "sender_entity";
@@ -149,18 +149,18 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
                         ,
                         p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                    AMREX_D_TERM(parrs.m_idata[MessageIntData::i][n] = iv[0];
-                                 , parrs.m_idata[MessageIntData::j][n] = iv[1];
-                                 , parrs.m_idata[MessageIntData::k][n] = iv[2];)
+                    AMREX_D_TERM(parrs.m_idata[CommonIntData::i][n] = iv[0];
+                                 , parrs.m_idata[CommonIntData::j][n] = iv[1];
+                                 , parrs.m_idata[CommonIntData::k][n] = iv[2];)
                 }
 
                 for (int n = start; n < start + messages_per_lp; n++) {
                     const amrex::Real ts =
                         random_exponential(lambda, engine) + lookahead;
 
-                    parrs.m_rdata[MessageRealData::timestamp][n] = ts;
+                    parrs.m_rdata[CommonRealData::timestamp][n] = ts;
                     parrs.m_rdata[MessageRealData::creation_time][n] = 0.0;
-                    parrs.m_idata[MessageIntData::type_id][n] =
+                    parrs.m_idata[CommonIntData::type_id][n] =
                         MessageTypes::MESSAGE;
                     parrs.m_idata[MessageIntData::pair_id][n] = -1;
                     parrs.m_idata[MessageIntData::pair_cpu][n] = -1;
@@ -183,8 +183,7 @@ void MessageParticleContainer::initialize_messages(const amrex::Real lookahead)
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
             bool valid_type = false;
             for (int typ = 0; typ < MessageTypes::NTYPES; typ++) {
-                valid_type =
-                    parrs.m_idata[MessageIntData::type_id][pidx] == typ;
+                valid_type = parrs.m_idata[CommonIntData::type_id][pidx] == typ;
                 if (valid_type) {
                     break;
                 }
@@ -319,10 +318,9 @@ void MessageParticleContainer::update_undefined()
                     , p.pos(1) = plo[1] + (iv[1] + constants::HALF) * dx[1];
                     , p.pos(2) = plo[2] + (iv[2] + constants::HALF) * dx[2];)
 
-                AMREX_D_TERM(parrs_adds.m_idata[MessageIntData::i][n] = iv[0];
-                             , parrs_adds.m_idata[MessageIntData::j][n] = iv[1];
-                             ,
-                             parrs_adds.m_idata[MessageIntData::k][n] = iv[2];)
+                AMREX_D_TERM(parrs_adds.m_idata[CommonIntData::i][n] = iv[0];
+                             , parrs_adds.m_idata[CommonIntData::j][n] = iv[1];
+                             , parrs_adds.m_idata[CommonIntData::k][n] = iv[2];)
             }
         });
 
@@ -397,9 +395,9 @@ void MessageParticleContainer::resolve_pairs()
                              parrs.m_idata[MessageIntData::pair_cpu]
                                           [pant_soa]) &&
                             (std::abs(
-                                 parrs.m_rdata[MessageRealData::timestamp]
+                                 parrs.m_rdata[CommonRealData::timestamp]
                                               [pmsg_soa] -
-                                 parrs.m_rdata[MessageRealData::timestamp]
+                                 parrs.m_rdata[CommonRealData::timestamp]
                                               [pant_soa]) < constants::EPS)) {
                             AMREX_ASSERT(
                                 parrs.m_idata[MessageIntData::sender_lp]
@@ -457,14 +455,14 @@ void MessageParticleContainer::garbage_collect(const amrex::Real gvt)
         const auto parrs = particle_arrays(pti.GetParticleTile());
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            if (((parrs.m_rdata[MessageRealData::timestamp][pidx] < gvt) &&
-                 (parrs.m_idata[MessageIntData::type_id][pidx] !=
+            if (((parrs.m_rdata[CommonRealData::timestamp][pidx] < gvt) &&
+                 (parrs.m_idata[CommonIntData::type_id][pidx] !=
                   MessageTypes::UNDEFINED)) ||
-                ((parrs.m_idata[MessageIntData::type_id][pidx] ==
+                ((parrs.m_idata[CommonIntData::type_id][pidx] ==
                   MessageTypes::CONJUGATE) &&
                  (parrs.m_rdata[MessageRealData::creation_time][pidx] < gvt))) {
                 AMREX_ASSERT(
-                    parrs.m_idata[MessageIntData::type_id][pidx] !=
+                    parrs.m_idata[CommonIntData::type_id][pidx] !=
                     MessageTypes::MESSAGE);
                 MarkMessageUndefined()(pidx, parrs);
             }
@@ -490,9 +488,9 @@ amrex::Real MessageParticleContainer::compute_gvt()
         amrex::Gpu::DeviceVector<amrex::Real> ts(np, constants::LARGE_NUM);
         auto* p_ts = ts.data();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pidx) noexcept {
-            if (parrs.m_idata[MessageIntData::type_id][pidx] ==
+            if (parrs.m_idata[CommonIntData::type_id][pidx] ==
                 MessageTypes::MESSAGE) {
-                p_ts[pidx] = parrs.m_rdata[MessageRealData::timestamp][pidx];
+                p_ts[pidx] = parrs.m_rdata[CommonRealData::timestamp][pidx];
             }
         });
         gvt = std::min(amrex::Reduce::Min(np, ts.data()), gvt);

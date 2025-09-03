@@ -9,19 +9,13 @@ namespace spades::particles {
 //! Entity real data
 struct EntityRealData
 {
-    enum : std::uint8_t { timestamp = CommonRealData::timestamp, ncomps };
+    enum : std::uint8_t { ncomps = CommonRealData::ncomps };
 };
 
 //! Entity int data
 struct EntityIntData
 {
-    enum : std::uint8_t {
-        AMREX_D_DECL(
-            i = CommonIntData::i, j = CommonIntData::j, k = CommonIntData::k),
-        type_id = CommonIntData::type_id,
-        owner,
-        ncomps
-    };
+    enum : std::uint8_t { owner = CommonIntData::ncomps, ncomps };
 };
 
 //! Entity types
