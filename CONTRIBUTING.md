@@ -107,6 +107,11 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/NREL/s
 
 <!-- You might want to create an issue template for enhancement suggestions that can be used as a guide and that defines the structure of the information to be included. If you do so, reference it here in the description. -->
 
+<!-- omit in toc -->
+#### Contributing Enhancements
+
+Enhancements are welcomed as [GitHub pull requests](https://github.com/NREL/spades/pulls). Contributions with enhancements should include tests to fully exercise the new capability. Testing instructions are provided in the documentation.
+
 ## Styleguides
 ### Linting
 The following tools are used for linting:
