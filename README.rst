@@ -9,6 +9,9 @@ SPADES: Solver for PArallel Discrete Event Simulation
 .. |Documentation Badge| image:: https://github.com/NREL/spades/actions/workflows/docs.yml/badge.svg
    :target: https://nrel.github.io/spades/
 
+.. |OpenSSF Badge| image:: https://www.bestpractices.dev/projects/11128/badge
+   :target: https://www.bestpractices.dev/projects/11128
+
 .. |License Badge| image:: https://img.shields.io/badge/License-Apache%20v2.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
