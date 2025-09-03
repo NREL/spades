@@ -1,0 +1,14 @@
+.. meta::ecd4f5d711385e929cd97cadd4b9fbf0b41f95d3e176255588b772003b440eecd1ac350c5e91507990ad04a1f2fb1d9fa226fb6ed362773544bd4f76295b14bf
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/EntityData.H Source File
+
+/home/runner/work/spades/spades/Source/EntityData.H Source File
+===============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _entity_data_8_h_source.html

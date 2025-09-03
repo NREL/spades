@@ -1,0 +1,14 @@
+.. meta::7e5eea62a15d42f8bbe51870ef590ffd4072ed2e2a92837a9b74fd53bdc494033b7d81c4c8c3aaad2dcaad8a37a95f6ae9be60df752eb5f98758668be174e425
+
+:orphan:
+
+.. title:: SPADES API: Class Members
+
+Class Members
+=============
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_r.html

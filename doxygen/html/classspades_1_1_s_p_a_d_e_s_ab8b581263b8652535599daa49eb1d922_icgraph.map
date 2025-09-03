@@ -1,0 +1,16 @@
+<map id="spades::SPADES::write_info_file" name="spades::SPADES::write_info_file">
+<area shape="rect" id="Node000001" title="Write job info to disk." alt="" coords="561,37,728,77"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1_s_p_a_d_e_s.html#ae3d9cc7f3a32593dbed6aa1899aed241" title="Write checkpoint file to disk." alt="" coords="347,5,513,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="547,45,513,40,514,35,548,40"/>
+<area shape="rect" id="Node000006" href="$classspades_1_1_s_p_a_d_e_s.html#ae734db0eea8651621eb07bbf6c8db9f3" title="Write plotfile to disk." alt="" coords="347,69,513,109"/>
+<area shape="poly" id="edge6_Node000001_Node000006" title=" " alt="" coords="548,74,514,80,513,74,547,69"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1_s_p_a_d_e_s.html#af3d4d2fbe90c38c164a2dd23d9471391" title="Advance solution to final time." alt="" coords="114,21,293,46"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="333,31,293,33,293,28,333,26"/>
+<area shape="rect" id="Node000005" href="$classspades_1_1_s_p_a_d_e_s.html#a30fb207b5d878663ebf2b17cffc473e8" title="Initializes data." alt="" coords="108,70,299,95"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="338,51,255,73,254,67,336,46"/>
+<area shape="rect" id="Node000004" href="$main_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97" title="Main function." alt="" coords="5,46,60,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="104,51,60,57,60,52,103,45"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="99,71,60,65,61,60,100,65"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="335,69,255,49,256,43,336,63"/>
+<area shape="poly" id="edge8_Node000006_Node000005" title=" " alt="" coords="333,89,299,88,299,83,333,84"/>
+</map>

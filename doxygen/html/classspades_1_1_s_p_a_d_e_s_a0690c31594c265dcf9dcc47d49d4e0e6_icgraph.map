@@ -1,0 +1,12 @@
+<map id="spades::SPADES::est_time_step" name="spades::SPADES::est_time_step">
+<area shape="rect" id="Node000001" title="Compute the time step." alt="" coords="605,23,760,63"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1_s_p_a_d_e_s.html#a46f92068ce623b245dc5a07279419076" title="Wrapper for EstTimeStep." alt="" coords="347,31,557,56"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="591,46,558,46,558,41,591,41"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1_s_p_a_d_e_s.html#af3d4d2fbe90c38c164a2dd23d9471391" title="Advance solution to final time." alt="" coords="114,5,293,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="333,34,293,30,293,24,333,29"/>
+<area shape="rect" id="Node000005" href="$classspades_1_1_s_p_a_d_e_s.html#a30fb207b5d878663ebf2b17cffc473e8" title="Initializes data." alt="" coords="108,55,299,80"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="333,57,299,61,299,55,333,52"/>
+<area shape="rect" id="Node000004" href="$main_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97" title="Main function." alt="" coords="5,31,60,56"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="104,35,60,42,60,37,103,30"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="99,55,60,50,61,44,100,50"/>
+</map>

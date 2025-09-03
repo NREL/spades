@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPADES API: /home/runner/work/spades/spades/Source/SPADES.H Source File &mdash; SPADES 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            SPADES
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../GettingStarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SPADES.html">SPADES</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">SPADES API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SPADES</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SPADES API: /home/runner/work/spades/spades/Source/SPADES.H Source File</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/doxygen/html/_s_p_a_d_e_s_8_h_source.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="home-runner-work-spades-spades-source-spades-h-source-file">
+<h1>/home/runner/work/spades/spades/Source/SPADES.H Source File<a class="headerlink" href="#home-runner-work-spades-spades-source-spades-h-source-file" title="Link to this heading"></a></h1>
+<div class="doxygen-content docutils container">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.12.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SPADES API: /home/runner/work/spades/spades/Source/SPADES.H Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">SPADES API
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.12.0 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',false,false,'search.php','Search',false);
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){ initResizable(false); });
+/* @license-end */
+</script>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_146306cb39e20a87482ac42056bee4b6.html">spades</a></li><li class="navelem"><a class="el" href="dir_49530cec0d50c554779629e2df68719c.html">Source</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div id="doc-content">
+<div class="header">
+  <div class="headertitle"><div class="title">SPADES.H</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="_s_p_a_d_e_s_8_h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef SPADES_H</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define SPADES_H</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;AMReX.H&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;AMReX_AmrCore.H&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;AMReX_MultiFab.H&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;AMReX_MultiFabUtil.H&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;AMReX_iMultiFab.H&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;AMReX_REAL.H&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;AMReX_ParmParse.H&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;AMReX_FluxRegister.H&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;AMReX_PlotFileUtil.H&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;AMReX_ErrorList.H&gt;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;AMReX_Random.H&gt;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;<a class="code" href="_constants_8_h.html">Constants.H</a>&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;<a class="code" href="_i_c_8_h.html">IC.H</a>&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;<a class="code" href="_utilities_8_h.html">Utilities.H</a>&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;<a class="code" href="_spades_particle_container_8_h.html">SpadesParticleContainer.H</a>&quot;</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#include &quot;<a class="code" href="_message_particle_container_8_h.html">MessageParticleContainer.H</a>&quot;</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &quot;<a class="code" href="_entity_particle_container_8_h.html">EntityParticleContainer.H</a>&quot;</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacespades.html">spades</a> {</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="foldopen" id="foldopen00027" data-start="{" data-end="};">
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html">   27</a></span><span class="keyword">class </span><a class="code hl_class" href="classspades_1_1_s_p_a_d_e_s.html">SPADES</a> : <span class="keyword">public</span> amrex::AmrCore</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>{</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ab02025cea761e171ae2822f294efefa9">SPADES</a>();</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#afac1f03ed1acfee9d71df701a6f8c4a0">   31</a></span>    <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#afac1f03ed1acfee9d71df701a6f8c4a0">~SPADES</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a30fb207b5d878663ebf2b17cffc473e8">init_data</a>();</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#af3d4d2fbe90c38c164a2dd23d9471391">evolve</a>();</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a869e760e32cca37d15b3995ec85215e6">MakeNewLevelFromCoarse</a>(</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <span class="keywordtype">int</span> lev,</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        amrex::Real time,</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        <span class="keyword">const</span> amrex::BoxArray&amp; ba,</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        <span class="keyword">const</span> amrex::DistributionMapping&amp; dm) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ae5ca9f54b193afcb4bdfd793bed30e84">RemakeLevel</a>(</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="keywordtype">int</span> lev,</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        amrex::Real time,</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <span class="keyword">const</span> amrex::BoxArray&amp; ba,</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <span class="keyword">const</span> amrex::DistributionMapping&amp; dm) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a35090846a325c8df16565628ebd0d8c6">ClearLevel</a>(<span class="keywordtype">int</span> lev) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#aa1c24bffb946f1f139a3164ecf5955ba">MakeNewLevelFromScratch</a>(</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>        <span class="keywordtype">int</span> lev,</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        amrex::Real time,</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        <span class="keyword">const</span> amrex::BoxArray&amp; ba,</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        <span class="keyword">const</span> amrex::DistributionMapping&amp; dm) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="foldopen" id="foldopen00107" data-start="{" data-end="}">
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a278220b5ce944ada40bc417219a593b4">  107</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a278220b5ce944ada40bc417219a593b4">ErrorEst</a>(</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        <span class="keywordtype">int</span> <span class="comment">/*lev*/</span>,</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        amrex::TagBoxArray&amp; <span class="comment">/*tags*/</span>,</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        amrex::Real <span class="comment">/*time*/</span>,</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        <span class="keywordtype">int</span> <span class="comment">/*ngrow*/</span>)<span class="keyword"> override</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keyword">    </span>{}</div>
+</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    <span class="keyword">static</span> amrex::Real <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a0690c31594c265dcf9dcc47d49d4e0e6">est_time_step</a>();</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    std::unique_ptr&lt;amrex::MultiFab&gt;</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#afe7daedd7175780b33eedc446c9fbce1">get_field</a>(<span class="keyword">const</span> std::string&amp; name, <span class="keyword">const</span> <span class="keywordtype">int</span> ngrow);</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a87ad184e18217adfb1fc08cdf8892622">plot_file_mf</a>();</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a111e685058926419cd49a570f430e57d">initialize_state</a>();</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#af38332640c7da1be964c522f05dace79">init_particle_containers</a>();</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span> </div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ac061c297f58d191b31b5ff6529a03e87">process_messages</a>();</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ae394ed7dee73e2bee962cf3eead24cc4">rollback</a>();</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span> </div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a4f9fe635aff84c88ddbc02fe531a0efc">rollback_statistics</a>();</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span> </div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#afaac93099a04dc1dbabe0f3fbf7dc553">update_gvt</a>();</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a9dadb2f517014aa3fe8e9f841535e836">update_lbts</a>();</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ac6c7aad5622d65790f74c7f56c788e83">  166</a></span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ac6c7aad5622d65790f74c7f56c788e83">LEV</a>{0};</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#aa7d548c45a501ed927441e3d38187139">read_parameters</a>();</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a46f92068ce623b245dc5a07279419076">compute_dt</a>();</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a63f0eec354a17c365e13f2268872c154">time_step</a>(<span class="keyword">const</span> amrex::Real time);</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a0b81ab952fa2884baa10af3a0c79de6e">advance</a>(<span class="keyword">const</span> amrex::Real time, <span class="keyword">const</span> amrex::Real dt);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a1a48992e0abbafdfd94f0b43551c3efe">post_time_step</a>();</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a83643df9c535d580cd122248bfaea2f3">check_field_existence</a>(<span class="keyword">const</span> std::string&amp; name);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#adbc8d1ed50086d853aa3f5c569d7dbc5">get_field_component</a>(</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>        <span class="keyword">const</span> std::string&amp; name, <span class="keyword">const</span> amrex::Vector&lt;std::string&gt;&amp; varnames);</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a3e0b5b0dec949d60d2ef8ecb5e1dce43">set_ics</a>();</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span> </div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    [[nodiscard]] std::string <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a5b00ea3a0f4445a415ed8061def3e9fd">plot_file_name</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> step) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    [[nodiscard]] std::string <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a931e7876f1853cc4c42373c82820ce2a">chk_file_name</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> step) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span> </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    [[nodiscard]] amrex::Vector&lt;std::string&gt; <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a9d99d17b8514b6251b7711959c2deba6">plot_file_var_names</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span> </div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ae734db0eea8651621eb07bbf6c8db9f3">write_plot_file</a>();</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span> </div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ae3d9cc7f3a32593dbed6aa1899aed241">write_checkpoint_file</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span> </div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#aad6ae6cbed80abcb958b023437280061">read_checkpoint_file</a>();</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span> </div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ab8b581263b8652535599daa49eb1d922">write_info_file</a>(<span class="keyword">const</span> std::string&amp; path) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span> </div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a6154cf5ada53b75fd6c5f609de9c5b11">write_rng_file</a>(<span class="keyword">const</span> std::string&amp; path) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a881660503379f75fe58ac988149a4b63">read_rng_file</a>(<span class="keyword">const</span> std::string&amp; path) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span> </div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#ad1b05918d14d80fa87d906c67d7f2931">init_rng</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span> </div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#af219b4e2f38e0e7870f3fdd7b862861c">write_data_file</a>(<span class="keyword">const</span> <span class="keywordtype">bool</span> is_init) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span> </div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classspades_1_1_s_p_a_d_e_s.html#a9736b6ab6437acce27bb8b8ace6f0a0f">summary</a>();</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span> </div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#af95708913ba6c19b4e077c7acc46f85f">  273</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#af95708913ba6c19b4e077c7acc46f85f">m_istep</a>{0};</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span> </div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a77605bb658da3673e7929a0f638e1bdc">  276</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a77605bb658da3673e7929a0f638e1bdc">m_gvt</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#a2ce2bde1744d014fa09f2db6d50e1417">constants::LOW_NUM</a>};</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span> </div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a7cebd411bcbde2739f14f4686897d8e7">  279</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a7cebd411bcbde2739f14f4686897d8e7">m_t_new</a>{0.0};</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span> </div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a1244149bb29064eaa18803a5d6792a1d">  282</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a1244149bb29064eaa18803a5d6792a1d">m_t_old</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#a2ce2bde1744d014fa09f2db6d50e1417">constants::LOW_NUM</a>};</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span> </div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ae48c7d7da49afe2a87c34d2c9455383d">  285</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ae48c7d7da49afe2a87c34d2c9455383d">m_dt</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#a0f9b6f6c2921dda3b321bd4ee0d9183d">constants::LARGE_NUM</a>};</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span> </div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a4bb9ed7b23c071a72941b090d7869b99">  288</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a4bb9ed7b23c071a72941b090d7869b99">m_lbts</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#a2ce2bde1744d014fa09f2db6d50e1417">constants::LOW_NUM</a>};</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span> </div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a928318a884be7e3a8607024af30689ea">  291</a></span>    amrex::Long <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a928318a884be7e3a8607024af30689ea">m_ncells</a>{0};</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span> </div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#aceeccec0d5997a62a27cae739803186d">  294</a></span>    amrex::Long <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#aceeccec0d5997a62a27cae739803186d">m_ntotal_messages</a>{0};</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span> </div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a274b97fe609ca74718221c8e74394afd">  297</a></span>    amrex::Vector&lt;amrex::Long&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a274b97fe609ca74718221c8e74394afd">m_nmessages</a>;</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span> </div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a70409ae72be108ae1878fed006e9888d">  300</a></span>    amrex::Vector&lt;amrex::Long&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a70409ae72be108ae1878fed006e9888d">m_min_messages</a>;</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span> </div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ac821f101686b3e497514198a1585cc7c">  303</a></span>    amrex::Vector&lt;amrex::Long&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ac821f101686b3e497514198a1585cc7c">m_max_messages</a>;</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span> </div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#af08c3220f6eef67cba4892f7701f6c59">  306</a></span>    amrex::Long <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#af08c3220f6eef67cba4892f7701f6c59">m_nprocessed_messages</a>{0};</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span> </div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a57e326984b5f333ee49dbf847707ef67">  309</a></span>    amrex::Long <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a57e326984b5f333ee49dbf847707ef67">m_ntotal_entities</a>{0};</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span> </div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ace8df15945ed6c11fed3fd3641a2eef5">  312</a></span>    amrex::Long <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ace8df15945ed6c11fed3fd3641a2eef5">m_nentities</a>{0};</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span> </div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a53adf9eb8ddeebd505b4494dca3b654b">  315</a></span>    amrex::Vector&lt;int&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a53adf9eb8ddeebd505b4494dca3b654b">m_nrollbacks</a>;</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span> </div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a73be7cde2289a158c7aebf54473b6e89">  318</a></span>    amrex::Vector&lt;amrex::Real&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a73be7cde2289a158c7aebf54473b6e89">m_min_timings</a>;</div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span> </div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a45e7e88d7c4dc6e621126d59c865608a">  321</a></span>    amrex::Vector&lt;amrex::Real&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a45e7e88d7c4dc6e621126d59c865608a">m_max_timings</a>;</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span> </div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a6f07ead6dcd3948c928e9275e492bfea">  324</a></span>    amrex::Vector&lt;amrex::Real&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a6f07ead6dcd3948c928e9275e492bfea">m_avg_timings</a>;</div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span> </div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a0b971a9cb29d121fe9d5331eb10b2d58">  327</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a0b971a9cb29d121fe9d5331eb10b2d58">m_max_step</a> = std::numeric_limits&lt;int&gt;::max();</div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span> </div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#aab87746d8ef54c606306be87fbecab5e">  330</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#aab87746d8ef54c606306be87fbecab5e">m_stop_time</a> = std::numeric_limits&lt;amrex::Real&gt;::max();</div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span> </div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a29892037b55afc28d4b7ce2a8266e1e8">  333</a></span>    amrex::Vector&lt;std::string&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a29892037b55afc28d4b7ce2a8266e1e8">m_spades_varnames</a>;</div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span> </div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a93ea77c09ee9d0811957260de29323b4">  336</a></span>    amrex::Vector&lt;std::string&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a93ea77c09ee9d0811957260de29323b4">m_state_varnames</a>;</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span> </div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#aed07a87a874a0c77377aa08990aa0548">  339</a></span>    amrex::Vector&lt;std::string&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#aed07a87a874a0c77377aa08990aa0548">m_message_counts_varnames</a>;</div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span> </div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a135e640625634cf30d7b98626c8ff11d">  342</a></span>    amrex::Vector&lt;std::string&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a135e640625634cf30d7b98626c8ff11d">m_entity_counts_varnames</a>;</div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span> </div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ab03791b39fbd626ed74157331007e757">  345</a></span>    amrex::MultiFab <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ab03791b39fbd626ed74157331007e757">m_state</a>;</div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span> </div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ad5c451993aaa00ec4a779650f0ed3740">  348</a></span>    amrex::MultiFab <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ad5c451993aaa00ec4a779650f0ed3740">m_plt_mf</a>;</div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span> </div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a77f51498510774de3a409ee68e11335c">  351</a></span>    <span class="keyword">const</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a77f51498510774de3a409ee68e11335c">m_state_ngrow</a> = 0;</div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span> </div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a60bcb891ed3282524315522187927610">  354</a></span>    std::string <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a60bcb891ed3282524315522187927610">m_restart_chkfile</a>;</div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span> </div>
+<div class="line"><a id="l00357" name="l00357"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#af64be0d5960e8c124f38ca2910096e4c">  357</a></span>    std::string <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#af64be0d5960e8c124f38ca2910096e4c">m_plot_file</a>{<span class="stringliteral">&quot;plt&quot;</span>};</div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span> </div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#af1adc020dce8bdd19f6851bfd71e87fc">  360</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#af1adc020dce8bdd19f6851bfd71e87fc">m_plot_int</a> = -1;</div>
+<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span> </div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a79a2fcae27d678bf652f83506b5cf3de">  363</a></span>    std::string <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a79a2fcae27d678bf652f83506b5cf3de">m_chk_file</a>{<span class="stringliteral">&quot;chk&quot;</span>};</div>
+<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span> </div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#abef307644edbc15295eb860a77355d20">  366</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#abef307644edbc15295eb860a77355d20">m_chk_int</a> = -1;</div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span> </div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#abfa5606a00bd9dcaf48eb539b9b7ebba">  369</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#abfa5606a00bd9dcaf48eb539b9b7ebba">m_nfiles</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#ab21d9f50dc3239c21236686a1ac82d16">constants::TWO_TO_EIGHT</a>};</div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span> </div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#aaad48095e50547906fa1ec79464a6d57">  372</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#aaad48095e50547906fa1ec79464a6d57">m_file_name_digits</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#a1509119ea787287e2a15000a0e833eef">constants::FILE_NAME_DIGITS</a>};</div>
+<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span> </div>
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a4d6437e2bca8e3c5c3c9f208efa1e049">  375</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a4d6437e2bca8e3c5c3c9f208efa1e049">m_rng_file_name_digits</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#aa7ef51f1a988a8e625b825cac2416675">constants::RNG_FILE_NAME_DIGITS</a>};</div>
+<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span> </div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ac9e054d40d5cf505f01c21cbd08233b8">  378</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ac9e054d40d5cf505f01c21cbd08233b8">m_write_messages</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span> </div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ac8d12e480eb1c15cfdc3f34dba575a04">  381</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ac8d12e480eb1c15cfdc3f34dba575a04">m_write_entities</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span> </div>
+<div class="line"><a id="l00384" name="l00384"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a668ebef9bd2ca9f8d1b2ae882ceb458e">  384</a></span>    std::string <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a668ebef9bd2ca9f8d1b2ae882ceb458e">m_data_fname</a>{<span class="stringliteral">&quot;data.csv&quot;</span>};</div>
+<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span> </div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ae3acd771f86518191498215a2f7710c9">  387</a></span>    <span class="keyword">const</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ae3acd771f86518191498215a2f7710c9">m_data_precision</a>{6};</div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span> </div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#affa81ba2c5b83df262d82f832c5e4945">  390</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#affa81ba2c5b83df262d82f832c5e4945">m_lookahead</a>{1.0};</div>
+<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span> </div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ae1c75df05f5bb633b050040e29b9fbe6">  393</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ae1c75df05f5bb633b050040e29b9fbe6">m_window_size</a>{<a class="code hl_variable" href="namespacespades_1_1constants.html#a0f9b6f6c2921dda3b321bd4ee0d9183d">constants::LARGE_NUM</a>};</div>
+<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span> </div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ab988aed86e2a8bbc86cd17a49bea486b">  396</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ab988aed86e2a8bbc86cd17a49bea486b">m_messages_per_step</a>{1};</div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span> </div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a00c97e0efd7e73e20471e98aa1eb3272">  399</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a00c97e0efd7e73e20471e98aa1eb3272">m_entities_per_lp</a>{1};</div>
+<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span> </div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a1d51ce2b5270690f0a07379f168f8d0f">  402</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a1d51ce2b5270690f0a07379f168f8d0f">m_messages_per_lp</a>{1};</div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span> </div>
+<div class="line"><a id="l00405" name="l00405"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a858ae40b1cc251160fb17c0ee8f199b9">  405</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a858ae40b1cc251160fb17c0ee8f199b9">m_seed</a>{0};</div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span> </div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a17f19495e63d55b3bd3369fd2f12b3b1">  410</a></span>    amrex::Real <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a17f19495e63d55b3bd3369fd2f12b3b1">m_lambda</a>{1.0};</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span> </div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ae2998e077b65d77d798a3521fc1ecdb4">  413</a></span>    std::unique_ptr&lt;ic::InitializerBase&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ae2998e077b65d77d798a3521fc1ecdb4">m_ic_op</a>;</div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span> </div>
+<div class="line"><a id="l00416" name="l00416"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a1260a97755f14307016df54a24698d1e">  416</a></span>    std::string <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a1260a97755f14307016df54a24698d1e">m_ic_type</a>;</div>
+<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span> </div>
+<div class="line"><a id="l00419" name="l00419"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#a730b22b90fa68f2a8337190e2797f182">  419</a></span>    std::unique_ptr&lt;particles::MessageParticleContainer&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#a730b22b90fa68f2a8337190e2797f182">m_message_pc</a>;</div>
+<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span> </div>
+<div class="line"><a id="l00422" name="l00422"></a><span class="lineno"><a class="line" href="classspades_1_1_s_p_a_d_e_s.html#ac1bdf2afc47b54a9011899a2ffdb6d72">  422</a></span>    std::unique_ptr&lt;particles::EntityParticleContainer&gt; <a class="code hl_variable" href="classspades_1_1_s_p_a_d_e_s.html#ac1bdf2afc47b54a9011899a2ffdb6d72">m_entity_pc</a>;</div>
+<div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span>};</div>
+</div>
+<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>} <span class="comment">// namespace spades</span></div>
+<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="a_constants_8_h_html"><div class="ttname"><a href="_constants_8_h.html">Constants.H</a></div></div>
+<div class="ttc" id="a_entity_particle_container_8_h_html"><div class="ttname"><a href="_entity_particle_container_8_h.html">EntityParticleContainer.H</a></div></div>
+<div class="ttc" id="a_i_c_8_h_html"><div class="ttname"><a href="_i_c_8_h.html">IC.H</a></div></div>
+<div class="ttc" id="a_message_particle_container_8_h_html"><div class="ttname"><a href="_message_particle_container_8_h.html">MessageParticleContainer.H</a></div></div>
+<div class="ttc" id="a_spades_particle_container_8_h_html"><div class="ttname"><a href="_spades_particle_container_8_h.html">SpadesParticleContainer.H</a></div></div>
+<div class="ttc" id="a_utilities_8_h_html"><div class="ttname"><a href="_utilities_8_h.html">Utilities.H</a></div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html">spades::SPADES</a></div><div class="ttdoc">Main SPADES class.</div><div class="ttdef"><b>Definition</b> SPADES.H:28</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a00c97e0efd7e73e20471e98aa1eb3272"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a00c97e0efd7e73e20471e98aa1eb3272">spades::SPADES::m_entities_per_lp</a></div><div class="ttdeci">int m_entities_per_lp</div><div class="ttdoc">Number of entities per logical process (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:399</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a0690c31594c265dcf9dcc47d49d4e0e6"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a0690c31594c265dcf9dcc47d49d4e0e6">spades::SPADES::est_time_step</a></div><div class="ttdeci">static amrex::Real est_time_step()</div><div class="ttdoc">Compute the time step.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:890</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a0b81ab952fa2884baa10af3a0c79de6e"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a0b81ab952fa2884baa10af3a0c79de6e">spades::SPADES::advance</a></div><div class="ttdeci">void advance(const amrex::Real time, const amrex::Real dt)</div><div class="ttdoc">Advance for a single time step.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:280</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a0b971a9cb29d121fe9d5331eb10b2d58"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a0b971a9cb29d121fe9d5331eb10b2d58">spades::SPADES::m_max_step</a></div><div class="ttdeci">int m_max_step</div><div class="ttdoc">Maximum number of steps.</div><div class="ttdef"><b>Definition</b> SPADES.H:327</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a111e685058926419cd49a570f430e57d"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a111e685058926419cd49a570f430e57d">spades::SPADES::initialize_state</a></div><div class="ttdeci">void initialize_state()</div><div class="ttdoc">Initialize state.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:937</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a1244149bb29064eaa18803a5d6792a1d"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a1244149bb29064eaa18803a5d6792a1d">spades::SPADES::m_t_old</a></div><div class="ttdeci">amrex::Real m_t_old</div><div class="ttdoc">Old time.</div><div class="ttdef"><b>Definition</b> SPADES.H:282</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a1260a97755f14307016df54a24698d1e"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a1260a97755f14307016df54a24698d1e">spades::SPADES::m_ic_type</a></div><div class="ttdeci">std::string m_ic_type</div><div class="ttdoc">Initial condition type (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:416</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a135e640625634cf30d7b98626c8ff11d"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a135e640625634cf30d7b98626c8ff11d">spades::SPADES::m_entity_counts_varnames</a></div><div class="ttdeci">amrex::Vector&lt; std::string &gt; m_entity_counts_varnames</div><div class="ttdoc">Entity count names for output.</div><div class="ttdef"><b>Definition</b> SPADES.H:342</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a17f19495e63d55b3bd3369fd2f12b3b1"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a17f19495e63d55b3bd3369fd2f12b3b1">spades::SPADES::m_lambda</a></div><div class="ttdeci">amrex::Real m_lambda</div><div class="ttdef"><b>Definition</b> SPADES.H:410</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a1a48992e0abbafdfd94f0b43551c3efe"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a1a48992e0abbafdfd94f0b43551c3efe">spades::SPADES::post_time_step</a></div><div class="ttdeci">static void post_time_step()</div><div class="ttdoc">Perform work after a time step.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:354</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a1d51ce2b5270690f0a07379f168f8d0f"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a1d51ce2b5270690f0a07379f168f8d0f">spades::SPADES::m_messages_per_lp</a></div><div class="ttdeci">int m_messages_per_lp</div><div class="ttdoc">Number of messages per logical process (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:402</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a274b97fe609ca74718221c8e74394afd"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a274b97fe609ca74718221c8e74394afd">spades::SPADES::m_nmessages</a></div><div class="ttdeci">amrex::Vector&lt; amrex::Long &gt; m_nmessages</div><div class="ttdoc">Message counts.</div><div class="ttdef"><b>Definition</b> SPADES.H:297</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a278220b5ce944ada40bc417219a593b4"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a278220b5ce944ada40bc417219a593b4">spades::SPADES::ErrorEst</a></div><div class="ttdeci">void ErrorEst(int, amrex::TagBoxArray &amp;, amrex::Real, int) override</div><div class="ttdoc">Tag cells for refinement.</div><div class="ttdef"><b>Definition</b> SPADES.H:107</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a29892037b55afc28d4b7ce2a8266e1e8"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a29892037b55afc28d4b7ce2a8266e1e8">spades::SPADES::m_spades_varnames</a></div><div class="ttdeci">amrex::Vector&lt; std::string &gt; m_spades_varnames</div><div class="ttdoc">All variable names for output.</div><div class="ttdef"><b>Definition</b> SPADES.H:333</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a30fb207b5d878663ebf2b17cffc473e8"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a30fb207b5d878663ebf2b17cffc473e8">spades::SPADES::init_data</a></div><div class="ttdeci">void init_data()</div><div class="ttdoc">Initializes data.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:69</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a35090846a325c8df16565628ebd0d8c6"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a35090846a325c8df16565628ebd0d8c6">spades::SPADES::ClearLevel</a></div><div class="ttdeci">void ClearLevel(int lev) override</div><div class="ttdoc">Delete level data.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:956</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a3e0b5b0dec949d60d2ef8ecb5e1dce43"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a3e0b5b0dec949d60d2ef8ecb5e1dce43">spades::SPADES::set_ics</a></div><div class="ttdeci">void set_ics()</div><div class="ttdoc">Set the user defined IC functions.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:965</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a45e7e88d7c4dc6e621126d59c865608a"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a45e7e88d7c4dc6e621126d59c865608a">spades::SPADES::m_max_timings</a></div><div class="ttdeci">amrex::Vector&lt; amrex::Real &gt; m_max_timings</div><div class="ttdoc">Max timings for each step.</div><div class="ttdef"><b>Definition</b> SPADES.H:321</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a46f92068ce623b245dc5a07279419076"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a46f92068ce623b245dc5a07279419076">spades::SPADES::compute_dt</a></div><div class="ttdeci">void compute_dt()</div><div class="ttdoc">Wrapper for EstTimeStep.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:871</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a4bb9ed7b23c071a72941b090d7869b99"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a4bb9ed7b23c071a72941b090d7869b99">spades::SPADES::m_lbts</a></div><div class="ttdeci">amrex::Real m_lbts</div><div class="ttdoc">Lower bound on incoming time stamp.</div><div class="ttdef"><b>Definition</b> SPADES.H:288</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a4d6437e2bca8e3c5c3c9f208efa1e049"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a4d6437e2bca8e3c5c3c9f208efa1e049">spades::SPADES::m_rng_file_name_digits</a></div><div class="ttdeci">int m_rng_file_name_digits</div><div class="ttdoc">Digits used in the rng seed file names.</div><div class="ttdef"><b>Definition</b> SPADES.H:375</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a4f9fe635aff84c88ddbc02fe531a0efc"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a4f9fe635aff84c88ddbc02fe531a0efc">spades::SPADES::rollback_statistics</a></div><div class="ttdeci">void rollback_statistics()</div><div class="ttdoc">Print rollback statistics.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:777</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a53adf9eb8ddeebd505b4494dca3b654b"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a53adf9eb8ddeebd505b4494dca3b654b">spades::SPADES::m_nrollbacks</a></div><div class="ttdeci">amrex::Vector&lt; int &gt; m_nrollbacks</div><div class="ttdoc">Number of rollbacks.</div><div class="ttdef"><b>Definition</b> SPADES.H:315</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a57e326984b5f333ee49dbf847707ef67"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a57e326984b5f333ee49dbf847707ef67">spades::SPADES::m_ntotal_entities</a></div><div class="ttdeci">amrex::Long m_ntotal_entities</div><div class="ttdoc">Total entity count.</div><div class="ttdef"><b>Definition</b> SPADES.H:309</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a5b00ea3a0f4445a415ed8061def3e9fd"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a5b00ea3a0f4445a415ed8061def3e9fd">spades::SPADES::plot_file_name</a></div><div class="ttdeci">std::string plot_file_name(const int step) const</div><div class="ttdoc">Get plotfile name.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1047</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a60bcb891ed3282524315522187927610"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a60bcb891ed3282524315522187927610">spades::SPADES::m_restart_chkfile</a></div><div class="ttdeci">std::string m_restart_chkfile</div><div class="ttdoc">Restart file name, restart from this checkpoint if it is not empty.</div><div class="ttdef"><b>Definition</b> SPADES.H:354</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a6154cf5ada53b75fd6c5f609de9c5b11"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a6154cf5ada53b75fd6c5f609de9c5b11">spades::SPADES::write_rng_file</a></div><div class="ttdeci">void write_rng_file(const std::string &amp;path) const</div><div class="ttdoc">Write random number generator seed info.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1343</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a63f0eec354a17c365e13f2268872c154"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a63f0eec354a17c365e13f2268872c154">spades::SPADES::time_step</a></div><div class="ttdeci">void time_step(const amrex::Real time)</div><div class="ttdoc">Advance by the time step.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:265</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a668ebef9bd2ca9f8d1b2ae882ceb458e"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a668ebef9bd2ca9f8d1b2ae882ceb458e">spades::SPADES::m_data_fname</a></div><div class="ttdeci">std::string m_data_fname</div><div class="ttdoc">Filename for simulation data.</div><div class="ttdef"><b>Definition</b> SPADES.H:384</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a6f07ead6dcd3948c928e9275e492bfea"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a6f07ead6dcd3948c928e9275e492bfea">spades::SPADES::m_avg_timings</a></div><div class="ttdeci">amrex::Vector&lt; amrex::Real &gt; m_avg_timings</div><div class="ttdoc">Average timings for each step.</div><div class="ttdef"><b>Definition</b> SPADES.H:324</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a70409ae72be108ae1878fed006e9888d"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a70409ae72be108ae1878fed006e9888d">spades::SPADES::m_min_messages</a></div><div class="ttdeci">amrex::Vector&lt; amrex::Long &gt; m_min_messages</div><div class="ttdoc">Min of message counts.</div><div class="ttdef"><b>Definition</b> SPADES.H:300</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a730b22b90fa68f2a8337190e2797f182"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a730b22b90fa68f2a8337190e2797f182">spades::SPADES::m_message_pc</a></div><div class="ttdeci">std::unique_ptr&lt; particles::MessageParticleContainer &gt; m_message_pc</div><div class="ttdoc">Message particle container.</div><div class="ttdef"><b>Definition</b> SPADES.H:419</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a73be7cde2289a158c7aebf54473b6e89"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a73be7cde2289a158c7aebf54473b6e89">spades::SPADES::m_min_timings</a></div><div class="ttdeci">amrex::Vector&lt; amrex::Real &gt; m_min_timings</div><div class="ttdoc">Min timings for each step.</div><div class="ttdef"><b>Definition</b> SPADES.H:318</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a77605bb658da3673e7929a0f638e1bdc"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a77605bb658da3673e7929a0f638e1bdc">spades::SPADES::m_gvt</a></div><div class="ttdeci">amrex::Real m_gvt</div><div class="ttdoc">Global virtual time.</div><div class="ttdef"><b>Definition</b> SPADES.H:276</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a77f51498510774de3a409ee68e11335c"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a77f51498510774de3a409ee68e11335c">spades::SPADES::m_state_ngrow</a></div><div class="ttdeci">const int m_state_ngrow</div><div class="ttdoc">Number of ghost cells.</div><div class="ttdef"><b>Definition</b> SPADES.H:351</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a79a2fcae27d678bf652f83506b5cf3de"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a79a2fcae27d678bf652f83506b5cf3de">spades::SPADES::m_chk_file</a></div><div class="ttdeci">std::string m_chk_file</div><div class="ttdoc">Checkpoint prefix (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:363</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a7cebd411bcbde2739f14f4686897d8e7"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a7cebd411bcbde2739f14f4686897d8e7">spades::SPADES::m_t_new</a></div><div class="ttdeci">amrex::Real m_t_new</div><div class="ttdoc">New time.</div><div class="ttdef"><b>Definition</b> SPADES.H:279</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a83643df9c535d580cd122248bfaea2f3"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a83643df9c535d580cd122248bfaea2f3">spades::SPADES::check_field_existence</a></div><div class="ttdeci">bool check_field_existence(const std::string &amp;name)</div><div class="ttdoc">Check if a field exists.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:978</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a858ae40b1cc251160fb17c0ee8f199b9"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a858ae40b1cc251160fb17c0ee8f199b9">spades::SPADES::m_seed</a></div><div class="ttdeci">int m_seed</div><div class="ttdoc">Random number generator seed (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:405</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a869e760e32cca37d15b3995ec85215e6"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a869e760e32cca37d15b3995ec85215e6">spades::SPADES::MakeNewLevelFromCoarse</a></div><div class="ttdeci">void MakeNewLevelFromCoarse(int lev, amrex::Real time, const amrex::BoxArray &amp;ba, const amrex::DistributionMapping &amp;dm) override</div><div class="ttdoc">Make a new level.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:896</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a87ad184e18217adfb1fc08cdf8892622"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a87ad184e18217adfb1fc08cdf8892622">spades::SPADES::plot_file_mf</a></div><div class="ttdeci">void plot_file_mf()</div><div class="ttdoc">Put together the MultiFab for output.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1057</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a881660503379f75fe58ac988149a4b63"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a881660503379f75fe58ac988149a4b63">spades::SPADES::read_rng_file</a></div><div class="ttdeci">void read_rng_file(const std::string &amp;path) const</div><div class="ttdoc">Read random number generator seed info.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1358</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a928318a884be7e3a8607024af30689ea"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a928318a884be7e3a8607024af30689ea">spades::SPADES::m_ncells</a></div><div class="ttdeci">amrex::Long m_ncells</div><div class="ttdoc">Cell count.</div><div class="ttdef"><b>Definition</b> SPADES.H:291</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a931e7876f1853cc4c42373c82820ce2a"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a931e7876f1853cc4c42373c82820ce2a">spades::SPADES::chk_file_name</a></div><div class="ttdeci">std::string chk_file_name(const int step) const</div><div class="ttdoc">Get checkpoint file name.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1052</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a93ea77c09ee9d0811957260de29323b4"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a93ea77c09ee9d0811957260de29323b4">spades::SPADES::m_state_varnames</a></div><div class="ttdeci">amrex::Vector&lt; std::string &gt; m_state_varnames</div><div class="ttdoc">State variable names for output.</div><div class="ttdef"><b>Definition</b> SPADES.H:336</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a9736b6ab6437acce27bb8b8ace6f0a0f"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a9736b6ab6437acce27bb8b8ace6f0a0f">spades::SPADES::summary</a></div><div class="ttdeci">void summary()</div><div class="ttdoc">Compute summary data.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:312</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a9d99d17b8514b6251b7711959c2deba6"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a9d99d17b8514b6251b7711959c2deba6">spades::SPADES::plot_file_var_names</a></div><div class="ttdeci">amrex::Vector&lt; std::string &gt; plot_file_var_names() const</div><div class="ttdoc">Set plotfile variables names.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1042</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_a9dadb2f517014aa3fe8e9f841535e836"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#a9dadb2f517014aa3fe8e9f841535e836">spades::SPADES::update_lbts</a></div><div class="ttdeci">void update_lbts()</div><div class="ttdoc">Update the Lower Bound on Incoming Time Stamp.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:830</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aa1c24bffb946f1f139a3164ecf5955ba"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aa1c24bffb946f1f139a3164ecf5955ba">spades::SPADES::MakeNewLevelFromScratch</a></div><div class="ttdeci">void MakeNewLevelFromScratch(int lev, amrex::Real time, const amrex::BoxArray &amp;ba, const amrex::DistributionMapping &amp;dm) override</div><div class="ttdoc">Make a level from scratch.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:906</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aa7d548c45a501ed927441e3d38187139"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aa7d548c45a501ed927441e3d38187139">spades::SPADES::read_parameters</a></div><div class="ttdeci">void read_parameters()</div><div class="ttdoc">Read parameters.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:123</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aaad48095e50547906fa1ec79464a6d57"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aaad48095e50547906fa1ec79464a6d57">spades::SPADES::m_file_name_digits</a></div><div class="ttdeci">int m_file_name_digits</div><div class="ttdoc">Digits used in the plotfile and checkpoint file names.</div><div class="ttdef"><b>Definition</b> SPADES.H:372</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aab87746d8ef54c606306be87fbecab5e"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aab87746d8ef54c606306be87fbecab5e">spades::SPADES::m_stop_time</a></div><div class="ttdeci">amrex::Real m_stop_time</div><div class="ttdoc">Stop time.</div><div class="ttdef"><b>Definition</b> SPADES.H:330</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aad6ae6cbed80abcb958b023437280061"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aad6ae6cbed80abcb958b023437280061">spades::SPADES::read_checkpoint_file</a></div><div class="ttdeci">void read_checkpoint_file()</div><div class="ttdoc">Read checkpoint file from disk.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1194</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ab02025cea761e171ae2822f294efefa9"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ab02025cea761e171ae2822f294efefa9">spades::SPADES::SPADES</a></div><div class="ttdeci">SPADES()</div><div class="ttdef"><b>Definition</b> SPADES.cpp:6</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ab03791b39fbd626ed74157331007e757"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ab03791b39fbd626ed74157331007e757">spades::SPADES::m_state</a></div><div class="ttdeci">amrex::MultiFab m_state</div><div class="ttdoc">Multifabs to store the solution.</div><div class="ttdef"><b>Definition</b> SPADES.H:345</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ab8b581263b8652535599daa49eb1d922"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ab8b581263b8652535599daa49eb1d922">spades::SPADES::write_info_file</a></div><div class="ttdeci">void write_info_file(const std::string &amp;path) const</div><div class="ttdoc">Write job info to disk.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1288</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ab988aed86e2a8bbc86cd17a49bea486b"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ab988aed86e2a8bbc86cd17a49bea486b">spades::SPADES::m_messages_per_step</a></div><div class="ttdeci">int m_messages_per_step</div><div class="ttdoc">Number of messages to process in each step (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:396</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_abef307644edbc15295eb860a77355d20"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#abef307644edbc15295eb860a77355d20">spades::SPADES::m_chk_int</a></div><div class="ttdeci">int m_chk_int</div><div class="ttdoc">Checkpoint frequency (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:366</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_abfa5606a00bd9dcaf48eb539b9b7ebba"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#abfa5606a00bd9dcaf48eb539b9b7ebba">spades::SPADES::m_nfiles</a></div><div class="ttdeci">int m_nfiles</div><div class="ttdoc">Number of plot and checkpoint data files per write.</div><div class="ttdef"><b>Definition</b> SPADES.H:369</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ac061c297f58d191b31b5ff6529a03e87"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ac061c297f58d191b31b5ff6529a03e87">spades::SPADES::process_messages</a></div><div class="ttdeci">void process_messages()</div><div class="ttdoc">Process messages.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:359</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ac1bdf2afc47b54a9011899a2ffdb6d72"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ac1bdf2afc47b54a9011899a2ffdb6d72">spades::SPADES::m_entity_pc</a></div><div class="ttdeci">std::unique_ptr&lt; particles::EntityParticleContainer &gt; m_entity_pc</div><div class="ttdoc">Entity article container.</div><div class="ttdef"><b>Definition</b> SPADES.H:422</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ac6c7aad5622d65790f74c7f56c788e83"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ac6c7aad5622d65790f74c7f56c788e83">spades::SPADES::LEV</a></div><div class="ttdeci">static constexpr int LEV</div><div class="ttdoc">Level index.</div><div class="ttdef"><b>Definition</b> SPADES.H:166</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ac821f101686b3e497514198a1585cc7c"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ac821f101686b3e497514198a1585cc7c">spades::SPADES::m_max_messages</a></div><div class="ttdeci">amrex::Vector&lt; amrex::Long &gt; m_max_messages</div><div class="ttdoc">Max of message counts.</div><div class="ttdef"><b>Definition</b> SPADES.H:303</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ac8d12e480eb1c15cfdc3f34dba575a04"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ac8d12e480eb1c15cfdc3f34dba575a04">spades::SPADES::m_write_entities</a></div><div class="ttdeci">bool m_write_entities</div><div class="ttdoc">Boolean to output entities (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:381</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ac9e054d40d5cf505f01c21cbd08233b8"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ac9e054d40d5cf505f01c21cbd08233b8">spades::SPADES::m_write_messages</a></div><div class="ttdeci">bool m_write_messages</div><div class="ttdoc">Boolean to output messages (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:378</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ace8df15945ed6c11fed3fd3641a2eef5"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ace8df15945ed6c11fed3fd3641a2eef5">spades::SPADES::m_nentities</a></div><div class="ttdeci">amrex::Long m_nentities</div><div class="ttdoc">Entity count.</div><div class="ttdef"><b>Definition</b> SPADES.H:312</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aceeccec0d5997a62a27cae739803186d"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aceeccec0d5997a62a27cae739803186d">spades::SPADES::m_ntotal_messages</a></div><div class="ttdeci">amrex::Long m_ntotal_messages</div><div class="ttdoc">Total message count.</div><div class="ttdef"><b>Definition</b> SPADES.H:294</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ad1b05918d14d80fa87d906c67d7f2931"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ad1b05918d14d80fa87d906c67d7f2931">spades::SPADES::init_rng</a></div><div class="ttdeci">void init_rng() const</div><div class="ttdoc">Initialize the random number generator.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1318</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ad5c451993aaa00ec4a779650f0ed3740"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ad5c451993aaa00ec4a779650f0ed3740">spades::SPADES::m_plt_mf</a></div><div class="ttdeci">amrex::MultiFab m_plt_mf</div><div class="ttdoc">Multifabs for output.</div><div class="ttdef"><b>Definition</b> SPADES.H:348</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_adbc8d1ed50086d853aa3f5c569d7dbc5"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#adbc8d1ed50086d853aa3f5c569d7dbc5">spades::SPADES::get_field_component</a></div><div class="ttdeci">static int get_field_component(const std::string &amp;name, const amrex::Vector&lt; std::string &gt; &amp;varnames)</div><div class="ttdoc">Get field component.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:988</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae1c75df05f5bb633b050040e29b9fbe6"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae1c75df05f5bb633b050040e29b9fbe6">spades::SPADES::m_window_size</a></div><div class="ttdeci">amrex::Real m_window_size</div><div class="ttdoc">Window size for processing messages (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:393</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae2998e077b65d77d798a3521fc1ecdb4"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae2998e077b65d77d798a3521fc1ecdb4">spades::SPADES::m_ic_op</a></div><div class="ttdeci">std::unique_ptr&lt; ic::InitializerBase &gt; m_ic_op</div><div class="ttdoc">Initial condition operator.</div><div class="ttdef"><b>Definition</b> SPADES.H:413</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae394ed7dee73e2bee962cf3eead24cc4"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae394ed7dee73e2bee962cf3eead24cc4">spades::SPADES::rollback</a></div><div class="ttdeci">void rollback()</div><div class="ttdoc">Perform rollback.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:539</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae3acd771f86518191498215a2f7710c9"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae3acd771f86518191498215a2f7710c9">spades::SPADES::m_data_precision</a></div><div class="ttdeci">const int m_data_precision</div><div class="ttdoc">Data precision for data output.</div><div class="ttdef"><b>Definition</b> SPADES.H:387</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae3d9cc7f3a32593dbed6aa1899aed241"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae3d9cc7f3a32593dbed6aa1899aed241">spades::SPADES::write_checkpoint_file</a></div><div class="ttdeci">void write_checkpoint_file() const</div><div class="ttdoc">Write checkpoint file to disk.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1107</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae48c7d7da49afe2a87c34d2c9455383d"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae48c7d7da49afe2a87c34d2c9455383d">spades::SPADES::m_dt</a></div><div class="ttdeci">amrex::Real m_dt</div><div class="ttdoc">Time step.</div><div class="ttdef"><b>Definition</b> SPADES.H:285</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae5ca9f54b193afcb4bdfd793bed30e84"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae5ca9f54b193afcb4bdfd793bed30e84">spades::SPADES::RemakeLevel</a></div><div class="ttdeci">void RemakeLevel(int lev, amrex::Real time, const amrex::BoxArray &amp;ba, const amrex::DistributionMapping &amp;dm) override</div><div class="ttdoc">Remake an existing level.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:946</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_ae734db0eea8651621eb07bbf6c8db9f3"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#ae734db0eea8651621eb07bbf6c8db9f3">spades::SPADES::write_plot_file</a></div><div class="ttdeci">void write_plot_file()</div><div class="ttdoc">Write plotfile to disk.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1084</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_aed07a87a874a0c77377aa08990aa0548"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#aed07a87a874a0c77377aa08990aa0548">spades::SPADES::m_message_counts_varnames</a></div><div class="ttdeci">amrex::Vector&lt; std::string &gt; m_message_counts_varnames</div><div class="ttdoc">Message count names for output.</div><div class="ttdef"><b>Definition</b> SPADES.H:339</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af08c3220f6eef67cba4892f7701f6c59"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af08c3220f6eef67cba4892f7701f6c59">spades::SPADES::m_nprocessed_messages</a></div><div class="ttdeci">amrex::Long m_nprocessed_messages</div><div class="ttdoc">Count of processed messages.</div><div class="ttdef"><b>Definition</b> SPADES.H:306</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af1adc020dce8bdd19f6851bfd71e87fc"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af1adc020dce8bdd19f6851bfd71e87fc">spades::SPADES::m_plot_int</a></div><div class="ttdeci">int m_plot_int</div><div class="ttdoc">Plotfile frequency (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:360</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af219b4e2f38e0e7870f3fdd7b862861c"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af219b4e2f38e0e7870f3fdd7b862861c">spades::SPADES::write_data_file</a></div><div class="ttdeci">void write_data_file(const bool is_init) const</div><div class="ttdoc">Write simulation information.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1381</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af38332640c7da1be964c522f05dace79"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af38332640c7da1be964c522f05dace79">spades::SPADES::init_particle_containers</a></div><div class="ttdeci">void init_particle_containers()</div><div class="ttdoc">Initialize the particle containers.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:112</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af3d4d2fbe90c38c164a2dd23d9471391"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af3d4d2fbe90c38c164a2dd23d9471391">spades::SPADES::evolve</a></div><div class="ttdeci">void evolve()</div><div class="ttdoc">Advance solution to final time.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:174</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af64be0d5960e8c124f38ca2910096e4c"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af64be0d5960e8c124f38ca2910096e4c">spades::SPADES::m_plot_file</a></div><div class="ttdeci">std::string m_plot_file</div><div class="ttdoc">Plotfile prefix (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:357</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_af95708913ba6c19b4e077c7acc46f85f"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#af95708913ba6c19b4e077c7acc46f85f">spades::SPADES::m_istep</a></div><div class="ttdeci">int m_istep</div><div class="ttdoc">Current step.</div><div class="ttdef"><b>Definition</b> SPADES.H:273</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_afaac93099a04dc1dbabe0f3fbf7dc553"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#afaac93099a04dc1dbabe0f3fbf7dc553">spades::SPADES::update_gvt</a></div><div class="ttdeci">void update_gvt()</div><div class="ttdoc">Update the global virtual time.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:821</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_afac1f03ed1acfee9d71df701a6f8c4a0"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#afac1f03ed1acfee9d71df701a6f8c4a0">spades::SPADES::~SPADES</a></div><div class="ttdeci">~SPADES() override</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_afe7daedd7175780b33eedc446c9fbce1"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#afe7daedd7175780b33eedc446c9fbce1">spades::SPADES::get_field</a></div><div class="ttdeci">std::unique_ptr&lt; amrex::MultiFab &gt; get_field(const std::string &amp;name, const int ngrow)</div><div class="ttdoc">Get a field based on a variable name.</div><div class="ttdef"><b>Definition</b> SPADES.cpp:1000</div></div>
+<div class="ttc" id="aclassspades_1_1_s_p_a_d_e_s_html_affa81ba2c5b83df262d82f832c5e4945"><div class="ttname"><a href="classspades_1_1_s_p_a_d_e_s.html#affa81ba2c5b83df262d82f832c5e4945">spades::SPADES::m_lookahead</a></div><div class="ttdeci">amrex::Real m_lookahead</div><div class="ttdoc">Lookahead value (optional user input)</div><div class="ttdef"><b>Definition</b> SPADES.H:390</div></div>
+<div class="ttc" id="anamespacespades_1_1constants_html_a0f9b6f6c2921dda3b321bd4ee0d9183d"><div class="ttname"><a href="namespacespades_1_1constants.html#a0f9b6f6c2921dda3b321bd4ee0d9183d">spades::constants::LARGE_NUM</a></div><div class="ttdeci">static constexpr amrex::Real LARGE_NUM</div><div class="ttdoc">A large number.</div><div class="ttdef"><b>Definition</b> Constants.H:34</div></div>
+<div class="ttc" id="anamespacespades_1_1constants_html_a1509119ea787287e2a15000a0e833eef"><div class="ttname"><a href="namespacespades_1_1constants.html#a1509119ea787287e2a15000a0e833eef">spades::constants::FILE_NAME_DIGITS</a></div><div class="ttdeci">static constexpr int FILE_NAME_DIGITS</div><div class="ttdoc">Number of digits to use in output file names.</div><div class="ttdef"><b>Definition</b> Constants.H:42</div></div>
+<div class="ttc" id="anamespacespades_1_1constants_html_a2ce2bde1744d014fa09f2db6d50e1417"><div class="ttname"><a href="namespacespades_1_1constants.html#a2ce2bde1744d014fa09f2db6d50e1417">spades::constants::LOW_NUM</a></div><div class="ttdeci">static constexpr amrex::Real LOW_NUM</div><div class="ttdoc">A large negative number.</div><div class="ttdef"><b>Definition</b> Constants.H:19</div></div>
+<div class="ttc" id="anamespacespades_1_1constants_html_aa7ef51f1a988a8e625b825cac2416675"><div class="ttname"><a href="namespacespades_1_1constants.html#aa7ef51f1a988a8e625b825cac2416675">spades::constants::RNG_FILE_NAME_DIGITS</a></div><div class="ttdeci">static constexpr int RNG_FILE_NAME_DIGITS</div><div class="ttdoc">Number of digits to use in random seed file names.</div><div class="ttdef"><b>Definition</b> Constants.H:45</div></div>
+<div class="ttc" id="anamespacespades_1_1constants_html_ab21d9f50dc3239c21236686a1ac82d16"><div class="ttname"><a href="namespacespades_1_1constants.html#ab21d9f50dc3239c21236686a1ac82d16">spades::constants::TWO_TO_EIGHT</a></div><div class="ttdeci">static constexpr int TWO_TO_EIGHT</div><div class="ttdef"><b>Definition</b> Constants.H:39</div></div>
+<div class="ttc" id="anamespacespades_html"><div class="ttname"><a href="namespacespades.html">spades</a></div><div class="ttdoc">Solver for PArallel Discrete Event Simulation.</div><div class="ttdef"><b>Definition</b> ConsoleIO.cpp:14</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.12.0
+</small></address>
+</div><!-- doc-content -->
+</body>
+</html>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, the Alliance for Sustainable Energy, LLC., through National Renewable Energy Laboratory. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

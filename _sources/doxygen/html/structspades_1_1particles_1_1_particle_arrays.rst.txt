@@ -1,0 +1,14 @@
+.. meta::0cbe56844ad04ddee3e4856c6964e2e8260da0eb83557bfbe6d3c3fdb885e703136be43db9ea55209e7c59ff308ab2c8737fbfd5ba914b131fb8ba154fe4df9f
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::ParticleArrays&lt; NReal, NInt, P, RT, IT &gt; Struct Template Reference
+
+ParticleArrays&lt; NReal, NInt, P, RT, IT &gt; Struct Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_particle_arrays.html
