@@ -39,9 +39,9 @@ parallel decomposition strategies, including the use of the Message
 Passing Interface (MPI) and OpenMP threading. All major GPU
 architectures (e.g., Intel, AMD, NVIDIA) are supported through the use
 of performance portability functionalities implemented in AMReX. The
-SPADES software is released in Department of Energy Software Record
+SPADES software is reported in NREL Software Record
 `SWR-24-99 “SPADES (Scalable Parallel Discrete Events Simulation)”
-<https://doi.org/10.11578/dc.20250905.4>`_.
+<https://doi.org/10.11578/dc.20250905.4>`_ (DOE CODE ID: 162638).
 
 
 Getting Started
