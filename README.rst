@@ -12,7 +12,7 @@ SPADES: Solver for PArallel Discrete Event Simulation
 .. |OpenSSF Badge| image:: https://www.bestpractices.dev/projects/11128/badge
    :target: https://www.bestpractices.dev/projects/11128
 
-.. |SWR| image:: https://img.shields.io/badge/SWR-10.11578/dc.20250905.4-green.svg
+.. |SWR| image:: https://img.shields.io/badge/SWR-10.11578/dc.20250905.4-blue.svg
    :target: https://doi.org/10.11578/dc.20250905.4
 
 .. |License Badge| image:: https://img.shields.io/badge/License-Apache%20v2.0-blue.svg
