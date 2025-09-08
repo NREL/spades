@@ -12,6 +12,9 @@ SPADES: Solver for PArallel Discrete Event Simulation
 .. |OpenSSF Badge| image:: https://www.bestpractices.dev/projects/11128/badge
    :target: https://www.bestpractices.dev/projects/11128
 
+.. |SWR| image:: https://img.shields.io/badge/SWR-10.11578/dc.20250905.4-green.svg
+   :target: https://doi.org/10.11578/dc.20250905.4
+
 .. |License Badge| image:: https://img.shields.io/badge/License-Apache%20v2.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -36,8 +39,9 @@ parallel decomposition strategies, including the use of the Message
 Passing Interface (MPI) and OpenMP threading. All major GPU
 architectures (e.g., Intel, AMD, NVIDIA) are supported through the use
 of performance portability functionalities implemented in AMReX. The
-SPADES software is released in NREL Software Record SWR-24-99 “SPADES
-(Scalable Parallel Discrete Events Simulation)”.
+SPADES software is released in Department of Energy Software Record
+`SWR-24-99 “SPADES (Scalable Parallel Discrete Events Simulation)”
+<https://doi.org/10.11578/dc.20250905.4>`_.
 
 
 Getting Started
