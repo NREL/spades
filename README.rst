@@ -1,7 +1,7 @@
 SPADES: Solver for PArallel Discrete Event Simulation
 -----------------------------------------------------
 
-|CI Badge| |Documentation Badge| |OpenSSF Badge| |License Badge| |AMReX Badge| |C++ Badge|
+|CI Badge| |Documentation Badge| |SWR| |OpenSSF Badge| |License Badge| |AMReX Badge| |C++ Badge|
 
 .. |CI Badge| image:: https://github.com/NREL/spades/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/NREL/spades/actions
