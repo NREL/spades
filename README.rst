@@ -1,7 +1,7 @@
 SPADES: Solver for PArallel Discrete Event Simulation
 -----------------------------------------------------
 
-|CI Badge| |Documentation Badge| |OpenSSF Badge| |License Badge| |AMReX Badge| |C++ Badge|
+|CI Badge| |Documentation Badge| |OpenSSF Badge| |SWR| |License Badge| |AMReX Badge| |C++ Badge|
 
 .. |CI Badge| image:: https://github.com/NREL/spades/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/NREL/spades/actions
@@ -14,6 +14,9 @@ SPADES: Solver for PArallel Discrete Event Simulation
 
 .. |License Badge| image:: https://img.shields.io/badge/License-Apache%20v2.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
+
+.. |SWR| image:: https://img.shields.io/badge/SWR-10.11578/dc.20250905.4-blue.svg
+   :target: https://doi.org/10.11578/dc.20250905.4
 
 .. |AMReX Badge| image:: https://img.shields.io/static/v1?label=%22powered%20by%22&message=%22AMReX%22&color=%22blue%22
    :target: https://amrex-codes.github.io/amrex/
@@ -36,8 +39,9 @@ parallel decomposition strategies, including the use of the Message
 Passing Interface (MPI) and OpenMP threading. All major GPU
 architectures (e.g., Intel, AMD, NVIDIA) are supported through the use
 of performance portability functionalities implemented in AMReX. The
-SPADES software is released in NREL Software Record SWR-24-99 “SPADES
-(Scalable Parallel Discrete Events Simulation)”.
+SPADES software is reported in NREL Software Record
+`SWR-24-99 “SPADES (Scalable Parallel Discrete Events Simulation)”
+<https://doi.org/10.11578/dc.20250905.4>`_ (DOE CODE ID: 162638).
 
 
 Getting Started
