@@ -1,0 +1,14 @@
+.. meta::58df3b379048a3b887d01d910399f771a6d6fa4be5d20776add4fcfd8ac9fd010c3de85dddb7b5bff4430e00ef2fd816a5973d0bd6428a0907ad48bf435e16e7
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::MarkMessageUndefined Struct Reference
+
+MarkMessageUndefined Struct Reference
+=====================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_mark_message_undefined.html

@@ -1,0 +1,13 @@
+<map id="spades::SPADES::read_checkpoint_file" name="spades::SPADES::read_checkpoint_file">
+<area shape="rect" id="Node000001" title="Read checkpoint file from disk." alt="" coords="5,87,168,127"/>
+<area shape="rect" id="Node000002" href="$namespacespades.html#a741b3219a89d09ae76ded1bdabbe9eb1" title="Skip to the next line in stream." alt="" coords="233,5,405,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,85,166,62,215,41,244,32,245,37,217,46,168,67,124,90"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1_s_p_a_d_e_s.html#af38332640c7da1be964c522f05dace79" title="Initialize the particle containers." alt="" coords="242,55,397,95"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="168,94,228,85,229,90,169,99"/>
+<area shape="rect" id="Node000004" href="$classspades_1_1_s_p_a_d_e_s.html#a881660503379f75fe58ac988149a4b63" title="Read random number generator seed info." alt="" coords="238,119,401,159"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="169,116,225,124,224,129,168,121"/>
+<area shape="rect" id="Node000006" href="$classspades_1_1_s_p_a_d_e_s.html#afaac93099a04dc1dbabe0f3fbf7dc553" title="Update the global virtual time." alt="" coords="216,184,423,209"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="124,125,168,148,217,169,245,178,244,183,215,174,166,152,122,130"/>
+<area shape="rect" id="Node000005" href="$namespacespades.html#ae5dca7276a49079908e771b6fcff00ba" title="Read and broadcast file to all ranks." alt="" coords="471,127,603,152"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="401,137,457,137,457,142,401,142"/>
+</map>

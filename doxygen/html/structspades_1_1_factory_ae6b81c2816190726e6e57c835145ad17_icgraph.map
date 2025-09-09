@@ -1,0 +1,15 @@
+<map id="spades::Factory::table" name="spades::Factory::table">
+<area shape="rect" id="Node000001" title="Lookup table containing all registered instances." alt="" coords="657,121,820,146"/>
+<area shape="rect" id="Node000002" href="$structspades_1_1_factory_1_1_register.html#a5854eaa6013e82d41bc3a150c65cb7dc" title=" " alt="" coords="425,5,609,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="702,116,608,66,567,48,569,43,611,62,705,111"/>
+<area shape="rect" id="Node000003" href="$structspades_1_1_factory.html#a8eca7f938c38bff2994cf7479d1949b8" title=" " alt="" coords="5,99,176,125"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="643,123,609,120,417,109,224,111,176,112,176,106,224,105,417,104,610,115,644,118"/>
+<area shape="rect" id="Node000004" href="$structspades_1_1_factory.html#a6f3ee40b5f44803ba68da4ef9ab3f602" title=" " alt="" coords="224,120,377,160"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="644,137,378,142,377,136,643,132"/>
+<area shape="rect" id="Node000005" href="$structspades_1_1_factory.html#a45a688718580d050933ca3be4f591e42" title=" " alt="" coords="437,171,597,197"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="669,152,574,174,573,169,668,147"/>
+<area shape="rect" id="Node000006" href="$structspades_1_1_factory_1_1_register.html#a53e34057f510077cf894ea07d0ba0a46" title=" " alt="" coords="425,221,609,261"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="708,156,663,184,610,212,582,224,580,219,608,207,660,179,706,151"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="210,131,176,126,177,121,211,125"/>
+<area shape="poly" id="edge6_Node000005_Node000004" title=" " alt="" coords="440,171,377,158,378,153,441,166"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="spades::SPADES::read_rng_file" name="spades::SPADES::read_rng_file">
+<area shape="rect" id="Node000001" title="Read random number generator seed info." alt="" coords="5,5,168,45"/>
+<area shape="rect" id="Node000002" href="$namespacespades.html#ae5dca7276a49079908e771b6fcff00ba" title="Read and broadcast file to all ranks." alt="" coords="216,13,348,38"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="168,23,202,23,202,28,168,28"/>
+</map>

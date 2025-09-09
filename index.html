@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPADES: Solver for PArallel Discrete Event Simulation &mdash; SPADES 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2709fde1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction" href="Introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            SPADES
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GettingStarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SPADES.html">SPADES</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen/html/index.html">SPADES API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">SPADES</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SPADES: Solver for PArallel Discrete Event Simulation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spades-solver-for-parallel-discrete-event-simulation">
+<h1>SPADES: Solver for PArallel Discrete Event Simulation<a class="headerlink" href="#spades-solver-for-parallel-discrete-event-simulation" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Introduction.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Introduction.html#acknowledgment">Acknowledgment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="GettingStarted.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Building.html">Building</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Building.html#cmake-configuration-reference">CMake configuration reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="InputFiles.html">Input Files and Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorials.html">Tutorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StyleGuide.html">Style Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="StyleGuide.html#formatting">Formatting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="StyleGuide.html#linting">Linting</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SPADES.html">SPADES</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen/html/index.html">SPADES API</a></li>
+</ul>
+</div>
+<section id="readme">
+<h2>README<a class="headerlink" href="#readme" title="Link to this heading"></a></h2>
+<section id="id1">
+<span id="id2"></span><h3>SPADES: Solver for PArallel Discrete Event Simulation<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://github.com/NREL/spades/actions"><img alt="CI Badge" src="https://github.com/NREL/spades/actions/workflows/ci.yml/badge.svg" /></a> <a class="reference external" href="https://nrel.github.io/spades/"><img alt="Documentation Badge" src="https://github.com/NREL/spades/actions/workflows/docs.yml/badge.svg" /></a> <a class="reference external" href="https://www.bestpractices.dev/projects/11128"><img alt="OpenSSF Badge" src="https://www.bestpractices.dev/projects/11128/badge" /></a> <a class="reference external" href="https://doi.org/10.11578/dc.20250905.4"><img alt="SWR" src="https://img.shields.io/badge/SWR-10.11578/dc.20250905.4-blue.svg" /></a> <a class="reference external" href="https://www.apache.org/licenses/LICENSE-2.0"><img alt="License Badge" src="https://img.shields.io/badge/License-Apache%20v2.0-blue.svg" /></a> <a class="reference external" href="https://amrex-codes.github.io/amrex/"><img alt="AMReX Badge" src="https://img.shields.io/static/v1?label=%22powered%20by%22&amp;message=%22AMReX%22&amp;color=%22blue%22" /></a> <a class="reference external" href="https://isocpp.org/"><img alt="C++ Badge" src="https://img.shields.io/badge/language-C%2B%2B17-blue" /></a></p>
+<p>SPADES (Solver for PArallel Discrete Event Simulation) is an
+open-source parallel discrete event simulation (PDES) package built on
+the AMReX library. Targeted at solving discrete event systems in
+parallel, this software package aims to be performance portable and
+scalable on heterogeneous computing architectures, e.g., graphic
+processing units (GPU). SPADES implements optimistic synchronization
+with rollback through an implementation of the Time Warp algorithm. An
+alternative conservative synchronization approach is also implemented
+using the Lower Bound on Incoming Time Stamp. In our implementation,
+logical processes are represented as cells in a grid and event
+messages are represented as particles. SPADES supports various
+parallel decomposition strategies, including the use of the Message
+Passing Interface (MPI) and OpenMP threading. All major GPU
+architectures (e.g., Intel, AMD, NVIDIA) are supported through the use
+of performance portability functionalities implemented in AMReX. The
+SPADES software is reported in NREL Software Record
+<a class="reference external" href="https://doi.org/10.11578/dc.20250905.4">SWR-24-99 “SPADES (Scalable Parallel Discrete Events Simulation)”</a> (DOE CODE ID: 162638).</p>
+<section id="getting-started">
+<h4>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h4>
+<p>To compile and run <cite>SPADES</cite>, one needs a C++ compiler that supports the C++17 standard, and then execute:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>git@github.com:NREL/spades.git
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>Build
+<span class="gp">$ </span>./cmake.sh
+<span class="gp">$ </span>./spades<span class="w"> </span>example.inp
+</pre></div>
+</div>
+</section>
+<section id="dependencies">
+<h4>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h4>
+<p><cite>SPADES</cite> is built on the <a class="reference external" href="https://github.com/AMReX-Codes/amrex">AMReX</a> library.</p>
+</section>
+<section id="documentation">
+<h4>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h4>
+<p>The full documentation for <cite>SPADES</cite> exists in the Docs directory; at present this is maintained inline using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="reference external" href="https://www.doxygen.nl/index.html">Doxygen</a>. To build the documentation:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>Build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cmake<span class="w"> </span>-DSPADES_ENABLE_DOCUMENTATION:BOOL<span class="o">=</span>ON<span class="w"> </span>..<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cmake<span class="w"> </span>--build<span class="w"> </span>.<span class="w"> </span>-t<span class="w"> </span>docs
+</pre></div>
+</div>
+</section>
+<section id="contributing-reporting-bugs-and-requesting-help">
+<h4>Contributing, reporting bugs, and requesting help<a class="headerlink" href="#contributing-reporting-bugs-and-requesting-help" title="Link to this heading"></a></h4>
+<p>To report issues or bugs please <a class="reference external" href="https://github.com/NREL/spades/issues">create a new issue</a> on GitHub.</p>
+<p>We welcome contributions from the community in form of bug fixes,
+feature enhancements, documentation updates, etc. Please refer to the
+<a class="reference external" href="https://github.com/NREL/spades/blob/main/CONTRIBUTING.md">contributing guidelines</a> for more
+information. All contributions are processed through pull-requests on
+GitHub. Please refer to the <a class="reference external" href="https://nrel.github.io/spades/StyleGuide.html">style guide</a> as a reference for
+the best practices currently used to develop SPADES.</p>
+<p>Please acknowledge as a publication co-author any developer that has
+significantly contributed to implementing or improving specific
+capability that was used for that publication.</p>
+</section>
+<section id="funding">
+<h4>Funding<a class="headerlink" href="#funding" title="Link to this heading"></a></h4>
+<p>This work was authored by the National Renewable Energy Laboratory (NREL) for the U.S. Department of Energy (DOE) under Contract No. DE-AC36-08GO28308. This work was supported by the Laboratory Directed Research and Development (LDRD) Program at NREL. The views expressed in the article do not necessarily represent the views of the DOE or the U.S. Government. The U.S. Government retains and the publisher, by accepting the article for publication, acknowledges that the U.S. Government retains a nonexclusive, paid-up, irrevocable, worldwide license to publish or reproduce the published form of this work, or allow others to do so, for U.S. Government purposes. A portion of the research was performed using computational resources sponsored by the Department of Energy’s Office of Energy Efficiency and Renewable Energy and located at the National Renewable Energy Laboratory.</p>
+</section>
+</section>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Introduction.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, the Alliance for Sustainable Energy, LLC., through National Renewable Energy Laboratory. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+.. meta::da3f2015e854f8aa81ae0478756ce72fcef74b535a7756019f8b20fdd7b427aeae5a083d7afe49f235920b2d190c2ba86c0fad085d7bedf8acb16486ba2d4653
+
+:orphan:
+
+.. title:: SPADES API: spades::ic::Constant::DeviceOp Struct Reference
+
+DeviceOp Struct Reference
+=========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1ic_1_1_constant_1_1_device_op.html

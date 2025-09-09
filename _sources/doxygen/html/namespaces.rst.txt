@@ -1,0 +1,14 @@
+.. meta::528104db7ae4adcc9c8726938c1c074b780fd5004319f553b05788cbcd7fb6cd6245b1478e7fe9ce8d35604db6a4f9514eeb4b56de85713ff5e1a99e23202199
+
+:orphan:
+
+.. title:: SPADES API: Namespace List
+
+Namespace List
+==============
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespaces.html

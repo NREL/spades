@@ -1,0 +1,14 @@
+.. meta::b57caa8c62d3c03deb358091cc08b415eb6eb7fb47f010704dd6edbfa5a69233de70c8f76c7ab6775ff93455711bf3b6671933ba4a435ef137d2b02c2880ed5f
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::CheckPair Struct Reference
+
+CheckPair Struct Reference
+==========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_check_pair.html

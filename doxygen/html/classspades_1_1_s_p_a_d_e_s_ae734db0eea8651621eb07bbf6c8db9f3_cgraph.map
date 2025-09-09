@@ -1,0 +1,12 @@
+<map id="spades::SPADES::write_plot_file" name="spades::SPADES::write_plot_file">
+<area shape="rect" id="Node000001" title="Write plotfile to disk." alt="" coords="5,92,172,132"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1_s_p_a_d_e_s.html#a87ad184e18217adfb1fc08cdf8892622" title="Put together the MultiFab for output." alt="" coords="224,5,383,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="138,89,239,48,241,53,140,94"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1_s_p_a_d_e_s.html#a9d99d17b8514b6251b7711959c2deba6" title="Set plotfile variables names." alt="" coords="435,35,593,75"/>
+<area shape="poly" id="edge4_Node000001_Node000003" title=" " alt="" coords="172,98,421,64,422,70,173,103"/>
+<area shape="rect" id="Node000004" href="$classspades_1_1_s_p_a_d_e_s.html#a5b00ea3a0f4445a415ed8061def3e9fd" title="Get plotfile name." alt="" coords="224,120,383,160"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="173,120,211,125,210,131,172,126"/>
+<area shape="rect" id="Node000005" href="$classspades_1_1_s_p_a_d_e_s.html#ab8b581263b8652535599daa49eb1d922" title="Write job info to disk." alt="" coords="220,184,387,224"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="133,130,221,170,238,177,236,181,219,174,131,135"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="383,34,422,39,421,44,382,39"/>
+</map>

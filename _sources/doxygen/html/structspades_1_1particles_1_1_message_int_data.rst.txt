@@ -1,0 +1,14 @@
+.. meta::30b492da0816fa2ba51b2b55e556068953f303039bb0b3ec572e709ced778c4317e64bc8e840b3230b50fd9fb166724d1d29e4eb93192af979a75f44b5680c4d
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::MessageIntData Struct Reference
+
+MessageIntData Struct Reference
+===============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_message_int_data.html
