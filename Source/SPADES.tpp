@@ -1,9 +1,11 @@
 #include <memory>
 
-#include "SPADES.H"
+#include "RunTime.H"
 
 namespace spades {
-SPADES::SPADES()
+
+template <typename Model>
+SPADES<Model>::SPADES(const Model& model) : m_model(model)
 {
     BL_PROFILE("spades::SPADES::SPADES()");
     read_parameters();
@@ -64,21 +66,23 @@ SPADES::SPADES()
     m_avg_timings.resize(2, 0);
 }
 
-SPADES::~SPADES() = default;
+template <typename Model>
+SPADES<Model>::~SPADES() = default;
 
-void SPADES::init_data()
+template <typename Model>
+void SPADES<Model>::initialize_data()
 {
-    BL_PROFILE("spades::SPADES::init_data()");
+    BL_PROFILE("spades::SPADES::initialize_data()");
 
     if (m_restart_chkfile.empty()) {
 
-        init_rng();
+        initialize_rng();
 
         // start simulation from the beginning
         const amrex::Real time = 0.0;
         set_ics();
 
-        init_particle_containers();
+        initialize_particle_containers();
 
         InitFromScratch(time);
 
@@ -109,9 +113,10 @@ void SPADES::init_data()
     write_data_file(true);
 }
 
-void SPADES::init_particle_containers()
+template <typename Model>
+void SPADES<Model>::initialize_particle_containers()
 {
-    BL_PROFILE("spades::SPADES::init_particle_containers()");
+    BL_PROFILE("spades::SPADES::initialize_particle_containers()");
     m_message_pc =
         std::make_unique<particles::MessageParticleContainer>(GetParGDB());
     m_entity_pc =
@@ -120,7 +125,8 @@ void SPADES::init_particle_containers()
     m_entity_pc->read_parameters();
 }
 
-void SPADES::read_parameters()
+template <typename Model>
+void SPADES<Model>::read_parameters()
 {
     BL_PROFILE("spades::SPADES::read_parameters()");
 
@@ -157,7 +163,6 @@ void SPADES::read_parameters()
         pp.query("messages_per_step", m_messages_per_step);
         pp.query("lambda", m_lambda);
         pp.query("data_fname", m_data_fname);
-        pp.query("entities_per_lp", m_entities_per_lp);
         pp.query("messages_per_lp", m_messages_per_lp);
     }
 
@@ -171,7 +176,8 @@ void SPADES::read_parameters()
     }
 }
 
-void SPADES::evolve()
+template <typename Model>
+void SPADES<Model>::evolve()
 {
     BL_PROFILE("spades::SPADES::evolve()");
 
@@ -262,7 +268,8 @@ void SPADES::evolve()
     }
 }
 
-void SPADES::time_step(const amrex::Real time)
+template <typename Model>
+void SPADES<Model>::time_step(const amrex::Real time)
 {
     BL_PROFILE("spades::SPADES::time_step()");
 
@@ -277,7 +284,8 @@ void SPADES::time_step(const amrex::Real time)
     summary();
 }
 
-void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
+template <typename Model>
+void SPADES<Model>::advance(const amrex::Real /*time*/, const amrex::Real dt)
 {
     BL_PROFILE("spades::SPADES::advance()");
 
@@ -309,7 +317,8 @@ void SPADES::advance(const amrex::Real /*time*/, const amrex::Real dt)
     m_t_new += dt;     // new time is ahead
 }
 
-void SPADES::summary()
+template <typename Model>
+void SPADES<Model>::summary()
 {
     BL_PROFILE("spades::SPADES::summary()");
 
@@ -351,12 +360,14 @@ void SPADES::summary()
         m_nmessages[particles::MessageTypes::MESSAGE] == m_nentities);
 }
 
-void SPADES::post_time_step()
+template <typename Model>
+void SPADES<Model>::post_time_step()
 {
     BL_PROFILE("spades::SPADES::post_time_step()");
 }
 
-void SPADES::process_messages()
+template <typename Model>
+void SPADES<Model>::process_messages()
 {
     BL_PROFILE("spades::SPADES::process_messages()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -373,7 +384,6 @@ void SPADES::process_messages()
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
     const auto lambda = m_lambda;
-    const auto entities_per_lp = m_entities_per_lp;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -392,6 +402,8 @@ void SPADES::process_messages()
         auto& ent_pti = m_entity_pc->GetParticles(LEV)[index];
         const auto ent_parrs = m_entity_pc->particle_arrays(ent_pti);
 
+        const auto process_op = m_model.process_op();
+
         amrex::ParallelForRNG(
             box, [=] AMREX_GPU_DEVICE(
                      int i, int j, int AMREX_D_PICK(, , k),
@@ -401,7 +413,6 @@ void SPADES::process_messages()
                     particles::Get(iv, msg_cnt_arr, msg_offsets_arr, msg_parrs);
                 const auto ent_getter =
                     particles::Get(iv, ent_cnt_arr, ent_offsets_arr, ent_parrs);
-
                 for (int n = 0;
                      n < amrex::min<int>(
                              msg_cnt_arr(iv, particles::MessageTypes::MESSAGE),
@@ -439,53 +450,63 @@ void SPADES::process_messages()
                             msg_parrs
                                 .m_idata[particles::MessageIntData::receiver_lp]
                                         [prcv_soa]) == iv);
-                    msg_parrs.m_rdata[particles::MessageRealData::old_timestamp]
-                                     [prcv_soa] =
-                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
-                                         [pe_soa];
-                    ent_parrs
-                        .m_rdata[particles::CommonRealData::timestamp][pe_soa] =
-                        ts;
-                    msg_parrs
-                        .m_idata[particles::CommonIntData::type_id][prcv_soa] =
-                        particles::MessageTypes::PROCESSED;
+
+                    // msg_parrs.m_rdata[particles::MessageRealData::old_timestamp]
+                    //                  [prcv_soa] =
+                    //     ent_parrs.m_rdata[particles::CommonRealData::timestamp]
+                    //                      [pe_soa];
+                    // ent_parrs
+                    //     .m_rdata[particles::CommonRealData::timestamp][pe_soa]
+                    //     = ts;
+                    // msg_parrs
+                    //     .m_idata[particles::CommonIntData::type_id][prcv_soa]
+                    //     = particles::MessageTypes::PROCESSED;
 
                     // Create a new message to send
-                    const auto ent_lvt =
-                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
-                                         [pe_soa];
-                    const amrex::IntVect iv_dest(AMREX_D_DECL(
-                        amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
-                        amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
-                        amrex::Random_int(dhi[2] - dlo[2] + 1, engine) +
-                            dlo[2]));
-                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos = {
-                        AMREX_D_DECL(
-                            plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
-                            plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
-                            plo[2] + (iv_dest[2] + constants::HALF) * dx[2])};
-                    const int rcv_ent = static_cast<int>(
-                        amrex::Random_int(entities_per_lp, engine));
-                    const amrex::Real next_ts =
-                        ent_lvt + random_exponential(lambda, engine) +
-                        lookahead;
+                    // const auto ent_lvt =
+                    //     ent_parrs.m_rdata[particles::CommonRealData::timestamp]
+                    //                      [pe_soa];
+                    // const amrex::IntVect iv_dest(AMREX_D_DECL(
+                    //     amrex::Random_int(dhi[0] - dlo[0] + 1, engine) +
+                    //     dlo[0], amrex::Random_int(dhi[1] - dlo[1] + 1,
+                    //     engine) + dlo[1], amrex::Random_int(dhi[2] - dlo[2] +
+                    //     1, engine) +
+                    //         dlo[2]));
+                    // const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos =
+                    // {
+                    //     AMREX_D_DECL(
+                    //         plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
+                    //         plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
+                    //         plo[2] + (iv_dest[2] + constants::HALF) *
+                    //         dx[2])};
+                    // const int rcv_ent = static_cast<int>(
+                    //     amrex::Random_int(entities_per_lp, engine));
+                    // const amrex::Real next_ts =
+                    //     ent_lvt + random_exponential(lambda, engine) +
+                    //     lookahead;
 
                     const auto psnd_soa =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
-                    particles::CreateMessage()(
-                        psnd_soa, msg_parrs, next_ts, pos, iv_dest,
-                        static_cast<int>(dom.index(iv)), ent,
-                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
+                    process_op(
+                        msg_parrs, ent_parrs, iv, prcv_soa, psnd_soa, pe_soa,
+                        engine);
+
+                    // particles::CreateMessage()(
+                    //     psnd_soa, msg_parrs, next_ts, pos, iv_dest,
+                    //     static_cast<int>(dom.index(iv)), ent,
+                    //     static_cast<int>(dom.index(iv_dest)), rcv_ent);
+            const auto ent_lvt =
+                ent_parrs.m_rdata[particles::CommonRealData::timestamp][ent];
+
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
-                    AMREX_ALWAYS_ASSERT(
-                        prcv.id() < std::numeric_limits<int>::max());
+                    AMREX_ASSERT(prcv.id() < std::numeric_limits<int>::max());
                     msg_parrs
                         .m_idata[particles::MessageIntData::pair_id][psnd_soa] =
                         static_cast<int>(prcv.id());
                     msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
                                      [psnd_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
-                                     [psnd_soa] = ent_lvt;
+                                     [psnd_soa] =ent_lvt;
 
                     // Create the conjugate message
                     const auto pcnj_soa = msg_getter(
@@ -512,8 +533,8 @@ void SPADES::process_messages()
                         , msg_parrs.m_idata[particles::CommonIntData::k]
                                            [pcnj_soa] = iv[2];)
                     msg_parrs
-                        .m_idata[particles::CommonIntData::type_id][pcnj_soa] =
-                        particles::MessageTypes::CONJUGATE;
+                        .m_idata[particles::CommonIntData::type_id][pcnj_soa]
+                        = particles::MessageTypes::CONJUGATE;
                 }
 
                 // Update LVT for the logical process
@@ -535,7 +556,8 @@ void SPADES::process_messages()
     }
 }
 
-void SPADES::rollback()
+template <typename Model>
+void SPADES<Model>::rollback()
 {
     BL_PROFILE("spades::SPADES::rollback()");
 
@@ -773,7 +795,8 @@ void SPADES::rollback()
         "There should be no anti-messages left after rollback");
 }
 
-void SPADES::rollback_statistics()
+template <typename Model>
+void SPADES<Model>::rollback_statistics()
 {
     BL_PROFILE("spades::SPADES::rollback_statistics()");
 
@@ -817,7 +840,8 @@ void SPADES::rollback_statistics()
     }
 }
 
-void SPADES::update_gvt()
+template <typename Model>
+void SPADES<Model>::update_gvt()
 {
     BL_PROFILE("spades::SPADES::update_gvt()");
     const amrex::Real gvt = m_message_pc->compute_gvt();
@@ -826,7 +850,8 @@ void SPADES::update_gvt()
     m_gvt = gvt;
 }
 
-void SPADES::update_lbts()
+template <typename Model>
+void SPADES<Model>::update_lbts()
 {
     BL_PROFILE("spades::SPADES::update_lbts()");
 
@@ -867,7 +892,8 @@ void SPADES::update_lbts()
     AMREX_ALWAYS_ASSERT(m_lbts >= m_gvt);
 }
 
-void SPADES::compute_dt()
+template <typename Model>
+void SPADES<Model>::compute_dt()
 {
     BL_PROFILE("spades::SPADES::compute_dt()");
     amrex::Real dt_tmp = est_time_step();
@@ -886,13 +912,15 @@ void SPADES::compute_dt()
     m_dt = dt_0;
 }
 
-amrex::Real SPADES::est_time_step()
+template <typename Model>
+amrex::Real SPADES<Model>::est_time_step()
 {
     BL_PROFILE("spades::SPADES::est_time_step()");
     return 1.0;
 }
 
-void SPADES::MakeNewLevelFromCoarse(
+template <typename Model>
+void SPADES<Model>::MakeNewLevelFromCoarse(
     int /*lev*/,
     amrex::Real /*time*/,
     const amrex::BoxArray& /*ba*/,
@@ -902,7 +930,8 @@ void SPADES::MakeNewLevelFromCoarse(
     amrex::Abort("spades::SPADES::MakeNewLevelFromCoarse(): not implemented");
 }
 
-void SPADES::MakeNewLevelFromScratch(
+template <typename Model>
+void SPADES<Model>::MakeNewLevelFromScratch(
     int /*lev*/,
     amrex::Real time,
     const amrex::BoxArray& ba,
@@ -933,7 +962,8 @@ void SPADES::MakeNewLevelFromScratch(
     m_entity_pc->sort();
 }
 
-void SPADES::initialize_state()
+template <typename Model>
+void SPADES<Model>::initialize_state()
 {
     BL_PROFILE("spades::SPADES::initialize_state()");
 
@@ -942,7 +972,8 @@ void SPADES::initialize_state()
     m_state.FillBoundary(Geom(LEV).periodicity());
 }
 
-void SPADES::RemakeLevel(
+template <typename Model>
+void SPADES<Model>::RemakeLevel(
     int /*lev*/,
     amrex::Real /* time*/,
     const amrex::BoxArray& /*ba*/,
@@ -952,7 +983,8 @@ void SPADES::RemakeLevel(
     amrex::Abort("spades::SPADES::RemakeLevel(): not implemented");
 }
 
-void SPADES::ClearLevel(int /*lev*/)
+template <typename Model>
+void SPADES<Model>::ClearLevel(int /*lev*/)
 {
     BL_PROFILE("spades::SPADES::ClearLevel()");
     m_message_pc->clear_state();
@@ -961,7 +993,8 @@ void SPADES::ClearLevel(int /*lev*/)
     m_plt_mf.clear();
 }
 
-void SPADES::set_ics()
+template <typename Model>
+void SPADES<Model>::set_ics()
 {
     BL_PROFILE("spades::SPADES::set_ics()");
     if (m_ic_type == "constant") {
@@ -974,7 +1007,8 @@ void SPADES::set_ics()
     }
 }
 
-bool SPADES::check_field_existence(const std::string& name)
+template <typename Model>
+bool SPADES<Model>::check_field_existence(const std::string& name)
 {
     BL_PROFILE("spades::SPADES::check_field_existence()");
     const auto vnames = {
@@ -984,7 +1018,8 @@ bool SPADES::check_field_existence(const std::string& name)
     });
 }
 
-int SPADES::get_field_component(
+template <typename Model>
+int SPADES<Model>::get_field_component(
     const std::string& name, const amrex::Vector<std::string>& varnames)
 {
     BL_PROFILE("spades::SPADES::get_field_component()");
@@ -995,8 +1030,9 @@ int SPADES::get_field_component(
     return -1;
 }
 
+template <typename Model>
 std::unique_ptr<amrex::MultiFab>
-SPADES::get_field(const std::string& name, const int ngrow)
+SPADES<Model>::get_field(const std::string& name, const int ngrow)
 {
     BL_PROFILE("spades::SPADES::get_field()");
 
@@ -1038,22 +1074,26 @@ SPADES::get_field(const std::string& name, const int ngrow)
     return mf;
 }
 
-amrex::Vector<std::string> SPADES::plot_file_var_names() const
+template <typename Model>
+amrex::Vector<std::string> SPADES<Model>::plot_file_var_names() const
 {
     return m_spades_varnames;
 }
 
-std::string SPADES::plot_file_name(const int step) const
+template <typename Model>
+std::string SPADES<Model>::plot_file_name(const int step) const
 {
     return amrex::Concatenate(m_plot_file, step, m_file_name_digits);
 }
 
-std::string SPADES::chk_file_name(const int step) const
+template <typename Model>
+std::string SPADES<Model>::chk_file_name(const int step) const
 {
     return amrex::Concatenate(m_chk_file, step, m_file_name_digits);
 }
 
-void SPADES::plot_file_mf()
+template <typename Model>
+void SPADES<Model>::plot_file_mf()
 {
     m_plt_mf.clear();
     m_plt_mf.define(
@@ -1080,7 +1120,8 @@ void SPADES::plot_file_mf()
     amrex::Gpu::streamSynchronize();
 }
 
-void SPADES::write_plot_file()
+template <typename Model>
+void SPADES<Model>::write_plot_file()
 {
     BL_PROFILE("spades::SPADES::write_plot_file()");
     const std::string& plotfilename = plot_file_name(m_istep);
@@ -1103,7 +1144,8 @@ void SPADES::write_plot_file()
     write_info_file(plotfilename);
 }
 
-void SPADES::write_checkpoint_file() const
+template <typename Model>
+void SPADES<Model>::write_checkpoint_file() const
 {
     BL_PROFILE("spades::SPADES::write_checkpoint_file()");
     const auto& varnames = m_state_varnames;
@@ -1190,7 +1232,8 @@ void SPADES::write_checkpoint_file() const
     write_rng_file(checkpointname);
 }
 
-void SPADES::read_checkpoint_file()
+template <typename Model>
+void SPADES<Model>::read_checkpoint_file()
 {
     BL_PROFILE("spades::SPADES::read_checkpoint_file()");
     const auto& varnames = m_state_varnames;
@@ -1271,7 +1314,7 @@ void SPADES::read_checkpoint_file()
 
     read_rng_file(m_restart_chkfile);
 
-    init_particle_containers();
+    initialize_particle_containers();
 
     m_message_pc->initialize_variable_names();
     m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());
@@ -1284,7 +1327,8 @@ void SPADES::read_checkpoint_file()
     m_entity_pc->sort();
 }
 
-void SPADES::write_info_file(const std::string& path) const
+template <typename Model>
+void SPADES<Model>::write_info_file(const std::string& path) const
 {
     BL_PROFILE("spades::SPADES::write_info_file()");
     if (!amrex::ParallelDescriptor::IOProcessor()) {
@@ -1314,9 +1358,10 @@ void SPADES::write_info_file(const std::string& path) const
     fh.close();
 }
 
-void SPADES::init_rng() const
+template <typename Model>
+void SPADES<Model>::initialize_rng() const
 {
-    BL_PROFILE("spades::SPADES::init_rng()");
+    BL_PROFILE("spades::SPADES::initialize_rng()");
 
     if (m_seed > 0) {
         amrex::InitRandom(
@@ -1339,7 +1384,8 @@ void SPADES::init_rng() const
     }
 }
 
-void SPADES::write_rng_file(const std::string& path) const
+template <typename Model>
+void SPADES<Model>::write_rng_file(const std::string& path) const
 {
     BL_PROFILE("spades::SPADES::write_rng_file()");
 
@@ -1354,7 +1400,8 @@ void SPADES::write_rng_file(const std::string& path) const
     fh.close();
 }
 
-void SPADES::read_rng_file(const std::string& path) const
+template <typename Model>
+void SPADES<Model>::read_rng_file(const std::string& path) const
 {
     BL_PROFILE("spades::SPADES::read_rng_file()");
 
@@ -1377,7 +1424,8 @@ void SPADES::read_rng_file(const std::string& path) const
     }
 }
 
-void SPADES::write_data_file(const bool is_init) const
+template <typename Model>
+void SPADES<Model>::write_data_file(const bool is_init) const
 {
     BL_PROFILE("spades::SPADES::write_data_file()");
 
