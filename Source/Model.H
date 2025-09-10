@@ -17,7 +17,19 @@ class Phold : public Model::Register<Phold>
 {
 public:
     static std::string identifier() { return "phold"; }
-    std::string model_name() const override;
+
+    explicit Phold();
+
+    std::string model_name() const override { return identifier(); };
+
+    struct ProcessOp
+    {};
+
+    using ProcessType = ProcessOp;
+
+    ProcessType process_instance() const { return m_process_op; }
+
+    ProcessOp m_process_op;
 };
 
 } // namespace spades

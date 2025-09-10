@@ -2,5 +2,6 @@
 
 namespace spades {
 
-std::string Phold::model_name() const { return identifier(); }
+Phold::Phold() {}
+
 } // namespace spades
