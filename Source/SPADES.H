@@ -17,6 +17,7 @@
 #include "SpadesParticleContainer.H"
 #include "MessageParticleContainer.H"
 #include "EntityParticleContainer.H"
+#include "Model.H"
 
 /**
    @brief Solver for PArallel Discrete Event Simulation
@@ -135,7 +136,10 @@ public:
     void initialize_state();
 
     //! Initialize the particle containers
-    void init_particle_containers();
+    void initialize_particle_containers();
+
+    //! Initialize the model
+    void initialize_model();
 
     /**
        @brief Process messages
@@ -420,6 +424,12 @@ private:
 
     //! Entity article container
     std::unique_ptr<particles::EntityParticleContainer> m_entity_pc;
+
+    //! Model name
+    std::string m_model_name;
+
+    //! Model
+    std::unique_ptr<spades::Model> m_model;
 };
 } // namespace spades
 #endif

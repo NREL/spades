@@ -78,7 +78,8 @@ void SPADES::init_data()
         const amrex::Real time = 0.0;
         set_ics();
 
-        init_particle_containers();
+        initialize_model();
+        initialize_particle_containers();
 
         InitFromScratch(time);
 
@@ -109,15 +110,21 @@ void SPADES::init_data()
     write_data_file(true);
 }
 
-void SPADES::init_particle_containers()
+void SPADES::initialize_particle_containers()
 {
-    BL_PROFILE("spades::SPADES::init_particle_containers()");
+    BL_PROFILE("spades::SPADES::initialize_particle_containers()");
     m_message_pc =
         std::make_unique<particles::MessageParticleContainer>(GetParGDB());
     m_entity_pc =
         std::make_unique<particles::EntityParticleContainer>(GetParGDB());
     m_message_pc->read_parameters();
     m_entity_pc->read_parameters();
+}
+
+void SPADES::initialize_model()
+{
+    BL_PROFILE("spades::SPADES::initialize_model()");
+    auto model = Model::create(m_model_name);
 }
 
 void SPADES::read_parameters()
@@ -159,6 +166,7 @@ void SPADES::read_parameters()
         pp.query("data_fname", m_data_fname);
         pp.query("entities_per_lp", m_entities_per_lp);
         pp.query("messages_per_lp", m_messages_per_lp);
+        pp.get("model", m_model_name);
     }
 
     // force periodic bcs
@@ -1272,7 +1280,8 @@ void SPADES::read_checkpoint_file()
 
     read_rng_file(m_restart_chkfile);
 
-    init_particle_containers();
+    initialize_model();
+    initialize_particle_containers();
 
     m_message_pc->initialize_variable_names();
     m_message_pc->Restart(m_restart_chkfile, m_message_pc->identifier());

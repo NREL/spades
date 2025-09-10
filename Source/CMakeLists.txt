@@ -6,6 +6,7 @@ target_sources(${spades_lib_name}
     IC.cpp
     SPADES.cpp
     Utilities.cpp
+    Model.cpp
 )
 
 target_sources(${spades_exe_name} PRIVATE main.cpp)
