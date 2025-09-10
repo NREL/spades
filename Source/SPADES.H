@@ -32,7 +32,7 @@ public:
     ~SPADES() override;
 
     //! Initializes data
-    void init_data();
+    void initialize_data();
 
     //! Advance solution to final time
     void evolve();
@@ -260,7 +260,7 @@ private:
     void read_rng_file(const std::string& path) const;
 
     //! Initialize the random number generator
-    void init_rng() const;
+    void initialize_rng() const;
 
     /**
        @brief Write simulation information

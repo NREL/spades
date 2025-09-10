@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
         amrex::Print() << "Initializing SPADES ..." << std::endl;
 
         spades::SPADES spades_obj;
-        spades_obj.init_data();
+        spades_obj.initialize_data();
 
         amrex::Real init_time =
             amrex::ParallelDescriptor::second() - start_time;
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
                           "================================================="
                        << std::endl
                        << std::endl;
-        amrex::Print() << "Time spent in init_data():    " << init_time
+        amrex::Print() << "Time spent in initialize_data():    " << init_time
                        << std::endl;
         amrex::Print() << "Time spent in evolve():       "
                        << end_time - init_time << std::endl;

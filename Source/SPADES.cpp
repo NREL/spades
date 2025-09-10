@@ -66,13 +66,13 @@ SPADES::SPADES()
 
 SPADES::~SPADES() = default;
 
-void SPADES::init_data()
+void SPADES::initialize_data()
 {
-    BL_PROFILE("spades::SPADES::init_data()");
+    BL_PROFILE("spades::SPADES::initialize_data()");
 
     if (m_restart_chkfile.empty()) {
 
-        init_rng();
+        initialize_rng();
 
         // start simulation from the beginning
         const amrex::Real time = 0.0;
@@ -1324,9 +1324,9 @@ void SPADES::write_info_file(const std::string& path) const
     fh.close();
 }
 
-void SPADES::init_rng() const
+void SPADES::initialize_rng() const
 {
-    BL_PROFILE("spades::SPADES::init_rng()");
+    BL_PROFILE("spades::SPADES::initialize_rng()");
 
     if (m_seed > 0) {
         amrex::InitRandom(
