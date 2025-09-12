@@ -15,15 +15,16 @@ public:
     {
         AMREX_GPU_DEVICE void operator()() const
         {
-            int a = 2;
-            int b = 2;
-            int c = b + a;
+            int aa = 2;
+            int bb = 2;
+            int cc = bb + aa;
+            amrex::ignore_unused(cc);
         }
     };
 
     using ProcessType = ProcessOp;
 
-    ProcessType process_op() const { return m_process_op; }
+    [[nodiscard]] ProcessType process_op() const { return m_process_op; }
 
     ProcessOp m_process_op;
 };

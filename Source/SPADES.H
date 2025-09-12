@@ -28,7 +28,7 @@ template <typename Model>
 class SPADES : public amrex::AmrCore
 {
     static_assert(
-        has_processop<Model>::value,
+        HasProcessOp<Model>::value,
         "The model must define a struct named ProcessOp.");
 
 public:

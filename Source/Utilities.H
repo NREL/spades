@@ -15,7 +15,7 @@ namespace spades {
  *`ProcessOp`.
  **/
 template <typename, typename = void>
-struct has_processop : std::false_type
+struct HasProcessOp : std::false_type
 {};
 
 /**
@@ -23,7 +23,7 @@ struct has_processop : std::false_type
  *`ProcessOp`.
  **/
 template <typename T>
-struct has_processop<T, std::void_t<typename T::ProcessOp>> : std::true_type
+struct HasProcessOp<T, std::void_t<typename T::ProcessOp>> : std::true_type
 {};
 
 /**
