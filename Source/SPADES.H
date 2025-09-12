@@ -24,11 +24,21 @@
  **/
 namespace spades {
 
+template <typename, typename = void>
+struct has_processop : std::false_type
+{};
+
+template <typename T>
+struct has_processop<T, std::void_t<typename T::ProcessOp>> : std::true_type
+{};
+
 //! Main SPADES class
+template <typename Model>
 class SPADES : public amrex::AmrCore
 {
+
 public:
-    SPADES();
+    SPADES(const Model& model);
     ~SPADES() override;
 
     //! Initializes data
@@ -425,11 +435,12 @@ private:
     //! Entity article container
     std::unique_ptr<particles::EntityParticleContainer> m_entity_pc;
 
-    //! Model name
-    std::string m_model_name;
-
     //! Model
-    std::unique_ptr<spades::Model> m_model;
+    Model m_model;
 };
+
 } // namespace spades
+
+#include "SPADES.tpp"
+
 #endif

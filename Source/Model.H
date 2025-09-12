@@ -3,31 +3,25 @@
 #include "Factory.H"
 
 namespace spades {
-class Model : public spades::Factory<Model>
-{
-public:
-    static std::string base_identifier() { return "Model"; }
-    ~Model() override = default;
 
-    //! String representation of this model for I/O
-    virtual std::string model_name() const = 0;
-};
-
-class Phold : public Model::Register<Phold>
+class Phold
 {
 public:
     static std::string identifier() { return "phold"; }
 
     explicit Phold();
 
-    std::string model_name() const override { return identifier(); };
-
     struct ProcessOp
-    {};
+    {
+        AMREX_GPU_DEVICE void operator()() const
+        {
+            amrex::Print() << "Success!!!!" << std::endl;
+        }
+    };
 
     using ProcessType = ProcessOp;
 
-    ProcessType process_instance() const { return m_process_op; }
+    ProcessType process_op() const { return m_process_op; }
 
     ProcessOp m_process_op;
 };
