@@ -15,7 +15,9 @@ public:
     {
         AMREX_GPU_DEVICE void operator()() const
         {
-            amrex::Print() << "Success!!!!" << std::endl;
+          int a = 2;
+          int b = 2;
+          int c = b+a;
         }
     };
 

@@ -421,7 +421,7 @@ void SPADES<Model>::process_messages()
                     particles::Get(iv, msg_cnt_arr, msg_offsets_arr, msg_parrs);
                 const auto ent_getter =
                     particles::Get(iv, ent_cnt_arr, ent_offsets_arr, ent_parrs);
-
+                process_op();
                 for (int n = 0;
                      n < amrex::min<int>(
                              msg_cnt_arr(iv, particles::MessageTypes::MESSAGE),
