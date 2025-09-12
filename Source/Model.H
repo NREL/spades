@@ -15,9 +15,9 @@ public:
     {
         AMREX_GPU_DEVICE void operator()() const
         {
-          int a = 2;
-          int b = 2;
-          int c = b+a;
+            int a = 2;
+            int b = 2;
+            int c = b + a;
         }
     };
 
