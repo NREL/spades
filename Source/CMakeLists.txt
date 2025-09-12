@@ -4,8 +4,8 @@ target_sources(${spades_lib_name}
     EntityParticleContainer.cpp
     ConsoleIO.cpp
     IC.cpp
-    SPADES.cpp
     Utilities.cpp
+    Model.cpp
 )
 
 target_sources(${spades_exe_name} PRIVATE main.cpp)

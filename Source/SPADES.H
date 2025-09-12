@@ -17,21 +17,26 @@
 #include "SpadesParticleContainer.H"
 #include "MessageParticleContainer.H"
 #include "EntityParticleContainer.H"
+#include "Model.H"
 
 /**
    @brief Solver for PArallel Discrete Event Simulation
  **/
 namespace spades {
-
 //! Main SPADES class
+template <typename Model>
 class SPADES : public amrex::AmrCore
 {
+    static_assert(
+        HasProcessOp<Model>::value,
+        "The model must define a struct named ProcessOp.");
+
 public:
-    SPADES();
+    SPADES(const Model& model);
     ~SPADES() override;
 
     //! Initializes data
-    void init_data();
+    void initialize_data();
 
     //! Advance solution to final time
     void evolve();
@@ -135,7 +140,10 @@ public:
     void initialize_state();
 
     //! Initialize the particle containers
-    void init_particle_containers();
+    void initialize_particle_containers();
+
+    //! Initialize the model
+    void initialize_model();
 
     /**
        @brief Process messages
@@ -256,7 +264,7 @@ private:
     void read_rng_file(const std::string& path) const;
 
     //! Initialize the random number generator
-    void init_rng() const;
+    void initialize_rng() const;
 
     /**
        @brief Write simulation information
@@ -420,6 +428,13 @@ private:
 
     //! Entity article container
     std::unique_ptr<particles::EntityParticleContainer> m_entity_pc;
+
+    //! Model
+    Model m_model;
 };
+
 } // namespace spades
+
+#include "SPADES.tpp"
+
 #endif
