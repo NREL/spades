@@ -23,19 +23,13 @@
    @brief Solver for PArallel Discrete Event Simulation
  **/
 namespace spades {
-
-template <typename, typename = void>
-struct has_processop : std::false_type
-{};
-
-template <typename T>
-struct has_processop<T, std::void_t<typename T::ProcessOp>> : std::true_type
-{};
-
 //! Main SPADES class
 template <typename Model>
 class SPADES : public amrex::AmrCore
 {
+    static_assert(
+        has_processop<Model>::value,
+        "The model must define a struct named ProcessOp.");
 
 public:
     SPADES(const Model& model);

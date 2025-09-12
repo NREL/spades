@@ -9,6 +9,23 @@
 #include "Constants.H"
 
 namespace spades {
+
+/**
+ * @brief Trait to determine if a class defines a nested struct named
+ *`ProcessOp`.
+ **/
+template <typename, typename = void>
+struct has_processop : std::false_type
+{};
+
+/**
+ * @brief Specialization for when the class `T` defines a nested struct
+ *`ProcessOp`.
+ **/
+template <typename T>
+struct has_processop<T, std::void_t<typename T::ProcessOp>> : std::true_type
+{};
+
 /**
    @brief Cantor pairing function
    @param k1 [in] first number
