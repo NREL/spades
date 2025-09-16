@@ -443,62 +443,21 @@ void SPADES<Model>::process_messages()
                     AMREX_ASSERT(
                         ent_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [pe_soa] < ts);
-
-                    // process the event
                     AMREX_ASSERT(
                         dom.atOffset(
                             msg_parrs
                                 .m_idata[particles::MessageIntData::receiver_lp]
                                         [prcv_soa]) == iv);
 
-                    // msg_parrs.m_rdata[particles::MessageRealData::old_timestamp]
-                    //                  [prcv_soa] =
-                    //     ent_parrs.m_rdata[particles::CommonRealData::timestamp]
-                    //                      [pe_soa];
-                    // ent_parrs
-                    //     .m_rdata[particles::CommonRealData::timestamp][pe_soa]
-                    //     = ts;
-                    // msg_parrs
-                    //     .m_idata[particles::CommonIntData::type_id][prcv_soa]
-                    //     = particles::MessageTypes::PROCESSED;
-
-                    // Create a new message to send
-                    // const auto ent_lvt =
-                    //     ent_parrs.m_rdata[particles::CommonRealData::timestamp]
-                    //                      [pe_soa];
-                    // const amrex::IntVect iv_dest(AMREX_D_DECL(
-                    //     amrex::Random_int(dhi[0] - dlo[0] + 1, engine) +
-                    //     dlo[0], amrex::Random_int(dhi[1] - dlo[1] + 1,
-                    //     engine) + dlo[1], amrex::Random_int(dhi[2] - dlo[2] +
-                    //     1, engine) +
-                    //         dlo[2]));
-                    // const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos =
-                    // {
-                    //     AMREX_D_DECL(
-                    //         plo[0] + (iv_dest[0] + constants::HALF) * dx[0],
-                    //         plo[1] + (iv_dest[1] + constants::HALF) * dx[1],
-                    //         plo[2] + (iv_dest[2] + constants::HALF) *
-                    //         dx[2])};
-                    // const int rcv_ent = static_cast<int>(
-                    //     amrex::Random_int(entities_per_lp, engine));
-                    // const amrex::Real next_ts =
-                    //     ent_lvt + random_exponential(lambda, engine) +
-                    //     lookahead;
-
+                    // process the event
                     const auto psnd_soa =
                         msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
+
                     process_op(
-                        msg_parrs, ent_parrs, iv, prcv_soa, psnd_soa, pe_soa,
-                        engine);
+                        msg_parrs, ent_parrs, iv, prcv_soa, psnd_soa, ent,
+                        pe_soa, engine);
 
-                    // particles::CreateMessage()(
-                    //     psnd_soa, msg_parrs, next_ts, pos, iv_dest,
-                    //     static_cast<int>(dom.index(iv)), ent,
-                    //     static_cast<int>(dom.index(iv_dest)), rcv_ent);
-                    const auto ent_lvt =
-                        ent_parrs
-                            .m_rdata[particles::CommonRealData::timestamp][ent];
-
+                    // Process agnostic modifications
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
                     AMREX_ASSERT(prcv.id() < std::numeric_limits<int>::max());
                     msg_parrs
@@ -507,7 +466,9 @@ void SPADES<Model>::process_messages()
                     msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
                                      [psnd_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
-                                     [psnd_soa] = ent_lvt;
+                                     [psnd_soa] =
+                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
+                                         [pe_soa];
 
                     // Create the conjugate message
                     const auto pcnj_soa = msg_getter(

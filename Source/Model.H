@@ -31,6 +31,7 @@ public:
             const int rcv_msg,
             const int snd_msg,
             const int ent,
+            const int ent_idx,
             amrex::RandomEngine const& engine) const
         {
             const auto& dlo = m_dom.smallEnd();
@@ -41,13 +42,16 @@ public:
 
             msg_parrs
                 .m_rdata[particles::MessageRealData::old_timestamp][rcv_msg] =
-                ent_parrs.m_rdata[particles::CommonRealData::timestamp][ent];
-            ent_parrs.m_rdata[particles::CommonRealData::timestamp][ent] = ts;
+                ent_parrs
+                    .m_rdata[particles::CommonRealData::timestamp][ent_idx];
+            ent_parrs.m_rdata[particles::CommonRealData::timestamp][ent_idx] =
+                ts;
             msg_parrs.m_idata[particles::CommonIntData::type_id][rcv_msg] =
                 particles::MessageTypes::PROCESSED;
 
             const auto ent_lvt =
-                ent_parrs.m_rdata[particles::CommonRealData::timestamp][ent];
+                ent_parrs
+                    .m_rdata[particles::CommonRealData::timestamp][ent_idx];
             const amrex::IntVect iv_dest(AMREX_D_DECL(
                 amrex::Random_int(dhi[0] - dlo[0] + 1, engine) + dlo[0],
                 amrex::Random_int(dhi[1] - dlo[1] + 1, engine) + dlo[1],
