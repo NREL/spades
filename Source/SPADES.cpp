@@ -491,27 +491,26 @@ void SPADES::process_messages()
                     const auto pcnj_soa = msg_getter(
                         2 * n + 1, particles::MessageTypes::UNDEFINED);
 
-                    // This is weird. The conjugate
-                    // position is iv but the receiver_lp is
-                    // still updated (we need to know who to
-                    // send this to)
-                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
-                        conj_pos = {AMREX_D_DECL(
-                            plo[0] + (iv[0] + constants::HALF) * dx[0],
-                            plo[1] + (iv[1] + constants::HALF) * dx[1],
-                            plo[2] + (iv[2] + constants::HALF) * dx[2])};
+                    particles::Copy()(psnd_soa, pcnj_soa, msg_parrs);
 
-                    particles::CreateMessage()(
-                        pcnj_soa, msg_parrs, next_ts, conj_pos, iv,
-                        static_cast<int>(dom.index(iv)), ent,
-                        static_cast<int>(dom.index(iv_dest)), rcv_ent);
-                    msg_parrs
-                        .m_idata[particles::MessageIntData::pair_id][pcnj_soa] =
-                        static_cast<int>(prcv.id());
-                    msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
-                                     [pcnj_soa] = prcv.cpu();
-                    msg_parrs.m_rdata[particles::MessageRealData::creation_time]
-                                     [pcnj_soa] = ent_lvt;
+                    // The conjugate position is iv but the
+                    // receiver_lp is still updated (we need to know
+                    // who to send this to)
+                    auto& pcnj_aos = msg_parrs.m_aos[pcnj_soa];
+                    AMREX_D_TERM(
+                        pcnj_aos.pos(0) =
+                            plo[0] + (iv[0] + constants::HALF) * dx[0];
+                        , pcnj_aos.pos(1) =
+                              plo[1] + (iv[1] + constants::HALF) * dx[1];
+                        , pcnj_aos.pos(2) =
+                              plo[2] + (iv[2] + constants::HALF) * dx[2];)
+                    AMREX_D_TERM(
+                        msg_parrs.m_idata[particles::CommonIntData::i]
+                                         [pcnj_soa] = iv[0];
+                        , msg_parrs.m_idata[particles::CommonIntData::j]
+                                           [pcnj_soa] = iv[1];
+                        , msg_parrs.m_idata[particles::CommonIntData::k]
+                                           [pcnj_soa] = iv[2];)
                     msg_parrs
                         .m_idata[particles::CommonIntData::type_id][pcnj_soa] =
                         particles::MessageTypes::CONJUGATE;

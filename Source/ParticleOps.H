@@ -9,23 +9,26 @@
 namespace spades::particles {
 
 //! Particle operations
-template <size_t NReal, size_t NInt, class P, class RT, class IT>
+template <size_t NRealT, size_t NIntT, class P, class RT, class IT>
 struct ParticleArrays
 {
+    static constexpr size_t NReal = NRealT;
+    static constexpr size_t NInt = NIntT;
+
     /**
-       @brief Constructor
-       @param aos [in] particle AOS data
-       @param rdata [in] particle real data
-       @param idata [in] particle int data
-     **/
+         @brief Constructor
+         @param aos [in] particle AOS data
+         @param rdata [in] particle real data
+         @param idata [in] particle int data
+       **/
     ParticleArrays(
-        P* aos, std::array<RT, NReal>& rdata, std::array<IT, NInt>& idata)
+        P* aos, std::array<RT, NRealT>& rdata, std::array<IT, NIntT>& idata)
         : m_aos(aos)
     {
-        for (size_t i = 0; i < NReal; i++) {
+        for (size_t i = 0; i < NRealT; i++) {
             m_rdata[i] = rdata[i].data();
         }
-        for (size_t i = 0; i < NInt; i++) {
+        for (size_t i = 0; i < NIntT; i++) {
             m_idata[i] = idata[i].data();
         }
     }
@@ -34,10 +37,10 @@ struct ParticleArrays
     P* m_aos = nullptr;
 
     //! Pointers to real data
-    amrex::GpuArray<amrex::Real*, NReal> m_rdata;
+    amrex::GpuArray<amrex::Real*, NRealT> m_rdata;
 
     //! Pointers to int data
-    amrex::GpuArray<int*, NInt> m_idata;
+    amrex::GpuArray<int*, NIntT> m_idata;
 };
 
 //! Functor for printing particle data on host
@@ -57,11 +60,11 @@ struct Print
                        << "  cpu = " << p.cpu() << "\n"
                        << "  type = "
                        << parrs.m_idata[CommonIntData::type_id][n] << "\n";
-        for (int i = 0; i < p.NInt; i++) {
+        for (int i = 0; i < PArrs::NInt; i++) {
             amrex::Print() << "  int comp(" << i
                            << ") = " << parrs.m_idata[i][n] << "\n";
         }
-        for (int i = 0; i < p.NReal; i++) {
+        for (int i = 0; i < PArrs::NReal; i++) {
             amrex::Print() << "  real comp(" << i
                            << ") = " << parrs.m_rdata[i][n] << "\n";
         }
