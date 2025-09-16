@@ -10,19 +10,44 @@
 
 namespace spades {
 
+//! PHOLD model
 class Phold
 {
 public:
+    /**
+       @brief Class identifier name
+       @return class identifier
+     **/
     static std::string identifier() { return "phold"; }
 
     explicit Phold() = default;
 
+    //! Initialize
     void initialize(const amrex::Geometry& geom);
 
+    //! Read user parameters
     void read_parameters();
 
+    /**
+     * @struct ProcessOp
+     * @brief A struct that defines an operator for processing messages
+     */
     struct ProcessOp
     {
+        /**
+         * @brief Callable operator to process a message
+         *
+         * @tparam MParrs type of the message particle array
+         * @tparam EParrs type of the entity particle array
+         * @param msg_parrs message particle array
+         * @param ent_parrs entity particle array
+         * @param iv cell index of the particle
+         * @param rcv_msg index of the received message
+         * @param snd_msg index of the sending message particle
+         * @param ent global ID of the entity
+         * @param ent_idx index of the entity
+         * @param engine random engine
+         */
         template <class MParrs, class EParrs>
         AMREX_GPU_DEVICE void operator()(
             const MParrs& msg_parrs,
@@ -95,8 +120,13 @@ public:
 
     using ProcessType = ProcessOp;
 
+    /**
+       @brief Message processing operator
+       @return ProcessType message processing operator
+     **/
     [[nodiscard]] ProcessType process_op() const { return m_process_op; }
 
+    // Message processing operator
     ProcessOp m_process_op;
 };
 
