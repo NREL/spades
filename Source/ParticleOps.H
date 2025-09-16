@@ -12,8 +12,8 @@ namespace spades::particles {
 template <size_t NRealT, size_t NIntT, class P, class RT, class IT>
 struct ParticleArrays
 {
-    static constexpr size_t nreal = NRealT;
-    static constexpr size_t nint = NIntT;
+    static constexpr size_t NREAL = NRealT;
+    static constexpr size_t NINT = NIntT;
 
     /**
          @brief Constructor
@@ -60,11 +60,11 @@ struct Print
                        << "  cpu = " << p.cpu() << "\n"
                        << "  type = "
                        << parrs.m_idata[CommonIntData::type_id][n] << "\n";
-        for (size_t i = 0; i < PArrs::nint; i++) {
+        for (size_t i = 0; i < PArrs::NINT; i++) {
             amrex::Print() << "  int comp(" << i
                            << ") = " << parrs.m_idata[i][n] << "\n";
         }
-        for (size_t i = 0; i < PArrs::nreal; i++) {
+        for (size_t i = 0; i < PArrs::NREAL; i++) {
             amrex::Print() << "  real comp(" << i
                            << ") = " << parrs.m_rdata[i][n] << "\n";
         }
@@ -104,10 +104,10 @@ struct Copy
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     operator()(const amrex::Long p1, const amrex::Long p2, PArrs& parrs) const
     {
-        for (size_t i = 0; i < PArrs::nreal; i++) {
+        for (size_t i = 0; i < PArrs::NREAL; i++) {
             parrs.m_rdata[i][p2] = parrs.m_rdata[i][p1];
         }
-        for (size_t i = 0; i < PArrs::nint; i++) {
+        for (size_t i = 0; i < PArrs::NINT; i++) {
             parrs.m_idata[i][p2] = parrs.m_idata[i][p1];
         }
     }
