@@ -161,7 +161,6 @@ void SPADES<Model>::read_parameters()
         pp.query("lookahead", m_lookahead);
         pp.query("window_size", m_window_size);
         pp.query("messages_per_step", m_messages_per_step);
-        pp.query("lambda", m_lambda);
         pp.query("data_fname", m_data_fname);
         pp.query("messages_per_lp", m_messages_per_lp);
     }
@@ -380,10 +379,8 @@ void SPADES<Model>::process_messages()
     const auto& dlo = dom.smallEnd();
     const auto& dhi = dom.bigEnd();
     const auto lbts = m_lbts;
-    const auto lookahead = m_lookahead;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
-    const auto lambda = m_lambda;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -424,7 +421,7 @@ void SPADES<Model>::process_messages()
                     const auto ts =
                         msg_parrs.m_rdata[particles::CommonRealData::timestamp]
                                          [prcv_soa];
-                    if (ts >= lbts + lookahead + window_size) {
+                    if (ts >= lbts + process_op.m_lookahead + window_size) {
                         break;
                     }
 
