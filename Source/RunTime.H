@@ -8,7 +8,7 @@ class RunTime
 public:
     virtual ~RunTime() = default;
     virtual void run() = 0;
-    virtual const amrex::Geometry& Geom() const = 0;
+    [[nodiscard]] virtual const amrex::Geometry& geom() const = 0;
 };
 
 template <typename Model>
@@ -46,7 +46,7 @@ public:
                        << end_time - init_time << std::endl;
     }
 
-    const amrex::Geometry& Geom() const override
+    [[nodiscard]] const amrex::Geometry& geom() const override
     {
         return m_spades.Geom(spades::SPADES<Model>::LEV);
     };
@@ -62,7 +62,7 @@ void create_and_run_model(const std::string& model_name)
     if (model_name == "phold") {
         spades::Phold model;
         runtime = std::make_unique<TemplatedRunTime<spades::Phold>>(model);
-        model.initialize(runtime->Geom());
+        model.initialize(runtime->geom());
     } else {
         amrex::Abort("Invalid model type" + model_name);
     }

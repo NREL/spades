@@ -376,8 +376,6 @@ void SPADES<Model>::process_messages()
     const auto& plo = Geom(LEV).ProbLoArray();
     const auto& dx = Geom(LEV).CellSizeArray();
     const auto& dom = Geom(LEV).Domain();
-    const auto& dlo = dom.smallEnd();
-    const auto& dhi = dom.bigEnd();
     const auto lbts = m_lbts;
     const auto window_size = m_window_size;
     const auto messages_per_step = m_messages_per_step;
