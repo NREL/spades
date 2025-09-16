@@ -60,11 +60,11 @@ struct Print
                        << "  cpu = " << p.cpu() << "\n"
                        << "  type = "
                        << parrs.m_idata[CommonIntData::type_id][n] << "\n";
-        for (int i = 0; i < PArrs::NInt; i++) {
+        for (size_t i = 0; i < PArrs::NInt; i++) {
             amrex::Print() << "  int comp(" << i
                            << ") = " << parrs.m_idata[i][n] << "\n";
         }
-        for (int i = 0; i < PArrs::NReal; i++) {
+        for (size_t i = 0; i < PArrs::NReal; i++) {
             amrex::Print() << "  real comp(" << i
                            << ") = " << parrs.m_rdata[i][n] << "\n";
         }
