@@ -1,0 +1,14 @@
+.. meta::ef4df7d27b15a2e1592c3787700d8d5a9e4f2a52e6efbb51d9bb4a0c79d4d404fb9dfbd62b06391f1e08d2adc35dec56c34f804fa4e87945f97461e11e3bb2e2
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::EntityRealData Struct Reference
+
+EntityRealData Struct Reference
+===============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_entity_real_data.html

@@ -1,0 +1,14 @@
+.. meta::cd5e54320811bce65b8a0b1566a2b6d100a14ba8b1c916d923a035589556caef0691c4f45fdbe3d026c8ea9679be7381d3f5b3de8c280fb2e28fc2709785df8a
+
+:orphan:
+
+.. title:: SPADES API: spades::Factory&lt; Base, Args &gt; Struct Template Reference
+
+Factory&lt; Base, Args &gt; Struct Template Reference
+=====================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1_factory.html

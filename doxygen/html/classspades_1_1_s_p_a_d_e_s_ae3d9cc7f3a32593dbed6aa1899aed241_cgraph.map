@@ -1,0 +1,9 @@
+<map id="spades::SPADES::write_checkpoint_file" name="spades::SPADES::write_checkpoint_file">
+<area shape="rect" id="Node000001" title="Write checkpoint file to disk." alt="" coords="5,69,172,109"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1_s_p_a_d_e_s.html#a931e7876f1853cc4c42373c82820ce2a" title="Get checkpoint file name." alt="" coords="225,5,382,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="156,67,222,47,223,52,157,72"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1_s_p_a_d_e_s.html#ab8b581263b8652535599daa49eb1d922" title="Write job info to disk." alt="" coords="220,69,387,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="173,87,206,87,206,92,173,92"/>
+<area shape="rect" id="Node000004" href="$classspades_1_1_s_p_a_d_e_s.html#a6154cf5ada53b75fd6c5f609de9c5b11" title="Write random number generator seed info." alt="" coords="220,133,387,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="157,107,223,127,222,132,156,112"/>
+</map>

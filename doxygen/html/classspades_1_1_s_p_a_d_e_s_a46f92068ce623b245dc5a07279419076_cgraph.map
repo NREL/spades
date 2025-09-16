@@ -1,0 +1,5 @@
+<map id="spades::SPADES::compute_dt" name="spades::SPADES::compute_dt">
+<area shape="rect" id="Node000001" title="Wrapper for EstTimeStep." alt="" coords="5,13,216,38"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1_s_p_a_d_e_s.html#a0690c31594c265dcf9dcc47d49d4e0e6" title="Compute the time step." alt="" coords="264,5,419,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="217,23,251,23,251,28,217,28"/>
+</map>

@@ -1,0 +1,14 @@
+.. meta::6eb435cae9e5b0b2807f9a74fcfca8c9b14a462c30d42dc4d820d3fc8e8ab61bd1b855dfb00abe452f526b7ce7de355b9027aacd1e510f63122cc315831845c4
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/IC.H Source File
+
+/home/runner/work/spades/spades/Source/IC.H Source File
+=======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _i_c_8_h_source.html

@@ -1,0 +1,14 @@
+.. meta::1618a34e0ec5aa904f406450042eda43c0d7972dc0297596e515e899b0520aae61d6469a3d4fcb6e08618ce285d0367914354b65c2a5c8995d8009ca9ed1d9e3
+
+:orphan:
+
+.. title:: SPADES API: spades::SPADES Class Reference
+
+SPADES Class Reference
+======================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classspades_1_1_s_p_a_d_e_s.html

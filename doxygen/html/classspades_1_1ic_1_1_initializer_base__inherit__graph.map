@@ -1,0 +1,5 @@
+<map id="spades::ic::InitializerBase" name="spades::ic::InitializerBase">
+<area shape="rect" id="Node000001" title="Base class for initial conditions." alt="" coords="5,5,193,31"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1ic_1_1_initializer.html" title="Initial condition class." alt="" coords="21,79,177,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="102,44,102,79,97,79,97,44"/>
+</map>
