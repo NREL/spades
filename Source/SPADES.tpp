@@ -457,7 +457,7 @@ void SPADES<Model>::process_messages()
                         msg_parrs, ent_parrs, iv, prcv_soa, psnd_soa, ent,
                         pe_soa, engine);
 
-                    // Process agnostic modifications
+                    // Model agnostic modifications
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
                     AMREX_ASSERT(prcv.id() < std::numeric_limits<int>::max());
                     msg_parrs
