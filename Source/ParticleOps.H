@@ -104,10 +104,10 @@ struct Copy
     AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
     operator()(const amrex::Long p1, const amrex::Long p2, PArrs& parrs) const
     {
-        for (int i = 0; i < PArrs::NReal; i++) {
+        for (size_t i = 0; i < PArrs::NReal; i++) {
             parrs.m_rdata[i][p2] = parrs.m_rdata[i][p1];
         }
-        for (int i = 0; i < PArrs::NInt; i++) {
+        for (size_t i = 0; i < PArrs::NInt; i++) {
             parrs.m_idata[i][p2] = parrs.m_idata[i][p1];
         }
     }
