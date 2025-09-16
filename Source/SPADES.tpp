@@ -495,8 +495,9 @@ void SPADES<Model>::process_messages()
                     //     psnd_soa, msg_parrs, next_ts, pos, iv_dest,
                     //     static_cast<int>(dom.index(iv)), ent,
                     //     static_cast<int>(dom.index(iv_dest)), rcv_ent);
-            const auto ent_lvt =
-                ent_parrs.m_rdata[particles::CommonRealData::timestamp][ent];
+                    const auto ent_lvt =
+                        ent_parrs
+                            .m_rdata[particles::CommonRealData::timestamp][ent];
 
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
                     AMREX_ASSERT(prcv.id() < std::numeric_limits<int>::max());
@@ -506,7 +507,7 @@ void SPADES<Model>::process_messages()
                     msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
                                      [psnd_soa] = prcv.cpu();
                     msg_parrs.m_rdata[particles::MessageRealData::creation_time]
-                                     [psnd_soa] =ent_lvt;
+                                     [psnd_soa] = ent_lvt;
 
                     // Create the conjugate message
                     const auto pcnj_soa = msg_getter(
@@ -533,8 +534,8 @@ void SPADES<Model>::process_messages()
                         , msg_parrs.m_idata[particles::CommonIntData::k]
                                            [pcnj_soa] = iv[2];)
                     msg_parrs
-                        .m_idata[particles::CommonIntData::type_id][pcnj_soa]
-                        = particles::MessageTypes::CONJUGATE;
+                        .m_idata[particles::CommonIntData::type_id][pcnj_soa] =
+                        particles::MessageTypes::CONJUGATE;
                 }
 
                 // Update LVT for the logical process
