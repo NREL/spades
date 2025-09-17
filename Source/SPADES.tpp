@@ -8,7 +8,9 @@ template <typename Model>
 SPADES<Model>::SPADES(const Model model) : m_model(model)
 {
     BL_PROFILE("spades::SPADES::SPADES()");
-    AMREX_ALWAYS_ASSERT(Geom(LEV).ProbSize() == m_model.geom().ProbSize());
+    AMREX_ALWAYS_ASSERT(
+        std::abs(Geom(LEV).ProbSize() - m_model.geom().ProbSize()) <
+        constants::EPS);
     AMREX_ALWAYS_ASSERT(Geom(LEV).Domain() == m_model.geom().Domain());
 
     read_parameters();

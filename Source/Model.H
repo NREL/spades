@@ -26,7 +26,7 @@ public:
     //! Read user parameters
     void read_parameters();
 
-    const amrex::Geometry& geom() const { return m_geom; }
+    [[nodiscard]] const amrex::Geometry& geom() const { return m_geom; }
 
     /**
      * @struct ProcessOp
