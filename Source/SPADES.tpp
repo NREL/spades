@@ -5,7 +5,7 @@
 namespace spades {
 
 template <typename Model>
-SPADES<Model>::SPADES(const Model model) : m_model(model)
+SPADES<Model>::SPADES(const Model& model) : m_model(model)
 {
     BL_PROFILE("spades::SPADES::SPADES()");
     AMREX_ALWAYS_ASSERT(

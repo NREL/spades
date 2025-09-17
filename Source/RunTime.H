@@ -14,7 +14,7 @@ template <typename Model>
 class TemplatedRunTime : public RunTime
 {
 public:
-    explicit TemplatedRunTime(const Model model) : m_spades(model) {}
+    explicit TemplatedRunTime(const Model& model) : m_spades(model) {}
 
     void run() override
     {
@@ -56,11 +56,10 @@ void create_and_run_model(const std::string& model_name)
     if (model_name == "phold") {
         spades::Phold model;
         runtime = std::make_unique<TemplatedRunTime<spades::Phold>>(model);
+        runtime->run();
     } else {
         amrex::Abort("Invalid model type" + model_name);
     }
-
-    runtime->run();
 }
 
 #endif
