@@ -32,7 +32,7 @@ class SPADES : public amrex::AmrCore
         "The model must define a struct named ProcessOp.");
 
 public:
-    SPADES(const Model& model);
+    SPADES(const Model model);
     ~SPADES() override;
 
     //! Initializes data
@@ -419,7 +419,7 @@ private:
     std::unique_ptr<particles::EntityParticleContainer> m_entity_pc;
 
     //! Model
-    const Model& m_model;
+    const Model m_model;
 };
 
 } // namespace spades

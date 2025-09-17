@@ -20,13 +20,13 @@ public:
      **/
     static std::string identifier() { return "phold"; }
 
-    explicit Phold() = default;
-
-    //! Initialize
-    void initialize(const amrex::Geometry& geom);
+    //! Constructor
+    explicit Phold();
 
     //! Read user parameters
     void read_parameters();
+
+    const amrex::Geometry& geom() const { return m_geom; }
 
     /**
      * @struct ProcessOp
@@ -128,6 +128,10 @@ public:
 
     // Message processing operator
     ProcessOp m_process_op;
+
+private:
+    // Domain geometry
+    amrex::Geometry m_geom;
 };
 
 } // namespace spades
