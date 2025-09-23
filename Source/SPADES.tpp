@@ -915,7 +915,7 @@ void SPADES<Model>::MakeNewLevelFromScratch(
     // Update message particle container
     m_message_pc->Define(Geom(LEV), dm, ba);
     m_message_pc->initialize_variable_names();
-    m_message_pc->initialize_messages(m_lookahead);
+    m_message_pc->initialize_messages(m_model);
     m_message_pc->initialize_state();
     m_message_pc->sort();
 

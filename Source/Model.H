@@ -171,6 +171,60 @@ public:
     // Initialize entity operator
     InitEntityOp m_init_entity_op;
 
+    /**
+     * @struct InitMessageOp
+     * @brief A struct that defines an operator for initializing entities
+     */
+    struct InitMessageOp
+    {
+        /**
+         * @brief Callable operator to initialize an message
+         *
+         * @tparam MParrs type of the message particle array
+         * @param ent_parrs message particle array
+         * @param n index of the particle
+         */
+        template <class MParrs>
+        AMREX_GPU_DEVICE void operator()(
+            const MParrs& msg_parrs,
+            const int n,
+            amrex::RandomEngine const& engine) const
+        {
+            const amrex::Real ts =
+                random_exponential(m_lambda, engine) + m_lookahead;
+            msg_parrs.m_idata[particles::CommonIntData::type_id][n] =
+                particles::MessageTypes::MESSAGE;
+            msg_parrs.m_rdata[particles::CommonRealData::timestamp][n] = ts;
+            msg_parrs.m_rdata[particles::MessageRealData::creation_time][n] =
+                0.0;
+        }
+
+        //! Lookahead value (optional user input)
+        amrex::Real m_lookahead{1.0};
+
+        //! Initial messages per LP
+        int m_messages_per_lp{1};
+
+        //! Width of exponential distribution (optional user input)
+        //! smaller values of lambda = larger variance in random values
+        //! larger values of lambda = smaller variance in random values
+        amrex::Real m_lambda{1.0};
+    };
+
+    using InitMessageType = InitMessageOp;
+
+    /**
+       @brief Initialize message operator
+       @return InitMessageType initialize message operator
+     **/
+    [[nodiscard]] InitMessageType init_message_op() const
+    {
+        return m_init_message_op;
+    }
+
+    // Initialize message operator
+    InitMessageOp m_init_message_op;
+
 private:
     // Domain geometry
     amrex::Geometry m_geom;

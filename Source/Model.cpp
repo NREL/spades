@@ -44,17 +44,22 @@ void Phold::read_parameters()
     amrex::Real lookahead = 1.0;
     amrex::Real lambda = 1.0;
     int entities_per_lp = 1;
+    int messages_per_lp = 1;
     {
         amrex::ParmParse pp("spades");
         pp.query("lookahead", lookahead);
         pp.query("lambda", lambda);
         pp.query("entities_per_lp", entities_per_lp);
+        pp.query("messages_per_lp", messages_per_lp);
     }
 
     m_process_op.m_lookahead = lookahead;
     m_process_op.m_lambda = lambda;
     m_process_op.m_entities_per_lp = entities_per_lp;
     m_init_entity_op.m_entities_per_lp = entities_per_lp;
+    m_init_message_op.m_messages_per_lp = messages_per_lp;
+    m_init_message_op.m_lambda = lambda;
+    m_init_message_op.m_lookahead = lookahead;
 }
 
 } // namespace spades
