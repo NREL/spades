@@ -1,14 +1,14 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef PHOLD_H
+#define PHOLD_H
 #include <AMReX_ParmParse.H>
 #include <AMReX_Geometry.H>
-#include "Constants.H"
-#include "Utilities.H"
-#include "MessageOps.H"
-#include "MessageData.H"
-#include "EntityData.H"
+#include "Source/Constants.H"
+#include "Source/Utilities.H"
+#include "Source/MessageOps.H"
+#include "Source/MessageData.H"
+#include "Source/EntityData.H"
 
-namespace spades {
+namespace spades::models {
 
 //! PHOLD model
 class Phold
@@ -230,5 +230,5 @@ private:
     amrex::Geometry m_geom;
 };
 
-} // namespace spades
-#endif /* MODEL_H */
+} // namespace spades::models
+#endif /* PHOLD_H */

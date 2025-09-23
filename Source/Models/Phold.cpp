@@ -1,6 +1,6 @@
-#include "Model.H"
+#include "Phold.H"
 
-namespace spades {
+namespace spades::models {
 
 Phold::Phold() { read_parameters(); }
 
@@ -62,4 +62,4 @@ void Phold::read_parameters()
     m_init_message_op.m_lookahead = lookahead;
 }
 
-} // namespace spades
+} // namespace spades::models

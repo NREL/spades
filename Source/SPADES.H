@@ -17,7 +17,7 @@
 #include "SpadesParticleContainer.H"
 #include "MessageParticleContainer.H"
 #include "EntityParticleContainer.H"
-#include "Model.H"
+#include "Models/Phold.H"
 
 /**
    @brief Solver for PArallel Discrete Event Simulation

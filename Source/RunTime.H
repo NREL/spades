@@ -54,8 +54,9 @@ void create_and_run_model(const std::string& model_name)
     std::unique_ptr<RunTime> runtime;
 
     if (model_name == "phold") {
-        spades::Phold model;
-        runtime = std::make_unique<TemplatedRunTime<spades::Phold>>(model);
+        spades::models::Phold model;
+        runtime =
+            std::make_unique<TemplatedRunTime<spades::models::Phold>>(model);
         runtime->run();
     } else {
         amrex::Abort("Invalid model type" + model_name);
