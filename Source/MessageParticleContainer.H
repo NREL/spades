@@ -52,7 +52,7 @@ public:
 
     /**
        @brief Initialize the messages
-       @param lookahead [in] lookahead
+       @param model [in] model
      **/
     template <typename Model>
     void initialize_messages(const Model& model);

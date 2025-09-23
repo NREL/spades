@@ -181,8 +181,9 @@ public:
          * @brief Callable operator to initialize an message
          *
          * @tparam MParrs type of the message particle array
-         * @param ent_parrs message particle array
+         * @param msg_parrs message particle array
          * @param n index of the particle
+         * @param engine random engine
          */
         template <class MParrs>
         AMREX_GPU_DEVICE void operator()(
