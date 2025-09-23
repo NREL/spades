@@ -129,6 +129,48 @@ public:
     // Message processing operator
     ProcessOp m_process_op;
 
+    /**
+     * @struct InitEntityOp
+     * @brief A struct that defines an operator for initializing entities
+     */
+    struct InitEntityOp
+    {
+        /**
+         * @brief Callable operator to initialize an entity
+         *
+         * @tparam EParrs type of the entity particle array
+         * @param ent_parrs entity particle array
+         * @param n index of the particle
+         */
+        template <class EParrs>
+        AMREX_GPU_DEVICE void
+        operator()(const EParrs& ent_parrs, const int n) const
+        {
+            const amrex::Real ts = 0.0;
+
+            ent_parrs.m_rdata[particles::CommonRealData::timestamp][n] = ts;
+            ent_parrs.m_idata[particles::CommonIntData::type_id][n] =
+                particles::EntityTypes::ENTITY;
+        }
+
+        //! Number of entities per logical process (optional user input)
+        int m_entities_per_lp{1};
+    };
+
+    using InitEntityType = InitEntityOp;
+
+    /**
+       @brief Initialize entity operator
+       @return InitEntityType initialize entity operator
+     **/
+    [[nodiscard]] InitEntityType init_entity_op() const
+    {
+        return m_init_entity_op;
+    }
+
+    // Initialize entity operator
+    InitEntityOp m_init_entity_op;
+
 private:
     // Domain geometry
     amrex::Geometry m_geom;

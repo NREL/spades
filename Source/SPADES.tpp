@@ -922,7 +922,7 @@ void SPADES<Model>::MakeNewLevelFromScratch(
     // Update entity particle container
     m_entity_pc->Define(Geom(LEV), dm, ba);
     m_entity_pc->initialize_variable_names();
-    m_entity_pc->initialize_entities();
+    m_entity_pc->initialize_entities(m_model);
     m_entity_pc->initialize_state();
     m_entity_pc->sort();
 }

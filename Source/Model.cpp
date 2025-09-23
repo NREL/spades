@@ -54,6 +54,7 @@ void Phold::read_parameters()
     m_process_op.m_lookahead = lookahead;
     m_process_op.m_lambda = lambda;
     m_process_op.m_entities_per_lp = entities_per_lp;
+    m_init_entity_op.m_entities_per_lp = entities_per_lp;
 }
 
 } // namespace spades
