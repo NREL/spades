@@ -47,9 +47,10 @@ public:
          * @param ent global ID of the entity
          * @param ent_idx index of the entity
          * @param engine random engine
+         * @return n_sent_messages number of sent messages
          */
         template <class MParrs, class EParrs>
-        AMREX_GPU_DEVICE void operator()(
+        AMREX_GPU_DEVICE int operator()(
             const MParrs& msg_parrs,
             const EParrs& ent_parrs,
             const amrex::IntVect& iv,
@@ -95,6 +96,8 @@ public:
                 snd_msg, msg_parrs, next_ts, pos, iv_dest,
                 static_cast<int>(m_dom.index(iv)), ent,
                 static_cast<int>(m_dom.index(iv_dest)), rcv_ent);
+            const int n_sent_messages = 1;
+            return n_sent_messages;
         }
 
         //! Lookahead value (optional user input)

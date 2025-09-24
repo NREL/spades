@@ -416,6 +416,7 @@ void SPADES<Model>::process_messages()
                     particles::Get(iv, msg_cnt_arr, msg_offsets_arr, msg_parrs);
                 const auto ent_getter =
                     particles::Get(iv, ent_cnt_arr, ent_offsets_arr, ent_parrs);
+                int undefined_index = 0;
                 for (int n = 0;
                      n < amrex::min<int>(
                              msg_cnt_arr(iv, particles::MessageTypes::MESSAGE),
@@ -453,53 +454,60 @@ void SPADES<Model>::process_messages()
                                         [prcv_soa]) == iv);
 
                     // process the event
-                    const auto psnd_soa =
-                        msg_getter(2 * n, particles::MessageTypes::UNDEFINED);
+                    const auto psnd_soa = msg_getter(
+                        undefined_index, particles::MessageTypes::UNDEFINED);
 
-                    process_op(
+                    int n_sent_messages = process_op(
                         msg_parrs, ent_parrs, iv, prcv_soa, psnd_soa, ent,
                         pe_soa, engine);
+                    undefined_index += n_sent_messages;
 
                     // Model agnostic modifications
                     auto& prcv = msg_parrs.m_aos[prcv_soa];
                     AMREX_ASSERT(prcv.id() < std::numeric_limits<int>::max());
-                    msg_parrs
-                        .m_idata[particles::MessageIntData::pair_id][psnd_soa] =
-                        static_cast<int>(prcv.id());
-                    msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
-                                     [psnd_soa] = prcv.cpu();
-                    msg_parrs.m_rdata[particles::MessageRealData::creation_time]
-                                     [psnd_soa] =
-                        ent_parrs.m_rdata[particles::CommonRealData::timestamp]
-                                         [pe_soa];
+                    for (int m = 0; m < n_sent_messages; m++) {
+                        msg_parrs.m_idata[particles::MessageIntData::pair_id]
+                                         [psnd_soa + m] =
+                            static_cast<int>(prcv.id());
+                        msg_parrs.m_idata[particles::MessageIntData::pair_cpu]
+                                         [psnd_soa + m] = prcv.cpu();
+                        msg_parrs
+                            .m_rdata[particles::MessageRealData::creation_time]
+                                    [psnd_soa + m] =
+                            ent_parrs
+                                .m_rdata[particles::CommonRealData::timestamp]
+                                        [pe_soa];
 
-                    // Create the conjugate message
-                    const auto pcnj_soa = msg_getter(
-                        2 * n + 1, particles::MessageTypes::UNDEFINED);
+                        // Create the conjugate message
+                        const auto pcnj_soa = msg_getter(
+                            undefined_index + m,
+                            particles::MessageTypes::UNDEFINED);
 
-                    particles::Copy()(psnd_soa, pcnj_soa, msg_parrs);
+                        particles::Copy()(psnd_soa + m, pcnj_soa, msg_parrs);
 
-                    // The conjugate position is iv but the
-                    // receiver_lp is still updated (we need to know
-                    // who to send this to)
-                    auto& pcnj_aos = msg_parrs.m_aos[pcnj_soa];
-                    AMREX_D_TERM(
-                        pcnj_aos.pos(0) =
-                            plo[0] + (iv[0] + constants::HALF) * dx[0];
-                        , pcnj_aos.pos(1) =
-                              plo[1] + (iv[1] + constants::HALF) * dx[1];
-                        , pcnj_aos.pos(2) =
-                              plo[2] + (iv[2] + constants::HALF) * dx[2];)
-                    AMREX_D_TERM(
-                        msg_parrs.m_idata[particles::CommonIntData::i]
-                                         [pcnj_soa] = iv[0];
-                        , msg_parrs.m_idata[particles::CommonIntData::j]
-                                           [pcnj_soa] = iv[1];
-                        , msg_parrs.m_idata[particles::CommonIntData::k]
-                                           [pcnj_soa] = iv[2];)
-                    msg_parrs
-                        .m_idata[particles::CommonIntData::type_id][pcnj_soa] =
-                        particles::MessageTypes::CONJUGATE;
+                        // The conjugate position is iv but the
+                        // receiver_lp is still updated (we need to know
+                        // who to send this to)
+                        auto& pcnj_aos = msg_parrs.m_aos[pcnj_soa];
+                        AMREX_D_TERM(
+                            pcnj_aos.pos(0) =
+                                plo[0] + (iv[0] + constants::HALF) * dx[0];
+                            , pcnj_aos.pos(1) =
+                                  plo[1] + (iv[1] + constants::HALF) * dx[1];
+                            , pcnj_aos.pos(2) =
+                                  plo[2] + (iv[2] + constants::HALF) * dx[2];)
+                        AMREX_D_TERM(
+                            msg_parrs.m_idata[particles::CommonIntData::i]
+                                             [pcnj_soa] = iv[0];
+                            , msg_parrs.m_idata[particles::CommonIntData::j]
+                                               [pcnj_soa] = iv[1];
+                            , msg_parrs.m_idata[particles::CommonIntData::k]
+                                               [pcnj_soa] = iv[2];)
+                        msg_parrs.m_idata[particles::CommonIntData::type_id]
+                                         [pcnj_soa] =
+                            particles::MessageTypes::CONJUGATE;
+                    }
+                    undefined_index += n_sent_messages;
                 }
 
                 // Update LVT for the logical process
