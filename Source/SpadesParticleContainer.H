@@ -256,7 +256,7 @@ protected:
     amrex::MultiFab m_max_timestamp;
 };
 
-#include "SpadesParticleContainerImpl.H"
+#include "SpadesParticleContainer.tpp"
 
 } // namespace spades::particles
 #endif
