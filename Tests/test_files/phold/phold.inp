@@ -19,6 +19,7 @@ spades.write_messages = t
 spades.write_entities = t
 spades.seed = 10
 spades.sort_type = "nonencoded"
+spades.model = "phold"
 
 amrex.fpe_trap_invalid = 1
 amrex.fpe_trap_zero = 1

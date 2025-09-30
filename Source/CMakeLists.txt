@@ -4,7 +4,6 @@ target_sources(${spades_lib_name}
     EntityParticleContainer.cpp
     ConsoleIO.cpp
     IC.cpp
-    SPADES.cpp
     Utilities.cpp
 )
 
@@ -14,6 +13,8 @@ target_include_directories(${spades_lib_name} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
   $<INSTALL_INTERFACE:include>)
+
+add_subdirectory(Models)
 
 include(AMReXBuildInfo)
 generate_buildinfo(${spades_lib_name} ${CMAKE_SOURCE_DIR})
