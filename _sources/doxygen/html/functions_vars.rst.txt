@@ -1,0 +1,14 @@
+.. meta::8acf0f2fafc5dcbd0c740a83b878bf515083fa75df8aa2a7cbd3a969f7ef563c667d5a65704eb5bde6c5a64911d1ab883f74d51ea1fe6e848fe15add145817d9
+
+:orphan:
+
+.. title:: SPADES API: Class Members - Variables
+
+Class Members - Variables
+=========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_vars.html

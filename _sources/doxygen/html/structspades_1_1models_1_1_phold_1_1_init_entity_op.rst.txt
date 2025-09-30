@@ -1,0 +1,14 @@
+.. meta::811d682f4de3ea6d7aa6cddd6826a75f55b2720b0ad873d3423599756c94812b0617ecc06f8c82ff3a2c94b062c7595e573935149eabde90f35778c46fb93b14
+
+:orphan:
+
+.. title:: SPADES API: spades::models::Phold::InitEntityOp Struct Reference
+
+InitEntityOp Struct Reference
+=============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1models_1_1_phold_1_1_init_entity_op.html

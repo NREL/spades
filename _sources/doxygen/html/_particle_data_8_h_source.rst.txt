@@ -1,0 +1,14 @@
+.. meta::92267810279fc68299d540021b3c0c76438aecc53e9f313aa343fc398869c5bfb7716f71100cf3121b61379862abf53b396d66824808be8cff3af97f4559cdf7
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/ParticleData.H Source File
+
+/home/runner/work/spades/spades/Source/ParticleData.H Source File
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _particle_data_8_h_source.html

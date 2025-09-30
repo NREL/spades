@@ -1,0 +1,14 @@
+.. meta::b1d647ce1a01af0a42861b66027ecad05ef86861762b931a790d9eb28945e5db5aa76ccaec341ef5bcdea8f97a26eace69f43a3ab19c571ad4092794aa3da8c6
+
+:orphan:
+
+.. title:: SPADES API: spades::models::Phold::ProcessOp Struct Reference
+
+ProcessOp Struct Reference
+==========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1models_1_1_phold_1_1_process_op.html

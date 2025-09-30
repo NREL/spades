@@ -1,0 +1,7 @@
+<map id="spades::random_exponential" name="spades::random_exponential">
+<area shape="rect" id="Node000001" title="Exponential distribution." alt="" coords="253,45,464,70"/>
+<area shape="rect" id="Node000002" href="$structspades_1_1models_1_1_phold_1_1_init_message_op.html#a2d3c8a520eab45be0e5504063915143f" title="Callable operator to initialize an message." alt="" coords="5,5,205,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="244,46,205,41,206,35,245,40"/>
+<area shape="rect" id="Node000003" href="$structspades_1_1models_1_1_phold_1_1_process_op.html#a306deef5ddd30e6d64720af3c12101e4" title="Callable operator to process a message." alt="" coords="20,69,191,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="245,74,191,81,191,76,244,69"/>
+</map>

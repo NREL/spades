@@ -1,0 +1,14 @@
+.. meta::b458e3b35cd359b23c97e5f306370f2d3fa3ac416a78797dd85d7be3c2d88227b80d5a109ed9010c03c52fb4c2f016a6d45d065f92fa3b7c5aabfd0239d74eaa
+
+:orphan:
+
+.. title:: SPADES API: spades::HasProcessOp&lt; typename, typename &gt; Struct Template Reference
+
+HasProcessOp&lt; typename, typename &gt; Struct Template Reference
+==================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1_has_process_op.html

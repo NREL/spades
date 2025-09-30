@@ -1,0 +1,14 @@
+.. meta::99478f2c41e28b9c97b985fd32a0e89eb85cecfc06cdb0db87a6390d8c007f7d53d0d8348921222f8375a08ed1ca27c46c5426da9c149e0e58c1ac60e1060688
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/SPADES.H Source File
+
+/home/runner/work/spades/spades/Source/SPADES.H Source File
+===========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _s_p_a_d_e_s_8_h_source.html

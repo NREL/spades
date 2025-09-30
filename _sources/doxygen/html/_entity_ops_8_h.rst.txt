@@ -1,0 +1,14 @@
+.. meta::df80fc689ead48bfbc448ff637e08f934a31ab1c4f8d6e46a678b4554903dd120489f86e773138ffc98aea8536dc12cea33afbaab41e8150dd8799689ea5383b
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/EntityOps.H File Reference
+
+/home/runner/work/spades/spades/Source/EntityOps.H File Reference
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _entity_ops_8_h.html

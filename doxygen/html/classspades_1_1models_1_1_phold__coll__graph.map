@@ -1,0 +1,9 @@
+<map id="spades::models::Phold" name="spades::models::Phold">
+<area shape="rect" id="Node000001" title="PHOLD model." alt="" coords="356,77,524,102"/>
+<area shape="rect" id="Node000002" href="$structspades_1_1models_1_1_phold_1_1_process_op.html" title="A struct that defines an operator for processing messages." alt="" coords="5,5,173,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="187,40,332,67,371,74,370,79,332,72,186,45"/>
+<area shape="rect" id="Node000003" href="$structspades_1_1models_1_1_phold_1_1_init_entity_op.html" title="A struct that defines an operator for initializing entities." alt="" coords="5,69,173,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="187,87,356,87,356,92,187,92"/>
+<area shape="rect" id="Node000004" href="$structspades_1_1models_1_1_phold_1_1_init_message_op.html" title="A struct that defines an operator for initializing entities." alt="" coords="5,133,173,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="186,133,332,107,370,99,371,105,332,112,187,139"/>
+</map>

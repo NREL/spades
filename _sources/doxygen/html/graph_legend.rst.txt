@@ -1,0 +1,14 @@
+.. meta::d32cf518c39562b1c90c2d23150c7301137c20edbaf070fc4adbfc85fa98fe0079fe682866578565d04e53691c5ec65946b317deb4e956915c05ae21cb468de4
+
+:orphan:
+
+.. title:: SPADES API: Graph Legend
+
+Graph Legend
+============
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: graph_legend.html

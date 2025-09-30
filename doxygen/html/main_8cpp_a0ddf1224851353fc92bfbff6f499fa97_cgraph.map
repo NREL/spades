@@ -1,0 +1,11 @@
+<map id="main" name="main">
+<area shape="rect" id="Node000001" title="Main function." alt="" coords="5,80,60,105"/>
+<area shape="rect" id="Node000002" href="$_run_time_8_h.html#af2bb7afd54284a9fe78cca2c4d016c44" title=" " alt="" coords="112,5,283,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="48,78,75,58,107,40,124,33,126,38,109,44,77,63,51,82"/>
+<area shape="rect" id="Node000003" href="$namespacespades_1_1io.html#a284753285fda41192ced6c0946c44b41" title="Print SPADES banner." alt="" coords="108,55,287,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="60,86,101,80,102,85,60,91"/>
+<area shape="rect" id="Node000004" href="$namespacespades_1_1io.html#acdff4cd3e16f737fbc1f1b7aa970cf8f" title="Print SPADES error." alt="" coords="115,104,279,129"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="60,94,102,100,101,105,60,99"/>
+<area shape="rect" id="Node000005" href="$namespacespades_1_1io.html#accd9f8c4095dbe334cc9ce9da8a0ea14" title="Print SPADES usage." alt="" coords="111,153,283,179"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="52,103,78,121,109,138,130,147,128,151,107,143,76,126,49,108"/>
+</map>
