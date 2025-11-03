@@ -1,0 +1,14 @@
+.. meta::a00fd89b8cd39b04dc698267b61e4b8155f077a58ae2a5c46d2e14bc55fc0b54b11565349b892f7057af7bacf32eb8a72f2155756685c706a84515a47a812d6f
+
+:orphan:
+
+.. title:: SPADES API: spades::ic::InitializerBase Class Reference
+
+InitializerBase Class Reference
+===============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classspades_1_1ic_1_1_initializer_base.html

@@ -1,0 +1,7 @@
+<map id="spades::particles::EntityParticleContainer::write_plot_file" name="spades::particles::EntityParticleContainer::write_plot_file">
+<area shape="rect" id="Node000001" title="Write the particles to file." alt="" coords="5,56,176,111"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_entity_particle_container.html#a35202b6e0fde3932ee3ad97e0edaf6e8" title="Class identifier name." alt="" coords="252,5,423,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,63,238,50,239,56,177,68"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1particles_1_1_spades_particle_container.html#af16bc91dc8bdf6f0facc86c31856cb55" title=" " alt="" coords="224,85,451,183"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="177,98,211,105,210,111,176,103"/>
+</map>

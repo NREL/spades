@@ -1,0 +1,14 @@
+.. meta::c13beaef8634f42a9024d9fa1c8c2c0dcf90fad8ea66968a48c44004543eb652d0d98831de22cb793b2ddb71aeff020c4665c56ec70f3b8b94406dd185400f33
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::Copy Struct Reference
+
+Copy Struct Reference
+=====================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_copy.html

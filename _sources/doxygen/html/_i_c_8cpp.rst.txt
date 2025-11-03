@@ -1,0 +1,14 @@
+.. meta::9f09153296e5bc230db44f58d5a6c19fad3894db8522a42cab3d5e7dd9c243cd524555a7f0e7cb2bc8a649c3485d44da53208a4bdd252ce86177bb570a0a5795
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/IC.cpp File Reference
+
+/home/runner/work/spades/spades/Source/IC.cpp File Reference
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _i_c_8cpp.html

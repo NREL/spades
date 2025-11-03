@@ -1,0 +1,14 @@
+.. meta::829076c04ca4f0bb8f8bdd8cefcad4b575d79f7e96d80868dc8cbf6c573aeee002a5e1c6e14ceab1f141cfb6b09a00184bdbdf5d9506a66573e3087d8f4cd716
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::Get&lt; PArrs &gt; Struct Template Reference
+
+Get&lt; PArrs &gt; Struct Template Reference
+============================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_get.html

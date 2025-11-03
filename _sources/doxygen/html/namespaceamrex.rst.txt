@@ -1,0 +1,14 @@
+.. meta::e4960e0c5232fb5114a92ef10dea8ba4c6da5328493201173cf1fea7f4e3580f9092b6a3a2c99fd6ee1e916b53901a4066d13d73a4230ca41c913e24ff0594ea
+
+:orphan:
+
+.. title:: SPADES API: amrex Namespace Reference
+
+amrex Namespace Reference
+=========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespaceamrex.html

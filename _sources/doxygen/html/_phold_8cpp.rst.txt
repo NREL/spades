@@ -1,0 +1,14 @@
+.. meta::cb5d32e95f953a277556d6bdc5e16d6f6671cb94a39da3538b2e68fd33950abe1ea1111df75037029377ff9419e3b3058c8a997bf57e1f36b73670a1ffbd141e
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/Models/Phold.cpp File Reference
+
+/home/runner/work/spades/spades/Source/Models/Phold.cpp File Reference
+======================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _phold_8cpp.html

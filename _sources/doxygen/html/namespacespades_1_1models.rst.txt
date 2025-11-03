@@ -1,0 +1,14 @@
+.. meta::debf36df53fdd82418d8541805a1f604638c8ac8975fce3875727434c28b1b2b2e1e7a86cb0c6445f1716a85ef83f520f642d4b44c244d4fe80e8b09e1b3daba
+
+:orphan:
+
+.. title:: SPADES API: spades::models Namespace Reference
+
+models Namespace Reference
+==========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespacespades_1_1models.html

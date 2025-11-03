@@ -1,0 +1,5 @@
+<map id="spades::particles::MessageParticleContainer::sort" name="spades::particles::MessageParticleContainer::sort">
+<area shape="rect" id="Node000001" title="Sort the messages." alt="" coords="244,13,468,53"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_message_particle_container.html#a2e97f73022ecc21967a931aa376f5dc7" title="Resolve message pairs (remove message/anti&#45;message pairs)" alt="" coords="5,5,196,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="230,35,196,35,196,30,230,30"/>
+</map>

@@ -1,0 +1,14 @@
+.. meta::83c0d0a7df14fa59f3c2677c606c4ccf892c6d526b988f420d897222b520978e13c8f0afc27fdab11d5a9728e8a1a19fc145d382ed6873c2d2a0f02b2fab2b96
+
+:orphan:
+
+.. title:: SPADES API: spades::models::Phold Class Reference
+
+Phold Class Reference
+=====================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classspades_1_1models_1_1_phold.html

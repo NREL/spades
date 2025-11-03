@@ -1,0 +1,7 @@
+<map id="spades::particles::SpadesParticleContainer::read_parameters" name="spades::particles::SpadesParticleContainer::read_parameters">
+<area shape="rect" id="Node000001" title="Read user parameters." alt="" coords="244,45,424,100"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_entity_particle_container.html#ae89e5869ad9dc3c5871b8ac3ba92585d" title="Read user parameters." alt="" coords="15,5,186,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="230,58,186,50,186,45,231,52"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1particles_1_1_message_particle_container.html#a13860171affdebfd328823a25fbafbc0" title="Read user parameters." alt="" coords="5,84,196,139"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="231,92,197,98,196,93,230,87"/>
+</map>

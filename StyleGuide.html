@@ -1,0 +1,170 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Style Guide &mdash; SPADES 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2709fde1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SPADES" href="SPADES.html" />
+    <link rel="prev" title="Testing" href="Testing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SPADES
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="GettingStarted.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Building.html">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InputFiles.html">Input Files and Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorials.html">Tutorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Testing.html">Testing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Style Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#formatting">Formatting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linting">Linting</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SPADES.html">SPADES</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen/html/index.html">SPADES API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SPADES</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="GettingStarted.html">Getting Started</a></li>
+      <li class="breadcrumb-item active">Style Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/StyleGuide.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="style-guide">
+<span id="styleguide"></span><h1>Style Guide<a class="headerlink" href="#style-guide" title="Link to this heading"></a></h1>
+<p>For consistency, we enforce some style guidelines with <a class="reference external" href="https://clang.llvm.org/docs/ClangFormat.html">ClangFormat</a> and <a class="reference external" href="https://clang.llvm.org/extra/clang-tidy/">Clang-Tidy</a>. These are defined in the
+<code class="file docutils literal notranslate"><span class="pre">.clang-format</span></code> and <code class="file docutils literal notranslate"><span class="pre">.clang-tidy</span></code> files.</p>
+<p>Here are some conventions to follow:</p>
+<ol class="arabic simple">
+<li><p>All <cite>SPADES</cite> specific code must be within <code class="docutils literal notranslate"><span class="pre">spades</span></code> namespace.</p></li>
+<li><p>Following AMReX convention, header files will use a <code class="docutils literal notranslate"><span class="pre">.H</span></code> extension and C++
+source files will use a <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> extension.</p></li>
+<li><p>Use <a class="reference external" href="https://en.wikipedia.org/wiki/Snake_case">snake_case</a> almost
+everywhere, i.e., for variables, namespaces, function and method names.
+Exceptions include when overriding AMReX class methods in inherited classes.</p></li>
+<li><p>Use <a class="reference external" href="https://en.wikipedia.org/wiki/Camel_case">CamelCase</a> for class names.
+Capitalize the first letter of the first word in the compound name also.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">m_</span></code> prefix for class instance variables. No prefix for class methods.</p></li>
+<li><p>Keep logic in functions short. Always use descriptive names for function
+names and variables that provide the reader with clues as to what the
+function does.</p></li>
+</ol>
+<section id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Link to this heading"></a></h2>
+<p>This is a manual way to format all source files:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>Source
+<span class="gp">$ </span>find<span class="w"> </span>.<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.cpp&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.H&quot;</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span>-exec<span class="w"> </span>clang-format<span class="w"> </span>-i<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
+</pre></div>
+</div>
+</section>
+<section id="linting">
+<h2>Linting<a class="headerlink" href="#linting" title="Link to this heading"></a></h2>
+<p>Linting of <cite>SPADES</cite> can be performed using cmake options to configure
+cppcheck and clang-tidy. For example, the continuous integration tools
+through Github Actions uses the following for clang-tidy:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cmake<span class="w"> </span>-DCMAKE_BUILD_TYPE:STRING<span class="o">=</span>Debug<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DCMAKE_CXX_COMPILER:STRING<span class="o">=</span>clang++<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DCMAKE_C_COMPILER:STRING<span class="o">=</span>clang<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DSPADES_DIM:STRING<span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DSPADES_ENABLE_MPI:BOOL<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DSPADES_TEST_WITH_FCOMPARE:BOOL<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DSPADES_ENABLE_ALL_WARNINGS:BOOL<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DSPADES_ENABLE_CPPCHECK:BOOL<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-DSPADES_ENABLE_CLANG_TIDY:BOOL<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>..
+<span class="gp">$ </span>cmake<span class="w"> </span>--build<span class="w"> </span>.<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>clang-tidy-full-report.txt
+</pre></div>
+</div>
+<p>A code spellchecker can be run by running <a class="reference external" href="https://github.com/codespell-project/codespell">codespell</a> in the project
+directory.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Testing.html" class="btn btn-neutral float-left" title="Testing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SPADES.html" class="btn btn-neutral float-right" title="SPADES" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, the Alliance for Sustainable Energy, LLC., through National Renewable Energy Laboratory. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

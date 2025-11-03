@@ -1,0 +1,5 @@
+<map id="spades::ic::Constant" name="spades::ic::Constant">
+<area shape="rect" id="Node000001" title="Constant initial condition." alt="" coords="5,108,159,133"/>
+<area shape="rect" id="Node000002" href="$structspades_1_1ic_1_1_constant_1_1_device_op.html" title="Device functor for the Constant initial condition." alt="" coords="5,5,159,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,59,85,108,79,108,79,59"/>
+</map>

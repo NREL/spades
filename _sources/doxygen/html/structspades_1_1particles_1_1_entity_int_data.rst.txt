@@ -1,0 +1,14 @@
+.. meta::e0fcaf7359bc33033886cd8e2556978d89a08b11d7adf22c2cf9491fca7d4ffd9f93adc7caa0c5c4e6a2e043cf7155548e849fc48f6a6c09868f1e016929878f
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::EntityIntData Struct Reference
+
+EntityIntData Struct Reference
+==============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_entity_int_data.html

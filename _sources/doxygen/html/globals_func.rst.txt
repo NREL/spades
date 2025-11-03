@@ -1,0 +1,14 @@
+.. meta::4b8114107569a56af90911250ada64dfd960f3a62e91977024a69cd342b5d677f3da45163a79b76f96b91b4995d2dcf6097485614fc30889e07a94b5a9f12d0d
+
+:orphan:
+
+.. title:: SPADES API: File Members
+
+File Members
+============
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: globals_func.html

@@ -1,0 +1,7 @@
+<map id="spades::particles::EntityParticleContainer" name="spades::particles::EntityParticleContainer">
+<area shape="rect" id="Node000001" title="Main SPADES entity container." alt="" coords="563,27,733,67"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_spades_particle_container.html" title=" " alt="" coords="296,5,515,89"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="528,45,563,45,563,50,528,50"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,20,248,75"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="262,45,296,45,296,50,262,50"/>
+</map>

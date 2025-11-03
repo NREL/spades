@@ -1,0 +1,14 @@
+.. meta::6740f0b8f5d80432d4f35cd84532891758c495ee7ff83e344483d2d9b13bb7fad6083c73bc28d15318c634890b791ad99ddbdafea568e9262d00ced597608555
+
+:orphan:
+
+.. title:: SPADES API: spades::particles::DevicePrint Struct Reference
+
+DevicePrint Struct Reference
+============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1particles_1_1_device_print.html

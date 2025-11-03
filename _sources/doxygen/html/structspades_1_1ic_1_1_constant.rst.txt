@@ -1,0 +1,14 @@
+.. meta::866321dd22bdc1ef78dd51ceaff11d1ba5ce674ab90beab5403b0bce376a53443c092ad9bcb3d67dec89cfb4062895cc9644684e0b33b6eefa94a999f06cf92c
+
+:orphan:
+
+.. title:: SPADES API: spades::ic::Constant Struct Reference
+
+Constant Struct Reference
+=========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1ic_1_1_constant.html

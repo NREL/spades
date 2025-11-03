@@ -1,0 +1,13 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,143,248,168"/>
+<area shape="rect" id="Node000001" href="$classspades_1_1particles_1_1_spades_particle_container.html" title=" " alt="" coords="317,5,536,89"/>
+<area shape="poly" id="edge2_Node000000_Node000001" title=" " alt="" coords="175,135,316,84,318,89,177,140"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1particles_1_1_spades_particle_container.html" title=" " alt="" coords="296,113,557,197"/>
+<area shape="poly" id="edge4_Node000000_Node000003" title=" " alt="" coords="262,153,296,153,296,158,262,158"/>
+<area shape="rect" id="Node000005" href="$classspades_1_1particles_1_1_spades_particle_container.html" title="Main SPADES particle container." alt="" coords="307,222,546,291"/>
+<area shape="poly" id="edge6_Node000000_Node000005" title=" " alt="" coords="179,170,324,219,323,225,178,175"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_entity_particle_container.html" title="Main SPADES entity container." alt="" coords="615,27,786,67"/>
+<area shape="poly" id="edge3_Node000001_Node000002" title=" " alt="" coords="550,45,615,45,615,50,550,50"/>
+<area shape="rect" id="Node000004" href="$classspades_1_1particles_1_1_message_particle_container.html" title="Main SPADES message container." alt="" coords="605,135,796,175"/>
+<area shape="poly" id="edge5_Node000003_Node000004" title=" " alt="" coords="571,153,605,153,605,158,571,158"/>
+</map>

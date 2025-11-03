@@ -1,0 +1,14 @@
+.. meta::a52fa03f028813d42cf2d28dc4e7f945cded6a6331fd51bbdf0bb8f8b9a29bc5b33788575e8a8256335ae2cd2203594a5f22a16e2f5286d817656e7559dd5a13
+
+:orphan:
+
+.. title:: SPADES API: spades::constants Namespace Reference
+
+constants Namespace Reference
+=============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespacespades_1_1constants.html

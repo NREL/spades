@@ -1,0 +1,14 @@
+.. meta::100f4f5c9f6cda42e9d3b6927c632a18aec909792cab7e40ecd501cc4b7ae09eea8367de96e703a25dbc8565d0a1320c9918c90c1694176c902955ddd212a93c
+
+:orphan:
+
+.. title:: SPADES API: Class Members - Typedefs
+
+Class Members - Typedefs
+========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_type.html

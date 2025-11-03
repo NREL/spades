@@ -1,0 +1,14 @@
+.. meta::8b13b05eaf62086f51fa855b8c1ada196b0a566a2d29e31cedde72fbe0164ddeebbe11d39b98a6e9f7c5e3014dfcb2774b4da1b6fcfd20b360a99a503db3585e
+
+:orphan:
+
+.. title:: SPADES API: spades::models::Phold::InitMessageOp Struct Reference
+
+InitMessageOp Struct Reference
+==============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structspades_1_1models_1_1_phold_1_1_init_message_op.html

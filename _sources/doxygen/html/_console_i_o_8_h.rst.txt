@@ -1,0 +1,14 @@
+.. meta::0729e465e9029fd1c54dcc330943821ff027780051b04073a0d1c8b9d9625b9fb84358e59d0609cd692d38822d65dd69623d841246923b9c9fdd4b9f4ae28773
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/ConsoleIO.H File Reference
+
+/home/runner/work/spades/spades/Source/ConsoleIO.H File Reference
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _console_i_o_8_h.html

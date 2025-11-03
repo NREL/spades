@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPADES API: /home/runner/work/spades/spades/Source/ParticleOps.H Source File &mdash; SPADES 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            SPADES
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../GettingStarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SPADES.html">SPADES</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">SPADES API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SPADES</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SPADES API: /home/runner/work/spades/spades/Source/ParticleOps.H Source File</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/doxygen/html/_particle_ops_8_h_source.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="home-runner-work-spades-spades-source-particleops-h-source-file">
+<h1>/home/runner/work/spades/spades/Source/ParticleOps.H Source File<a class="headerlink" href="#home-runner-work-spades-spades-source-particleops-h-source-file" title="Link to this heading"></a></h1>
+<div class="doxygen-content docutils container">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.12.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SPADES API: /home/runner/work/spades/spades/Source/ParticleOps.H Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">SPADES API
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.12.0 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',false,false,'search.php','Search',false);
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){ initResizable(false); });
+/* @license-end */
+</script>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_146306cb39e20a87482ac42056bee4b6.html">spades</a></li><li class="navelem"><a class="el" href="dir_49530cec0d50c554779629e2df68719c.html">Source</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div id="doc-content">
+<div class="header">
+  <div class="headertitle"><div class="title">ParticleOps.H</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="_particle_ops_8_h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef PARTICLEOPS_H</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define PARTICLEOPS_H</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;AMReX.H&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;AMReX_Array4.H&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;AMReX_Print.H&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="_particle_data_8_h.html">ParticleData.H</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacespades_1_1particles.html">spades::particles</a> {</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> NRealT, <span class="keywordtype">size_t</span> NIntT, <span class="keyword">class</span> P, <span class="keyword">class</span> RT, <span class="keyword">class</span> IT&gt;</div>
+<div class="foldopen" id="foldopen00013" data-start="{" data-end="};">
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html">   13</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_particle_arrays.html">ParticleArrays</a></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>{</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html#a73578da84f9db3477046e32e90465be8">   15</a></span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#a73578da84f9db3477046e32e90465be8">NREAL</a> = NRealT;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html#abad33a9778daa315204fd64f7f8ada74">   16</a></span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#abad33a9778daa315204fd64f7f8ada74">NINT</a> = NIntT;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="foldopen" id="foldopen00024" data-start="{" data-end="}">
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html#a5d44fc0a48273cfac8c2975499c54338">   24</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_particle_arrays.html#a5d44fc0a48273cfac8c2975499c54338">ParticleArrays</a>(</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        P* aos, std::array&lt;RT, NRealT&gt;&amp; rdata, std::array&lt;IT, NIntT&gt;&amp; idata)</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        : <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#a99dfa65600c6f5a000594ba6abeb82e9">m_aos</a>(aos)</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; NRealT; i++) {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>            <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#a2eb5083d5f00cfaa457aa592f012e878">m_rdata</a>[i] = rdata[i].data();</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        }</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; NIntT; i++) {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>            <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#ad97cd3742d48986e8fdbaf8fdd2a5414">m_idata</a>[i] = idata[i].data();</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        }</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    }</div>
+</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html#a99dfa65600c6f5a000594ba6abeb82e9">   37</a></span>    P* <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#a99dfa65600c6f5a000594ba6abeb82e9">m_aos</a> = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html#a2eb5083d5f00cfaa457aa592f012e878">   40</a></span>    amrex::GpuArray&lt;amrex::Real*, NRealT&gt; <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#a2eb5083d5f00cfaa457aa592f012e878">m_rdata</a>;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_particle_arrays.html#ad97cd3742d48986e8fdbaf8fdd2a5414">   43</a></span>    amrex::GpuArray&lt;int*, NIntT&gt; <a class="code hl_variable" href="structspades_1_1particles_1_1_particle_arrays.html#ad97cd3742d48986e8fdbaf8fdd2a5414">m_idata</a>;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>};</div>
+</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="foldopen" id="foldopen00047" data-start="{" data-end="};">
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_print.html">   47</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_print.html">Print</a></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> PArrs&gt;</div>
+<div class="foldopen" id="foldopen00055" data-start="{" data-end="}">
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_print.html#ad5a34fd1b2098115c213e8f66a981db6">   55</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structspades_1_1particles_1_1_print.html#ad5a34fd1b2098115c213e8f66a981db6">operator()</a>(<span class="keyword">const</span> amrex::Long n, PArrs&amp; parrs)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        <span class="keyword">auto</span>&amp; p = parrs.m_aos[n];</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        amrex::Print() &lt;&lt; <span class="stringliteral">&quot;Particle data: \n&quot;</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>                       &lt;&lt; <span class="stringliteral">&quot;  id = &quot;</span> &lt;&lt; p.id() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>                       &lt;&lt; <span class="stringliteral">&quot;  cpu = &quot;</span> &lt;&lt; p.cpu() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>                       &lt;&lt; <span class="stringliteral">&quot;  type = &quot;</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>                       &lt;&lt; parrs.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][n] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; PArrs::NINT; i++) {</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>            amrex::Print() &lt;&lt; <span class="stringliteral">&quot;  int comp(&quot;</span> &lt;&lt; i</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>                           &lt;&lt; <span class="stringliteral">&quot;) = &quot;</span> &lt;&lt; parrs.m_idata[i][n] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        }</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; PArrs::NREAL; i++) {</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>            amrex::Print() &lt;&lt; <span class="stringliteral">&quot;  real comp(&quot;</span> &lt;&lt; i</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>                           &lt;&lt; <span class="stringliteral">&quot;) = &quot;</span> &lt;&lt; parrs.m_rdata[i][n] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        }</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    }</div>
+</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>};</div>
+</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="foldopen" id="foldopen00075" data-start="{" data-end="};">
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_device_print.html">   75</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_device_print.html">DevicePrint</a></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>{</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> PArrs&gt;</div>
+<div class="foldopen" id="foldopen00083" data-start="{" data-end="}">
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_device_print.html#a7a5577d2161b9f45da3d045198d5e018">   83</a></span>    AMREX_GPU_DEVICE <span class="keywordtype">void</span> <a class="code hl_function" href="structspades_1_1particles_1_1_device_print.html#a7a5577d2161b9f45da3d045198d5e018">operator()</a>(<span class="keyword">const</span> amrex::Long n, PArrs&amp; parrs)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        <span class="keyword">auto</span>&amp; p = parrs.m_aos[n];</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>        printf(</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>            <span class="stringliteral">&quot;Particle data: id = %ld, cpu = %ld, type = %d, timestamp = %.8e\n&quot;</span>,</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>            <span class="keyword">static_cast&lt;</span>amrex::Long<span class="keyword">&gt;</span>(p.id()), <span class="keyword">static_cast&lt;</span>amrex::Long<span class="keyword">&gt;</span>(p.cpu()),</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>            parrs.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][n],</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>            parrs.m_rdata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_real_data.html#ad388d761a8794263b97b4628bc504d2da52a7f562d4136576377e108640bae49f">CommonRealData::timestamp</a>][n]);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    }</div>
+</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>};</div>
+</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="foldopen" id="foldopen00095" data-start="{" data-end="};">
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_copy.html">   95</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_copy.html">Copy</a></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>{</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> PArrs&gt;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00105" data-start="{" data-end="}">
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_copy.html#a2858b1d1b8897f1779c798ac76d8dd5f">  105</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_copy.html#a2858b1d1b8897f1779c798ac76d8dd5f">operator()</a>(<span class="keyword">const</span> amrex::Long p1, <span class="keyword">const</span> amrex::Long p2, PArrs&amp; parrs)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; PArrs::NREAL; i++) {</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>            parrs.m_rdata[i][p2] = parrs.m_rdata[i][p1];</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        }</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; PArrs::NINT; i++) {</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>            parrs.m_idata[i][p2] = parrs.m_idata[i][p1];</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        }</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    }</div>
+</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>};</div>
+</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="keyword">template</span> &lt;<span class="keyword">class</span> PArrs&gt;</div>
+<div class="foldopen" id="foldopen00118" data-start="{" data-end="};">
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html">  118</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_get.html">Get</a></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>{</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE</div>
+<div class="foldopen" id="foldopen00128" data-start="{" data-end="}">
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#a8e30c963c02c354c16054147468db61d">  128</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_get.html#a8e30c963c02c354c16054147468db61d">Get</a>(<span class="keyword">const</span> amrex::IntVect&amp; iv,</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>        <span class="keyword">const</span> amrex::Array4&lt;const int&gt;&amp; counts,</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        <span class="keyword">const</span> amrex::Array4&lt;const int&gt;&amp; offsets,</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        PArrs&amp; parrs)</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        : <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>(iv), <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#aaa40e5b336767785be369a0f71eb615d">m_counts</a>(counts), <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">m_offsets</a>(offsets), <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">m_parrs</a>(parrs)</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    {}</div>
+</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE <span class="keywordtype">int</span></div>
+<div class="foldopen" id="foldopen00142" data-start="{" data-end="}">
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#aa10fb4a40c84e9e361166a70529d5c05">  142</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_get.html#aa10fb4a40c84e9e361166a70529d5c05">operator()</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> n, <span class="keyword">const</span> <span class="keywordtype">int</span> typ)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>        AMREX_ASSERT(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#aaa40e5b336767785be369a0f71eb615d">m_counts</a>(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>, typ) &gt; n);</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> idx = <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">m_offsets</a>(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>, typ) + n;</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        AMREX_ASSERT(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">m_parrs</a>.m_aos[idx].id() &gt;= 0);</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        AMREX_ASSERT(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">m_parrs</a>.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][idx] == typ);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        <span class="keywordflow">return</span> idx;</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    }</div>
+</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span> </div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00161" data-start="{" data-end="}">
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#aa2cad03bfc7bd775512d1cb6632b1891">  161</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_get.html#aa2cad03bfc7bd775512d1cb6632b1891">check</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> n, <span class="keyword">const</span> <span class="keywordtype">int</span> typ)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        AMREX_ASSERT(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#aaa40e5b336767785be369a0f71eb615d">m_counts</a>(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>, typ) &gt; n);</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> idx = <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">m_offsets</a>(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>, typ) + n;</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">m_parrs</a>.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][idx] == typ;</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    }</div>
+</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00182" data-start="{" data-end="}">
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#ade4b85bc364e3a8b6bed6923cdd557e0">  182</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_get.html#ade4b85bc364e3a8b6bed6923cdd557e0">assert_different</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> n, <span class="keyword">const</span> <span class="keywordtype">int</span> typ, <span class="keyword">const</span> <span class="keywordtype">int</span> expected_type)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="preprocessor">#ifdef AMREX_DEBUG</span></div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> idx = <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">m_offsets</a>(<a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>, typ) + n;</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        AMREX_ASSERT(</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>            <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">m_parrs</a>.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][idx] == expected_type);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>        amrex::ignore_unused(n, typ, expected_type);</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    }</div>
+</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span> </div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">  194</a></span>    <span class="keyword">const</span> amrex::IntVect&amp; <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">m_iv</a>;</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#aaa40e5b336767785be369a0f71eb615d">  197</a></span>    <span class="keyword">const</span> amrex::Array4&lt;const int&gt;&amp; <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#aaa40e5b336767785be369a0f71eb615d">m_counts</a>;</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">  200</a></span>    <span class="keyword">const</span> amrex::Array4&lt;const int&gt;&amp; <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">m_offsets</a>;</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">  203</a></span>    PArrs&amp; <a class="code hl_variable" href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">m_parrs</a>;</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>};</div>
+</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span> </div>
+<div class="foldopen" id="foldopen00207" data-start="{" data-end="};">
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_check_pair.html">  207</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_check_pair.html">CheckPair</a></div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>{</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> P&gt;</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00215" data-start="{" data-end="}">
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_check_pair.html#a2072f78f986770aa952b4a856aa749d1">  215</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_check_pair.html#a2072f78f986770aa952b4a856aa749d1">operator()</a>(<span class="keyword">const</span> P&amp; <span class="comment">/*p1*/</span>, <span class="keyword">const</span> P&amp; <span class="comment">/*p2*/</span>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    }</div>
+</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>};</div>
+</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span> </div>
+<div class="foldopen" id="foldopen00227" data-start="{" data-end="};">
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_compare_particle.html">  227</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structspades_1_1particles_1_1_compare_particle.html">CompareParticle</a></div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>{</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> PArrs&gt;</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    AMREX_GPU_DEVICE AMREX_FORCE_INLINE <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00238" data-start="{" data-end="}">
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno"><a class="line" href="structspades_1_1particles_1_1_compare_particle.html#a839088a46072aa27118e2538f843eb62">  238</a></span>    <a class="code hl_function" href="structspades_1_1particles_1_1_compare_particle.html#a839088a46072aa27118e2538f843eb62">operator()</a>(<span class="keyword">const</span> amrex::Long p1, <span class="keyword">const</span> amrex::Long p2, PArrs&amp; parrs)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>        <span class="comment">// sort by iv, then particle type then by timestamp</span></div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>        <span class="keyword">const</span> amrex::IntVect piv1(AMREX_D_DECL(</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>            parrs.m_idata[CommonIntData::i][p1],</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>            parrs.m_idata[CommonIntData::j][p1],</div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>            parrs.m_idata[CommonIntData::k][p1]));</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>        <span class="keyword">const</span> amrex::IntVect piv2(AMREX_D_DECL(</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>            parrs.m_idata[CommonIntData::i][p2],</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>            parrs.m_idata[CommonIntData::j][p2],</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>            parrs.m_idata[CommonIntData::k][p2]));</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span> </div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        <span class="keyword">const</span> <span class="keyword">auto</span> m1 = parrs.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][p1];</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>        <span class="keyword">const</span> <span class="keyword">auto</span> m2 = parrs.m_idata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">CommonIntData::type_id</a>][p2];</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        <span class="keyword">const</span> <span class="keyword">auto</span> t1 = parrs.m_rdata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_real_data.html#ad388d761a8794263b97b4628bc504d2da52a7f562d4136576377e108640bae49f">CommonRealData::timestamp</a>][p1];</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>        <span class="keyword">const</span> <span class="keyword">auto</span> t2 = parrs.m_rdata[<a class="code hl_enumvalue" href="structspades_1_1particles_1_1_common_real_data.html#ad388d761a8794263b97b4628bc504d2da52a7f562d4136576377e108640bae49f">CommonRealData::timestamp</a>][p2];</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>        <span class="keywordflow">return</span> (piv1 &lt; piv2) ||</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>               (piv1 == piv2 &amp;&amp; ((m1 &lt; m2) || (m1 == m2 &amp;&amp; t1 &lt; t2)));</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    }</div>
+</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>};</div>
+</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>} <span class="comment">// namespace spades::particles</span></div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="a_particle_data_8_h_html"><div class="ttname"><a href="_particle_data_8_h.html">ParticleData.H</a></div></div>
+<div class="ttc" id="anamespacespades_1_1particles_html"><div class="ttname"><a href="namespacespades_1_1particles.html">spades::particles</a></div><div class="ttdoc">SPADES particles.</div><div class="ttdef"><b>Definition</b> EntityData.H:7</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_check_pair_html"><div class="ttname"><a href="structspades_1_1particles_1_1_check_pair.html">spades::particles::CheckPair</a></div><div class="ttdoc">Functor for pairing particles.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:208</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_check_pair_html_a2072f78f986770aa952b4a856aa749d1"><div class="ttname"><a href="structspades_1_1particles_1_1_check_pair.html#a2072f78f986770aa952b4a856aa749d1">spades::particles::CheckPair::operator()</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool operator()(const P &amp;, const P &amp;) const</div><div class="ttdoc">Compare particles for pairing.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:215</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_common_int_data_html_aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7"><div class="ttname"><a href="structspades_1_1particles_1_1_common_int_data.html#aac17ded109d9bed078306d4629b8c5e6ae3dc74caab3f5c3b674bcc501371b2a7">spades::particles::CommonIntData::type_id</a></div><div class="ttdeci">@ type_id</div><div class="ttdef"><b>Definition</b> ParticleData.H:18</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_common_real_data_html_ad388d761a8794263b97b4628bc504d2da52a7f562d4136576377e108640bae49f"><div class="ttname"><a href="structspades_1_1particles_1_1_common_real_data.html#ad388d761a8794263b97b4628bc504d2da52a7f562d4136576377e108640bae49f">spades::particles::CommonRealData::timestamp</a></div><div class="ttdeci">@ timestamp</div><div class="ttdef"><b>Definition</b> ParticleData.H:12</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_compare_particle_html"><div class="ttname"><a href="structspades_1_1particles_1_1_compare_particle.html">spades::particles::CompareParticle</a></div><div class="ttdoc">Functor for comparing particles.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:228</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_compare_particle_html_a839088a46072aa27118e2538f843eb62"><div class="ttname"><a href="structspades_1_1particles_1_1_compare_particle.html#a839088a46072aa27118e2538f843eb62">spades::particles::CompareParticle::operator()</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool operator()(const amrex::Long p1, const amrex::Long p2, PArrs &amp;parrs) const</div><div class="ttdoc">Compare particles.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:238</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_copy_html"><div class="ttname"><a href="structspades_1_1particles_1_1_copy.html">spades::particles::Copy</a></div><div class="ttdoc">Functor for copying a particle's data to another.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:96</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_copy_html_a2858b1d1b8897f1779c798ac76d8dd5f"><div class="ttname"><a href="structspades_1_1particles_1_1_copy.html#a2858b1d1b8897f1779c798ac76d8dd5f">spades::particles::Copy::operator()</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE void operator()(const amrex::Long p1, const amrex::Long p2, PArrs &amp;parrs) const</div><div class="ttdoc">Copy particle data.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:105</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_device_print_html"><div class="ttname"><a href="structspades_1_1particles_1_1_device_print.html">spades::particles::DevicePrint</a></div><div class="ttdoc">Functor for printing particle data on device.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:76</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_device_print_html_a7a5577d2161b9f45da3d045198d5e018"><div class="ttname"><a href="structspades_1_1particles_1_1_device_print.html#a7a5577d2161b9f45da3d045198d5e018">spades::particles::DevicePrint::operator()</a></div><div class="ttdeci">AMREX_GPU_DEVICE void operator()(const amrex::Long n, PArrs &amp;parrs) const</div><div class="ttdoc">Print particle data to screen.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:83</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html">spades::particles::Get</a></div><div class="ttdoc">Functor for accessing a particle in a cell.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:119</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_a1f511b3922d6560748c51041c7660b67"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#a1f511b3922d6560748c51041c7660b67">spades::particles::Get::m_offsets</a></div><div class="ttdeci">const amrex::Array4&lt; const int &gt; &amp; m_offsets</div><div class="ttdoc">Cell offsets of particle types.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:200</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_a435a5cfa80980fbe7e2885a318be5a2a"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#a435a5cfa80980fbe7e2885a318be5a2a">spades::particles::Get::m_parrs</a></div><div class="ttdeci">PArrs &amp; m_parrs</div><div class="ttdoc">Particle array.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:203</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_a51fbd09617ef059c1c3ff6c09fc5aae5"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#a51fbd09617ef059c1c3ff6c09fc5aae5">spades::particles::Get::m_iv</a></div><div class="ttdeci">const amrex::IntVect &amp; m_iv</div><div class="ttdoc">Cell index.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:194</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_a8e30c963c02c354c16054147468db61d"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#a8e30c963c02c354c16054147468db61d">spades::particles::Get::Get</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE Get(const amrex::IntVect &amp;iv, const amrex::Array4&lt; const int &gt; &amp;counts, const amrex::Array4&lt; const int &gt; &amp;offsets, PArrs &amp;parrs)</div><div class="ttdoc">Constructor.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:128</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_aa10fb4a40c84e9e361166a70529d5c05"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#aa10fb4a40c84e9e361166a70529d5c05">spades::particles::Get::operator()</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE int operator()(const int n, const int typ) const</div><div class="ttdoc">Get a particle in a cell.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:142</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_aa2cad03bfc7bd775512d1cb6632b1891"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#aa2cad03bfc7bd775512d1cb6632b1891">spades::particles::Get::check</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE bool check(const int n, const int typ) const</div><div class="ttdoc">Check validity of the particle type.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:161</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_aaa40e5b336767785be369a0f71eb615d"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#aaa40e5b336767785be369a0f71eb615d">spades::particles::Get::m_counts</a></div><div class="ttdeci">const amrex::Array4&lt; const int &gt; &amp; m_counts</div><div class="ttdoc">Cell counts of particle types.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:197</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_get_html_ade4b85bc364e3a8b6bed6923cdd557e0"><div class="ttname"><a href="structspades_1_1particles_1_1_get.html#ade4b85bc364e3a8b6bed6923cdd557e0">spades::particles::Get::assert_different</a></div><div class="ttdeci">AMREX_GPU_DEVICE AMREX_FORCE_INLINE void assert_different(const int n, const int typ, const int expected_type) const</div><div class="ttdoc">Assert that the particle is of a different but expected type.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:182</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html">spades::particles::ParticleArrays</a></div><div class="ttdoc">Particle operations.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:14</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html_a2eb5083d5f00cfaa457aa592f012e878"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html#a2eb5083d5f00cfaa457aa592f012e878">spades::particles::ParticleArrays::m_rdata</a></div><div class="ttdeci">amrex::GpuArray&lt; amrex::Real *, NRealT &gt; m_rdata</div><div class="ttdoc">Pointers to real data.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:40</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html_a5d44fc0a48273cfac8c2975499c54338"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html#a5d44fc0a48273cfac8c2975499c54338">spades::particles::ParticleArrays::ParticleArrays</a></div><div class="ttdeci">ParticleArrays(P *aos, std::array&lt; RT, NRealT &gt; &amp;rdata, std::array&lt; IT, NIntT &gt; &amp;idata)</div><div class="ttdoc">Constructor.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:24</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html_a73578da84f9db3477046e32e90465be8"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html#a73578da84f9db3477046e32e90465be8">spades::particles::ParticleArrays::NREAL</a></div><div class="ttdeci">static constexpr size_t NREAL</div><div class="ttdef"><b>Definition</b> ParticleOps.H:15</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html_a99dfa65600c6f5a000594ba6abeb82e9"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html#a99dfa65600c6f5a000594ba6abeb82e9">spades::particles::ParticleArrays::m_aos</a></div><div class="ttdeci">P * m_aos</div><div class="ttdoc">AOS data.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:37</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html_abad33a9778daa315204fd64f7f8ada74"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html#abad33a9778daa315204fd64f7f8ada74">spades::particles::ParticleArrays::NINT</a></div><div class="ttdeci">static constexpr size_t NINT</div><div class="ttdef"><b>Definition</b> ParticleOps.H:16</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_particle_arrays_html_ad97cd3742d48986e8fdbaf8fdd2a5414"><div class="ttname"><a href="structspades_1_1particles_1_1_particle_arrays.html#ad97cd3742d48986e8fdbaf8fdd2a5414">spades::particles::ParticleArrays::m_idata</a></div><div class="ttdeci">amrex::GpuArray&lt; int *, NIntT &gt; m_idata</div><div class="ttdoc">Pointers to int data.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:43</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_print_html"><div class="ttname"><a href="structspades_1_1particles_1_1_print.html">spades::particles::Print</a></div><div class="ttdoc">Functor for printing particle data on host.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:48</div></div>
+<div class="ttc" id="astructspades_1_1particles_1_1_print_html_ad5a34fd1b2098115c213e8f66a981db6"><div class="ttname"><a href="structspades_1_1particles_1_1_print.html#ad5a34fd1b2098115c213e8f66a981db6">spades::particles::Print::operator()</a></div><div class="ttdeci">void operator()(const amrex::Long n, PArrs &amp;parrs) const</div><div class="ttdoc">Print particle data to screen.</div><div class="ttdef"><b>Definition</b> ParticleOps.H:55</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.12.0
+</small></address>
+</div><!-- doc-content -->
+</body>
+</html>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, the Alliance for Sustainable Energy, LLC., through National Renewable Energy Laboratory. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

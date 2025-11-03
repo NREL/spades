@@ -1,0 +1,10 @@
+<map id="/home/runner/work/spades/spades/Source/EntityData.H" name="/home/runner/work/spades/spades/Source/EntityData.H">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,212,45"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="21,167,103,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="105,47,90,94,72,154,67,153,85,93,100,45"/>
+<area shape="rect" id="Node000003" href="$_particle_data_8_h.html" title=" " alt="" coords="99,93,214,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="123,44,145,80,140,83,118,47"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="143,121,90,160,87,156,140,117"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="127,167,258,192"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="165,118,183,153,178,156,160,120"/>
+</map>

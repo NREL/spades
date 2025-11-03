@@ -1,0 +1,23 @@
+.. meta::2362c3fe1a840c7296e4ec94665c263a2b44b2ea41cd4ce9f39c23c9e7f35c4f3549d68dd5c53fb82bcea35d5c4707ca2033e813b468c969f8391b19fe6787a6
+
+:orphan:
+
+.. title:: SPADES API: SPADES API documentation
+
+SPADES API
+==========
+
+.. toctree::
+   :caption: Main Page
+   :maxdepth: 2
+   :hidden:
+
+   Namespaces <namespaces_namespaces>
+   Classes <annotated_classes>
+   Files <files_files>
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: index.html

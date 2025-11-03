@@ -1,0 +1,9 @@
+<map id="spades::particles::MessageParticleContainer::resolve_pairs" name="spades::particles::MessageParticleContainer::resolve_pairs">
+<area shape="rect" id="Node000001" title="Resolve message pairs (remove message/anti&#45;message pairs)" alt="" coords="5,74,196,129"/>
+<area shape="rect" id="Node000002" href="$classspades_1_1particles_1_1_spades_particle_container.html#a1a67a6e5761ea7ba5a0d2ec147737225" title=" " alt="" coords="244,5,491,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="196,82,230,76,231,81,197,87"/>
+<area shape="rect" id="Node000003" href="$classspades_1_1particles_1_1_message_particle_container.html#ad3984df22e731e2f4ac7b456db78b184" title="Sort the messages." alt="" coords="255,128,479,168"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="197,115,242,123,241,129,196,121"/>
+<area shape="rect" id="Node000004" href="$classspades_1_1particles_1_1_spades_particle_container.html#a0e66e7b0915a6dac52537ad80b0ceec1" title=" " alt="" coords="539,99,785,197"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="479,145,524,145,524,151,479,151"/>
+</map>

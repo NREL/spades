@@ -1,0 +1,14 @@
+.. meta::2534ec22ea0ba94e67c3445016191f966cba03b3e872dd816d811a664e857488662b87e0bd86942fde88fcb3ae9a95104b37b25ba33f89717ad46a4fbb9b3e29
+
+:orphan:
+
+.. title:: SPADES API: /home/runner/work/spades/spades/Source/MessageOps.H Source File
+
+/home/runner/work/spades/spades/Source/MessageOps.H Source File
+===============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: _message_ops_8_h_source.html

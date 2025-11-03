@@ -1,0 +1,14 @@
+.. meta::5e1a194fab92859e968ccea75464a8f7e8983b1eeb8486451520885cf5839efee9c1329920fb258bb0f092ee16c9d0ca67b0f95675e7973bd7e24ca99cc09b84
+
+:orphan:
+
+.. title:: SPADES API: Class Hierarchy
+
+Class Hierarchy
+===============
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: inherits.html
